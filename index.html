@@ -267,15 +267,16 @@ async function renderDash(){
   renderKPIs();renderChartSetores();renderChartDia();renderMetasProg();
 }
 
+function embalageMes(lancs){return lancs.filter(l=>l.setor==='Embalagem').reduce((a,l)=>a+l.qtd,0)}
 function renderKPIs(){
   const mes=lancsMes(),sem=lancsSem();
-  const totM=mes.reduce((a,l)=>a+l.qtd,0),totS=sem.reduce((a,l)=>a+l.qtd,0);
-  const dias=[...new Set(mes.map(l=>l.data))].length||1,media=Math.round(totM/dias);
-  const melhor=SETORES.reduce((b,s)=>{const t=mes.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0);return t>b.v?{n:s,v:t}:b},{n:'—',v:0});
-  const totMeta=Object.values(cachedMetas).reduce((a,v)=>a+(v||0),0);
-  const pctMeta=totMeta>0?Math.round(totM/totMeta*100):null;
-  document.getElementById('kpi-row-1').innerHTML=`<div class="kpi kpi-accent"><div class="kpi-label">Total mês</div><div class="kpi-val">${totM.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças lançadas</div></div><div class="kpi"><div class="kpi-label">Semana atual</div><div class="kpi-val">${totS.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças</div></div>`;
-  document.getElementById('kpi-row-2').innerHTML=`<div class="kpi"><div class="kpi-label">Média / dia</div><div class="kpi-val">${media.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças por dia</div></div><div class="kpi"><div class="kpi-label">${pctMeta!==null?'Meta geral':'Setor líder'}</div><div class="kpi-val" style="font-size:${pctMeta!==null?'26px':'18px'}">${pctMeta!==null?pctMeta+'%':melhor.n}</div><div class="kpi-sub">${pctMeta!==null?totM.toLocaleString('pt-BR')+' / '+totMeta.toLocaleString('pt-BR'):melhor.v.toLocaleString('pt-BR')+' pç'}</div></div>`;
+  const totM=embalageMes(mes),totS=embalageMes(sem);
+  const dias=[...new Set(mes.filter(l=>l.setor==='Embalagem').map(l=>l.data))].length||1;
+  const media=Math.round(totM/dias);
+  const meta=cachedMetas['Embalagem']||0;
+  const pctMeta=meta>0?Math.round(totM/meta*100):null;
+  document.getElementById('kpi-row-1').innerHTML=`<div class="kpi kpi-accent"><div class="kpi-label">Prontas no mês</div><div class="kpi-val">${totM.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças embaladas</div></div><div class="kpi"><div class="kpi-label">Prontas na semana</div><div class="kpi-val">${totS.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças embaladas</div></div>`;
+  document.getElementById('kpi-row-2').innerHTML=`<div class="kpi"><div class="kpi-label">Média / dia</div><div class="kpi-val">${media.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças prontas/dia</div></div><div class="kpi"><div class="kpi-label">Meta embalagem</div><div class="kpi-val" style="font-size:${pctMeta!==null?'26px':'18px'}">${pctMeta!==null?pctMeta+'%':'—'}</div><div class="kpi-sub">${pctMeta!==null?totM.toLocaleString('pt-BR')+' / '+meta.toLocaleString('pt-BR')+' pç':'sem meta definida'}</div></div>`;
 }
 
 function renderChartSetores(){
@@ -287,7 +288,7 @@ function renderChartSetores(){
 }
 
 function renderChartDia(){
-  const mes=lancsMes(),dias=[...new Set(mes.map(l=>l.data))].sort();
+  const mes=lancsMes().filter(l=>l.setor==='Embalagem'),dias=[...new Set(mes.map(l=>l.data))].sort();
   const vals=dias.map(d=>mes.filter(l=>l.data===d).reduce((a,l)=>a+l.qtd,0));
   const ctx=document.getElementById('chart-dia').getContext('2d');
   if(charts.dia)charts.dia.destroy();
@@ -296,13 +297,27 @@ function renderChartDia(){
 
 function renderMetasProg(){
   const mes=lancsMes();
-  document.getElementById('metas-prog').innerHTML=SETORES.map(s=>{
+  const embTotal=mes.filter(l=>l.setor==='Embalagem').reduce((a,l)=>a+l.qtd,0);
+  const embMeta=cachedMetas['Embalagem']||0;
+  const embPct=embMeta>0?Math.min(100,Math.round(embTotal/embMeta*100)):0;
+  const embCor=embPct>=100?'#4caf7d':embPct>=70?'#e89c47':'#e05c5c';
+  let html=`<div style="background:var(--ink3);border:1px solid rgba(232,197,71,.25);border-radius:var(--r);padding:12px 14px;margin-bottom:16px">
+    <div style="font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.06em;margin-bottom:8px">PEÇAS PRONTAS — REFERÊNCIA PRINCIPAL</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+      <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text)">Embalagem</span>
+      <span style="font-size:11px;color:var(--text3)">${embMeta>0?embTotal.toLocaleString('pt-BR')+' / '+embMeta.toLocaleString('pt-BR')+' ('+embPct+'%)':embTotal.toLocaleString('pt-BR')+' pç'}</span>
+    </div>
+    <div class="prog-bg"><div class="prog-bar" style="width:${embPct}%;background:${embCor}"></div></div>
+  </div>
+  <div style="font-size:10px;color:var(--text3);letter-spacing:.06em;margin-bottom:10px;font-weight:600">PRODUÇÃO POR SETOR</div>`;
+  html+=SETORES.filter(s=>s!=='Embalagem').map(s=>{
     const real=mes.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0),meta=cachedMetas[s]||0;
     const pct=meta>0?Math.min(100,Math.round(real/meta*100)):0;
     const cor=pct>=100?'#4caf7d':pct>=70?'#e89c47':'#e05c5c';
     const txt=meta>0?`${real.toLocaleString('pt-BR')} / ${meta.toLocaleString('pt-BR')} (${pct}%)`:real.toLocaleString('pt-BR')+' pç';
     return`<div class="prog-wrap"><div class="prog-header"><span class="prog-nome">${s}</span><span class="prog-vals">${txt}</span></div><div class="prog-bg"><div class="prog-bar" style="width:${pct}%;background:${cor}"></div></div></div>`;
   }).join('');
+  document.getElementById('metas-prog').innerHTML=html;
 }
 
 function renderProd(){
