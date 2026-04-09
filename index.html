@@ -17,7 +17,7 @@
   --accent:#e8c547;--green:#4caf7d;--green-d:#1a3d2b;
   --red:#e05c5c;--red-d:#3d1a1a;--amber:#e89c47;--amber-d:#3d2a0e;
   --blue:#5b9cf6;--blue-d:#0e1f3d;
-  --r:10px;--r2:16px;--sidebar:220px;--top-h:56px;--nav-h:64px;
+  --r:10px;--r2:16px;--sidebar:240px;--top-h:56px;--nav-h:64px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;overscroll-behavior:none}
@@ -37,16 +37,33 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
   .sidebar{display:flex!important}
   .bottom-nav{display:none!important}
   .scroll-area{left:var(--sidebar)!important;bottom:0!important}
-  .content-inner{max-width:900px;margin:0 auto;padding:24px 28px}
+  .content-inner{max-width:1200px;margin:0 auto;padding:32px 40px}
+  .kpi-val{font-size:36px!important}
+  .kpi{padding:20px 24px!important}
+  .kpi-label{font-size:12px!important}
+  .kpi-sub{font-size:12px!important}
+  .sec-title{font-size:13px!important;margin:28px 0 14px!important}
+  .card{padding:24px!important;margin-bottom:16px!important}
+  .prog-nome{font-size:14px!important}
+  .prog-vals{font-size:13px!important}
+  .prog-bg{height:8px!important}
+  th{font-size:11px!important;padding:10px 12px!important}
+  td{font-size:13px!important;padding:12px 12px!important}
+  .chart-wrap canvas{font-size:13px}
 }
 @media(max-width:767px){
   .sidebar{display:none!important}
   .content-inner{padding:16px 16px 28px}
 }
+@media(min-width:1400px){
+  .content-inner{max-width:1400px;padding:40px 56px}
+  .kpi-val{font-size:42px!important}
+  .chart-wrap{min-height:340px}
+}
 
 /* ── SIDEBAR (desktop) ── */
-.sidebar{position:fixed;top:var(--top-h);left:0;bottom:0;width:var(--sidebar);background:var(--ink2);border-right:1px solid var(--line2);z-index:200;flex-direction:column;padding:16px 10px}
-.sb-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);cursor:pointer;border:none;background:none;color:var(--text3);font-family:'DM Mono',monospace;font-size:13px;width:100%;text-align:left;transition:all .15s;margin-bottom:4px}
+.sidebar{position:fixed;top:var(--top-h);left:0;bottom:0;width:var(--sidebar);background:var(--ink2);border-right:1px solid var(--line2);z-index:200;flex-direction:column;padding:20px 12px}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:var(--r);cursor:pointer;border:none;background:none;color:var(--text3);font-family:'DM Mono',monospace;font-size:13px;width:100%;text-align:left;transition:all .15s;margin-bottom:4px}.sb-item svg{width:18px;height:18px;flex-shrink:0}
 .sb-item:hover{background:var(--ink3);color:var(--text2)}
 .sb-item.active{background:var(--ink3);color:var(--accent);font-weight:500}
 .sb-item svg{width:16px;height:16px;flex-shrink:0}
@@ -70,7 +87,7 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 
 /* Grid responsivo para cards de KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
-@media(min-width:768px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:768px){.kpi-grid{grid-template-columns:repeat(4,1fr)}.charts-2col{gap:20px}}
 .kpi{background:var(--ink3);border-radius:var(--r2);padding:14px 16px;border:1px solid var(--line)}
 .kpi-label{font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.04em}
 .kpi-val{font-family:'Syne',sans-serif;font-weight:700;font-size:24px;line-height:1;color:var(--text)}
@@ -261,11 +278,11 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     <div class="card">
       <div class="sec-title" style="margin-top:0">Por setor — semana</div>
       <div class="legend" id="legend-setores"></div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-setores" role="img" aria-label="Produção por setor">Produção por setor.</canvas></div>
+      <div class="chart-wrap" style="height:240px;min-height:300px"><canvas id="chart-setores" role="img" aria-label="Produção por setor">Produção por setor.</canvas></div>
     </div>
     <div class="card">
       <div class="sec-title" style="margin-top:0">Evolução diária</div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-dia" role="img" aria-label="Produção diária">Produção diária.</canvas></div>
+      <div class="chart-wrap" style="height:240px;min-height:300px"><canvas id="chart-dia" role="img" aria-label="Produção diária">Produção diária.</canvas></div>
     </div>
   </div>
   <div class="sec-title">Metas do mês</div>
@@ -298,7 +315,7 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
       <div class="field"><label class="field-label">Produto</label><select id="dv-produto"><option value="">— selecione —</option></select></div>
       <div class="field"><label class="field-label">Qtd devolvida</label><input type="number" id="dv-qtd" min="1" placeholder="0" inputmode="numeric"></div>
       <div class="field"><label class="field-label">Nº NF de venda</label><input type="text" id="dv-nf" placeholder="Ex: 001234"></div>
-      <div class="field"><label class="field-label">Motivo comercial (gestor)</label><select id="dv-motivo"><option value="">— a definir —</option><option>Arrependimento do cliente</option><option>Atraso na entrega</option><option>Produto não corresponde ao anúncio</option><option>Outro</option></select></div>
+      <div class="field"><label class="field-label">Canal de vendas</label><select id="dv-motivo"><option value="">— selecione —</option><option>Mercado Livre</option><option>Shopee</option><option>Amazon</option><option>TikTok Shop</option><option>Site próprio</option><option>Magalu</option><option>Madeira Madeira</option><option>Outro</option></select></div>
       <div class="field"><label class="field-label">Destino do produto</label><select id="dv-destino"><option value="">— selecione —</option><option>Retrabalho / reparo</option><option>Descarte</option><option>Reembalagem e reenvio</option></select></div>
       <div class="field"><label class="field-label">Observações</label><input type="text" id="dv-obs" placeholder="Detalhes adicionais..."></div>
     </div>
@@ -331,7 +348,7 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
       <div id="dev-status-bars"></div>
     </div>
     <div class="card">
-      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">MOTIVOS COMERCIAIS</div>
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">CANAL DE VENDAS</div>
       <div id="dev-motivos"></div>
     </div>
   </div>
