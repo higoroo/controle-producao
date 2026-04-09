@@ -141,6 +141,69 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     <button class="btn btn-ghost" style="margin-bottom:10px" onclick="exportCSV()">Exportar CSV</button>
   </div>
 
+  <div id="page-anal" class="page">
+    <div class="sec-title">Insights automáticos</div>
+    <div id="insights-area"><div class="loading"><div class="spinner"></div>Calculando...</div></div>
+    <div class="sec-title" style="margin-top:8px">Comparar períodos</div>
+    <div class="card">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Compare a produção da Embalagem entre dois períodos</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--accent);font-weight:600;min-width:16px">A</span>
+        <input type="date" id="ca-de" style="flex:1;padding:9px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+        <span style="font-size:11px;color:var(--text3)">até</span>
+        <input type="date" id="ca-ate" style="flex:1;padding:9px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:11px;color:var(--blue);font-weight:600;min-width:16px">B</span>
+        <input type="date" id="cb-de" style="flex:1;padding:9px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+        <span style="font-size:11px;color:var(--text3)">até</span>
+        <input type="date" id="cb-ate" style="flex:1;padding:9px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="renderCompar()">Comparar períodos</button>
+    </div>
+    <div id="compar-resultado"></div>
+  </div>
+
+
+  <div id="page-dev" class="page">
+    <div class="sec-title">Nova devolução</div>
+    <div class="card">
+      <div class="field-row">
+        <div class="field"><label class="field-label">Data</label><input type="date" id="dv-data"></div>
+        <div class="field"><label class="field-label">Qtd devolvida</label><input type="number" id="dv-qtd" min="1" placeholder="0" inputmode="numeric"></div>
+      </div>
+      <div class="field"><label class="field-label">Nome do cliente</label><input type="text" id="dv-cliente" placeholder="Nome do cliente"></div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">Produto</label><select id="dv-produto"><option value="">— selecione —</option></select></div>
+        <div class="field"><label class="field-label">Nº NF</label><input type="text" id="dv-nf" placeholder="Ex: 001234"></div>
+      </div>
+      <div class="field"><label class="field-label">Motivo da devolução</label><select id="dv-motivo"><option value="">— selecione —</option><option>Produto danificado / quebrado</option><option>Defeito de fabricação</option><option>Atraso na entrega</option><option>Arrependimento do cliente</option><option>Outro</option></select></div>
+      <div class="field"><label class="field-label">Destino do produto</label><select id="dv-destino"><option value="">— selecione —</option><option>Retrabalho / reparo</option><option>Descarte</option><option>Reembalagem e reenvio</option></select></div>
+      <div class="field"><label class="field-label">Observações</label><input type="text" id="dv-obs" placeholder="Detalhes adicionais..."></div>
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">Foto do produto</label>
+        <div id="dv-foto-wrap" style="border:1px dashed var(--line2);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer" onclick="document.getElementById('dv-foto-input').click()">
+          <div id="dv-foto-preview" style="font-size:12px;color:var(--text3)">Toque para tirar ou selecionar foto</div>
+        </div>
+        <input type="file" id="dv-foto-input" accept="image/*" capture="environment" style="display:none" onchange="previewFoto(this)">
+      </div>
+    </div>
+    <button class="btn btn-accent" id="btn-dev-salvar" onclick="salvarDevolucao()">Registrar devolução</button>
+    <div class="sec-title" style="margin-top:24px">Resumo do mês</div>
+    <div class="kpi-row" id="dev-kpi-row"><div class="kpi"><div class="loading"><div class="spinner"></div></div></div><div class="kpi"><div class="loading"><div class="spinner"></div></div></div></div>
+    <div class="card">
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">MOTIVOS MAIS FREQUENTES</div>
+      <div id="dev-motivos"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:10px">ÚLTIMAS DEVOLUÇÕES</div>
+      <div class="tabela-wrap">
+        <table><thead><tr><th>Data</th><th>Cliente</th><th>Produto</th><th>Motivo</th><th class="td-r">Qtd</th></tr></thead>
+        <tbody id="dev-tbody"><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
   <div id="page-cfg" class="page">
     <div class="sec-title">Metas mensais (peças/mês)</div>
     <div class="card"><div class="meta-grid" id="meta-form"><div class="loading"><div class="spinner"></div>Carregando...</div></div></div>
@@ -162,15 +225,19 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   </button>
   <button class="nav-item" onclick="goTo('dash',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="13" width="4" height="8" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="5" width="4" height="16" rx="1"/></svg>
-    Dashboard
+    Dash
   </button>
   <button class="nav-item" onclick="goTo('prod',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     Produtos
   </button>
-  <button class="nav-item" onclick="goTo('hist',this)">
-    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
-    Histórico
+  <button class="nav-item" onclick="goTo('dev',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+    Devoluções
+  </button>
+  <button class="nav-item" onclick="goTo('anal',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    Análise
   </button>
   <button class="nav-item" onclick="goTo('cfg',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -186,7 +253,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const SETORES=['Usinagem','Marcenaria','Fundo','Lixa de Fundo','Pintura','Montagem','Elétrica','Embalagem','Expedição'];
 const PRODUTOS=['A/W','XG','XP','AB Slim','AB Mine','AB Soft','AB A/W','AB XP','Viena','Mônaco','Floripa','Ipanema','Áustria','Wells','Mine','Wood','Sky','Slim','Colunas','Abajures','Chapa Lázaro','Prateleira Pinus','Ádegas Vinho','Sup Taça','Cup 40','Ripada','Peça Nova','Mesa Dobrável','Outros'];
 const CORS=['#5b9cf6','#4caf7d','#e89c47','#e05c5c','#a78bf6','#e87d7d','#64c896','#8a8880','#3dd6ac'];
-let pendentes=[],charts={},chipSetor='',cachedLancs=[],cachedMetas={};
+let pendentes=[],charts={},chipSetor='Embalagem',cachedLancs=[],cachedMetas={};
 
 async function sb(path,opts={}){
   const res=await fetch(SB_URL+'/rest/v1/'+path,{...opts,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':opts.prefer||'return=representation',...opts.headers}});
@@ -213,8 +280,9 @@ async function loadAll(){
 
 function init(){
   document.getElementById('f-data').value=hoje();
+  document.getElementById('dv-data').value=hoje();
   const pop=(id,lista)=>{const sel=document.getElementById(id);lista.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)})};
-  pop('f-setor',SETORES);pop('f-produto',PRODUTOS);pop('h-setor',SETORES);
+  pop('f-setor',SETORES);pop('f-produto',PRODUTOS);pop('h-setor',SETORES);pop('dv-produto',PRODUTOS);
   const m=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   document.getElementById('topbar-mes').textContent=m.charAt(0).toUpperCase()+m.slice(1);
   loadAll();
@@ -229,6 +297,8 @@ function goTo(id,btn){
   if(id==='dash')renderDash();
   if(id==='prod')renderProd();
   if(id==='hist')loadAll().then(renderHist);
+  if(id==='dev'){Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash());}
+  if(id==='anal'){loadAll().then(()=>{renderInsights();preencherDatasCompar()});}
   if(id==='cfg')renderCfg();
 }
 
@@ -322,8 +392,9 @@ function renderMetasProg(){
 
 function renderProd(){
   const chips=document.getElementById('chips-setor');
-  chips.innerHTML=`<div class="chip ${chipSetor===''?'active':''}" onclick="setChip('',this)">Todos</div>`+SETORES.map(s=>`<div class="chip ${chipSetor===s?'active':''}" onclick="setChip('${s}',this)">${s}</div>`).join('');
-  const mes=lancsMes().filter(l=>!chipSetor||l.setor===chipSetor),tot={};
+  chips.innerHTML=`<div class="chip ${chipSetor==='Embalagem'?'active':''}" onclick="setChip('Embalagem',this)">Prontos</div>`+SETORES.filter(s=>s!=='Embalagem').map(s=>`<div class="chip ${chipSetor===s?'active':''}" onclick="setChip('${s}',this)">${s}</div>`).join('');
+  const setor=chipSetor||'Embalagem';
+  const mes=lancsMes().filter(l=>l.setor===setor),tot={};
   mes.forEach(l=>{tot[l.produto]=(tot[l.produto]||0)+l.qtd});
   const sorted=Object.entries(tot).sort((a,b)=>b[1]-a[1]),total=sorted.reduce((a,e)=>a+e[1],0)||1;
   const pal=['#5b9cf6','#4caf7d','#e8c547','#e89c47','#e05c5c','#a78bf6','#64c896','#e87d7d','#3dd6ac','#8a8880','#c9a82e','#3b8a6e'];
@@ -332,7 +403,7 @@ function renderProd(){
   const ctx=document.getElementById('chart-prod').getContext('2d');
   if(charts.prod)charts.prod.destroy();
   charts.prod=new Chart(ctx,{type:'bar',data:{labels:sorted.map(e=>e[0]),datasets:[{data:sorted.map(e=>e[1]),backgroundColor:sorted.map((_,i)=>pal[i%pal.length]),borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw.toLocaleString('pt-BR')+' pç'}}},scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5855',font:{size:10}}},y:{grid:{display:false},ticks:{color:'#8a8880',font:{size:10}}}}}});
-  document.getElementById('tbody-prod').innerHTML=sorted.map(([p,v],i)=>`<tr><td style="color:var(--text3)">${i+1}</td><td>${p}</td><td class="td-r">${v.toLocaleString('pt-BR')}</td><td class="td-r" style="color:var(--text3)">${(v/total*100).toFixed(1)}%</td></tr>`).join('')||'<tr><td colspan="4" style="color:var(--text3);padding:14px 6px">Nenhum dado.</td></tr>';
+  document.getElementById('tbody-prod').innerHTML=sorted.map(([p,v],i)=>`<tr><td style="color:var(--text3)">${i+1}</td><td>${p}</td><td class="td-r">${v.toLocaleString('pt-BR')}</td><td class="td-r" style="color:var(--text3)">${(v/total*100).toFixed(1)}%</td></tr>`).join('')||'<tr><td colspan="4" style="color:var(--text3);padding:14px 6px">Nenhum lançamento de embalagem no mês.</td></tr>';
 }
 
 function setChip(s,el){chipSetor=s;renderProd()}
@@ -376,6 +447,227 @@ async function salvarCfg(){
     setSync('ok');toast('Configurações salvas!');
   }catch(e){setSync('err');toast('Erro ao salvar configurações.')}
 }
+
+function embDoPeriodo(de,ate){
+  return cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data>=de&&l.data<=ate).reduce((a,l)=>a+l.qtd,0);
+}
+function diasUteisEntre(de,ate){
+  return cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data>=de&&l.data<=ate).map(l=>l.data);
+}
+function produtosDoPeriodo(de,ate){
+  const tot={};
+  cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data>=de&&l.data<=ate).forEach(l=>{tot[l.produto]=(tot[l.produto]||0)+l.qtd});
+  return tot;
+}
+
+function preencherDatasCompar(){
+  const hoje2=hoje();
+  const d=new Date();
+  const priDiaMes=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01';
+  const ultMes=new Date(d.getFullYear(),d.getMonth(),0);
+  const priDiaUltMes=new Date(d.getFullYear(),d.getMonth()-1,1);
+  const fmtISO=x=>x.toISOString().slice(0,10);
+  if(!document.getElementById('ca-de').value){
+    document.getElementById('ca-de').value=fmtISO(priDiaUltMes);
+    document.getElementById('ca-ate').value=fmtISO(ultMes);
+    document.getElementById('cb-de').value=priDiaMes;
+    document.getElementById('cb-ate').value=hoje2;
+  }
+}
+
+function renderInsights(){
+  const el=document.getElementById('insights-area');
+  const emb=cachedLancs.filter(l=>l.setor==='Embalagem');
+  if(emb.length<3){el.innerHTML='<div class="empty-msg">Gere mais lançamentos para ver insights automáticos.<br>Mínimo de 3 dias com embalagem.</div>';return}
+
+  const dias=[...new Set(emb.map(l=>l.data))].sort();
+  const totPorDia=dias.map(d=>({d,v:emb.filter(l=>l.data===d).reduce((a,l)=>a+l.qtd,0)}));
+  const media=Math.round(totPorDia.reduce((a,x)=>a+x.v,0)/totPorDia.length);
+
+  const n=totPorDia.length;
+  const metade=Math.floor(n/2);
+  const mediaA=Math.round(totPorDia.slice(0,metade).reduce((a,x)=>a+x.v,0)/metade);
+  const mediaB=Math.round(totPorDia.slice(metade).reduce((a,x)=>a+x.v,0)/(n-metade));
+  const tendencia=mediaB>mediaA?'subindo':mediaB<mediaA?'caindo':'estável';
+  const deltaTend=mediaA>0?Math.round((mediaB-mediaA)/mediaA*100):0;
+
+  const melhorDia=totPorDia.reduce((b,x)=>x.v>b.v?x:b,totPorDia[0]);
+  const piorDia=totPorDia.reduce((b,x)=>x.v<b.v?x:b,totPorDia[0]);
+  const diasAbaixo=totPorDia.filter(x=>x.v<media*0.8).length;
+
+  const meta=cachedMetas['Embalagem']||0;
+  const mesAtualStr=mesAtual();
+  const totMes=emb.filter(l=>l.data.startsWith(mesAtualStr)).reduce((a,l)=>a+l.qtd,0);
+  const diasMes=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  const diaAtual=new Date().getDate();
+  const diasRestantes=diasMes-diaAtual;
+  const ritmoNecessario=meta>0&&diasRestantes>0?Math.ceil((meta-totMes)/diasRestantes):null;
+
+  const prodTot={};
+  emb.forEach(l=>{prodTot[l.produto]=(prodTot[l.produto]||0)+l.qtd});
+  const topProd=Object.entries(prodTot).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  const icon=(cor,svg)=>`<div style="width:36px;height:36px;border-radius:50%;background:${cor};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">${svg}</div>`;
+  const card=(corBorda,icone,titulo,desc)=>`
+    <div style="display:flex;gap:12px;align-items:flex-start;background:var(--ink2);border:1px solid ${corBorda};border-radius:var(--r2);padding:14px;margin-bottom:10px">
+      ${icone}
+      <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text);margin-bottom:3px">${titulo}</div><div style="font-size:12px;color:var(--text3);line-height:1.6">${desc}</div></div>
+    </div>`;
+
+  let html='';
+
+  const corTend=tendencia==='subindo'?'rgba(76,175,125,.15)':tendencia==='caindo'?'rgba(224,92,92,.15)':'rgba(91,156,246,.15)';
+  const emojTend=tendencia==='subindo'?'↑':tendencia==='caindo'?'↓':'→';
+  const corTendBorda=tendencia==='subindo'?'rgba(76,175,125,.3)':tendencia==='caindo'?'rgba(224,92,92,.3)':'rgba(91,156,246,.3)';
+  html+=card(corTendBorda,icon(corTend,emojTend),`Tendência ${tendencia} (${deltaTend>0?'+':''}${deltaTend}%)`,`Média da primeira metade do histórico: <b>${mediaA.toLocaleString('pt-BR')} pç/dia</b>. Segunda metade: <b>${mediaB.toLocaleString('pt-BR')} pç/dia</b>.`);
+
+  html+=card('rgba(232,197,71,.2)',icon('rgba(232,197,71,.15)','★'),`Melhor dia: ${fmt(melhorDia.d)}`,`<b>${melhorDia.v.toLocaleString('pt-BR')} peças</b> embaladas — ${Math.round(melhorDia.v/media*100)}% acima da média de ${media.toLocaleString('pt-BR')} pç/dia.`);
+
+  if(diasAbaixo>0){
+    html+=card('rgba(224,92,92,.2)',icon('rgba(224,92,92,.15)','!'),`${diasAbaixo} dia${diasAbaixo>1?'s':''} abaixo de 80% da média`,`Pior dia foi ${fmt(piorDia.d)} com ${piorDia.v.toLocaleString('pt-BR')} pç. Verifique se houve paradas ou manutenções nesses dias.`);
+  }
+
+  if(ritmoNecessario!==null){
+    const viavel=ritmoNecessario<=media*1.3;
+    const cor=viavel?'rgba(76,175,125,.2)':'rgba(224,92,92,.2)';
+    const corB=viavel?'rgba(76,175,125,.3)':'rgba(224,92,92,.3)';
+    html+=card(corB,icon(cor,'◎'),`Meta: ${viavel?'no ritmo certo':'desafio alto'}`,`Faltam <b>${(meta-totMes).toLocaleString('pt-BR')} peças</b> para a meta de ${meta.toLocaleString('pt-BR')}. Nos ${diasRestantes} dias restantes, precisam de <b>${ritmoNecessario.toLocaleString('pt-BR')} pç/dia</b> (média atual: ${media.toLocaleString('pt-BR')}).`);
+  }
+
+  if(topProd.length){
+    html+=card('rgba(91,156,246,.2)',icon('rgba(91,156,246,.15)','▦'),`Top produtos do histórico`,topProd.map(([p,v],i)=>`${i+1}. <b>${p}</b> — ${v.toLocaleString('pt-BR')} pç`).join('<br>'));
+  }
+
+  el.innerHTML=html;
+}
+
+function renderCompar(){
+  const deA=document.getElementById('ca-de').value,ateA=document.getElementById('ca-ate').value;
+  const deB=document.getElementById('cb-de').value,ateB=document.getElementById('cb-ate').value;
+  if(!deA||!ateA||!deB||!ateB){toast('Preencha todos os campos de data.');return}
+
+  const totA=embDoPeriodo(deA,ateA),totB=embDoPeriodo(deB,ateB);
+  const diasA=[...new Set(diasUteisEntre(deA,ateA))].length||1;
+  const diasB=[...new Set(diasUteisEntre(deB,ateB))].length||1;
+  const mediaA=Math.round(totA/diasA),mediaB=Math.round(totB/diasB);
+  const delta=totA>0?Math.round((totB-totA)/totA*100):0;
+  const corDelta=delta>=0?'var(--green)':'var(--red)';
+  const prodA=produtosDoPeriodo(deA,ateA),prodB=produtosDoPeriodo(deB,ateB);
+  const todosProd=[...new Set([...Object.keys(prodA),...Object.keys(prodB)])].sort((a,b)=>(prodB[b]||0)-(prodA[a]||0));
+
+  const el=document.getElementById('compar-resultado');
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 10px">
+      <div style="background:rgba(232,197,71,.08);border:1px solid rgba(232,197,71,.2);border-radius:var(--r2);padding:14px">
+        <div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:6px">PERÍODO A</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:var(--text)">${totA.toLocaleString('pt-BR')}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">peças · ${diasA} dias · ${mediaA.toLocaleString('pt-BR')} pç/dia</div>
+      </div>
+      <div style="background:rgba(91,156,246,.08);border:1px solid rgba(91,156,246,.2);border-radius:var(--r2);padding:14px">
+        <div style="font-size:10px;color:var(--blue);font-weight:600;margin-bottom:6px">PERÍODO B</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:var(--text)">${totB.toLocaleString('pt-BR')}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">peças · ${diasB} dias · ${mediaB.toLocaleString('pt-BR')} pç/dia</div>
+      </div>
+    </div>
+    <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:${corDelta}">${delta>=0?'+':''}${delta}%</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.6">variação total<br>Média/dia: ${mediaA.toLocaleString('pt-BR')} → <b style="color:${corDelta}">${mediaB.toLocaleString('pt-BR')} pç</b></div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:10px">POR PRODUTO</div>
+    <div class="card" style="padding:0">
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Produto</th><th class="td-r" style="color:var(--accent)">A</th><th class="td-r" style="color:var(--blue)">B</th><th class="td-r">Var.</th></tr></thead>
+          <tbody>${todosProd.map(p=>{
+            const a=prodA[p]||0,b=prodB[p]||0;
+            const v=a>0?Math.round((b-a)/a*100):b>0?100:0;
+            const c=v>0?'var(--green)':v<0?'var(--red)':'var(--text3)';
+            return`<tr><td>${p}</td><td class="td-r">${a||'—'}</td><td class="td-r">${b||'—'}</td><td class="td-r" style="color:${c};font-weight:600">${a>0||b>0?(v>=0?'+':'')+v+'%':'—'}</td></tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+let cachedDevs=[];
+
+async function loadDevs(){
+  try{const devs=await sb('devolucoes?select=*&order=data.desc,created_at.desc');cachedDevs=devs;}
+  catch(e){toast('Erro ao carregar devoluções.')}
+}
+
+function previewFoto(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{document.getElementById('dv-foto-wrap').innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:200px;border-radius:var(--r);object-fit:cover">`};
+  reader.readAsDataURL(file);
+}
+
+async function uploadFoto(file){
+  const ext=file.name.split('.').pop()||'jpg';
+  const nome=`dev_${Date.now()}.${ext}`;
+  const res=await fetch(`${SB_URL}/storage/v1/object/fotos-devolucoes/${nome}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type},body:file});
+  if(!res.ok)throw new Error('Erro no upload');
+  return`${SB_URL}/storage/v1/object/public/fotos-devolucoes/${nome}`;
+}
+
+async function salvarDevolucao(){
+  const data=document.getElementById('dv-data').value;
+  const cliente=document.getElementById('dv-cliente').value.trim();
+  const produto=document.getElementById('dv-produto').value;
+  const qtd=parseInt(document.getElementById('dv-qtd').value)||0;
+  const nf=document.getElementById('dv-nf').value.trim();
+  const motivo=document.getElementById('dv-motivo').value;
+  const destino=document.getElementById('dv-destino').value;
+  const obs=document.getElementById('dv-obs').value.trim();
+  const fotoInput=document.getElementById('dv-foto-input');
+  if(!data||!cliente||!produto||qtd<=0||!motivo||!destino){toast('Preencha todos os campos obrigatórios.');return}
+  const btn=document.getElementById('btn-dev-salvar');
+  btn.disabled=true;btn.textContent='Salvando...';setSync('syncing');
+  try{
+    let foto_url=null;
+    if(fotoInput.files[0])foto_url=await uploadFoto(fotoInput.files[0]);
+    const row={data,cliente,produto,quantidade:qtd,nf:nf||null,motivo,destino,obs:obs||null,foto_url};
+    await sb('devolucoes',{method:'POST',body:JSON.stringify(row),prefer:'return=minimal'});
+    cachedDevs=[row,...cachedDevs];
+    setSync('ok');toast('Devolução registrada!');
+    ['dv-cliente','dv-qtd','dv-nf','dv-obs'].forEach(id=>document.getElementById(id).value='');
+    ['dv-produto','dv-motivo','dv-destino'].forEach(id=>document.getElementById(id).selectedIndex=0);
+    document.getElementById('dv-foto-wrap').innerHTML='<div style="font-size:12px;color:var(--text3)">Toque para tirar ou selecionar foto</div>';
+    fotoInput.value='';renderDevDash();
+  }catch(e){setSync('err');toast('Erro ao salvar. Tente novamente.')}
+  btn.disabled=false;btn.textContent='Registrar devolução';
+}
+
+function devMes(){const m=mesAtual();return cachedDevs.filter(d=>d.data&&d.data.startsWith(m))}
+
+function renderDevDash(){
+  const mes=devMes();
+  const totalDev=mes.reduce((a,d)=>a+(d.quantidade||0),0);
+  const embMes=cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data&&l.data.startsWith(mesAtual())).reduce((a,l)=>a+l.qtd,0);
+  const taxa=embMes>0?((totalDev/embMes)*100).toFixed(1):0;
+  const corTaxa=parseFloat(taxa)<=2?'var(--green)':parseFloat(taxa)<=5?'var(--amber)':'var(--red)';
+  document.getElementById('dev-kpi-row').innerHTML=`
+    <div class="kpi" style="border-color:rgba(224,92,92,.25)"><div class="kpi-label">Devoluções no mês</div><div class="kpi-val" style="color:var(--red)">${totalDev.toLocaleString('pt-BR')}</div><div class="kpi-sub">${mes.length} ocorrências</div></div>
+    <div class="kpi"><div class="kpi-label">Taxa de devolução</div><div class="kpi-val" style="color:${corTaxa};font-size:24px">${taxa}%</div><div class="kpi-sub">vs ${embMes.toLocaleString('pt-BR')} embaladas</div></div>`;
+  const motivos={};mes.forEach(d=>{motivos[d.motivo]=(motivos[d.motivo]||0)+(d.quantidade||0)});
+  const sortedM=Object.entries(motivos).sort((a,b)=>b[1]-a[1]);
+  const totalM=sortedM.reduce((a,e)=>a+e[1],0)||1;
+  document.getElementById('dev-motivos').innerHTML=sortedM.length?sortedM.map(([mot,v])=>{
+    const pct=Math.round(v/totalM*100);
+    return`<div class="prog-wrap"><div class="prog-header"><span class="prog-nome" style="font-size:12px">${mot}</span><span class="prog-vals">${v} pç (${pct}%)</span></div><div class="prog-bg"><div class="prog-bar" style="width:${pct}%;background:var(--red)"></div></div></div>`;
+  }).join(''):'<div class="empty-msg" style="padding:10px 0">Nenhuma devolução este mês.</div>';
+  const ultimas=[...cachedDevs].slice(0,20);
+  const motTag=m=>m.includes('danif')||m.includes('quebr')?'tag-r':m.includes('Defeito')?'tag-a':m.includes('Atraso')?'tag-b':'tag-g';
+  document.getElementById('dev-tbody').innerHTML=ultimas.length?ultimas.map(d=>`<tr>
+    <td style="white-space:nowrap">${fmt(d.data)}</td>
+    <td style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)">${d.cliente}</td>
+    <td style="color:var(--text2)">${d.produto}</td>
+    <td><span class="tag ${motTag(d.motivo)}" style="font-size:9px">${d.motivo.split('/')[0].split(' ').slice(0,2).join(' ')}</span></td>
+    <td class="td-r">${d.quantidade}</td>
+  </tr>${d.foto_url?`<tr><td colspan="5" style="padding:2px 6px 10px"><a href="${d.foto_url}" target="_blank" style="color:var(--blue);font-size:11px">Ver foto anexada</a></td></tr>`:''}`).join(''):'<tr><td colspan="5" style="color:var(--text3);padding:14px 6px">Nenhum registro.</td></tr>';
+}
+
 
 init();
 </script>
