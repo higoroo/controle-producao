@@ -253,8 +253,28 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 
 <!-- ── LANÇAMENTO ── -->
 <div id="page-lanc" class="page active"><div class="content-inner">
-  <div class="sec-title">Data do lançamento</div>
-  <div class="card"><input type="date" id="f-data" style="width:100%;padding:8px 0;background:none;border:none;border-bottom:1px solid var(--line2);color:var(--text);font-family:'DM Mono',monospace;font-size:16px;outline:none"></div>
+  <div class="sec-title">Selecione o dia</div>
+  <div class="card" style="padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <button onclick="calNav(-1)" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px 8px">&#8249;</button>
+      <span id="cal-titulo" style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text)"></span>
+      <button onclick="calNav(1)" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px 8px">&#8250;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
+      <div style="text-align:center;font-size:10px;color:var(--text3);padding:4px">D</div>
+      <div style="text-align:center;font-size:10px;color:var(--text3);padding:4px">S</div>
+      <div style="text-align:center;font-size:10px;color:var(--text3);padding:4px">T</div>
+      <div style="text-align:center;font-size:10px;color:var(--text3);padding:4px">Q</div>
+      <div style="text-align:center;font-size:10px;color:var(--text3);padding:4px">Q</div>
+      <div style="text-align:center;font-size:10px;color:var(--text3);padding:4px">S</div>
+      <div style="text-align:center;font-size:10px;color:var(--text3);padding:4px">S</div>
+    </div>
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+    <div id="cal-aviso" style="display:none;margin-top:10px;padding:8px 12px;background:var(--amber-d);border-radius:var(--r);font-size:12px;color:var(--amber)">
+      Este dia já tem lançamentos. Você pode adicionar mais ou corrigir no Histórico.
+    </div>
+    <input type="hidden" id="f-data">
+  </div>
   <div class="sec-title">Adicionar item</div>
   <div class="card">
     <div class="form-2col">
@@ -272,7 +292,15 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 
 <!-- ── DASHBOARD ── -->
 <div id="page-dash" class="page"><div class="content-inner">
-  <div class="sec-title">Resumo do mês</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+    <div class="sec-title" style="margin:0">Resumo</div>
+    <div style="display:flex;gap:6px">
+      <button class="chip active" id="p-dia" onclick="setPeriodo('dia',this)">Hoje</button>
+      <button class="chip" id="p-sem" onclick="setPeriodo('semana',this)">Semana</button>
+      <button class="chip" id="p-mes" onclick="setPeriodo('mes',this)">Mês</button>
+      <input type="date" id="p-custom" onchange="setPeriodoCustom(this.value)" style="padding:6px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:20px;color:var(--text2);font-family:'DM Mono',monospace;font-size:11px;-webkit-appearance:none;appearance:none;outline:none" title="Selecionar dia específico">
+    </div>
+  </div>
   <div class="kpi-grid" id="kpi-area"><div class="kpi"><div class="loading"><div class="spinner"></div></div></div><div class="kpi"><div class="loading"><div class="spinner"></div></div></div><div class="kpi"><div class="loading"><div class="spinner"></div></div></div><div class="kpi"><div class="loading"><div class="spinner"></div></div></div></div>
   <div class="charts-2col">
     <div class="card">
@@ -398,9 +426,37 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     </div>
     <button class="btn btn-ghost btn-sm" style="margin-top:4px" onclick="renderHist()">Filtrar</button>
   </div>
-  <div class="sec-title">Lançamentos</div>
-  <div class="card"><div class="tabela-wrap"><table><thead><tr><th>Data</th><th>Setor</th><th>Produto</th><th class="td-r">Qtd</th><th>Obs</th></tr></thead><tbody id="tbody-hist"><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+    <div class="sec-title" style="margin:0">Lançamentos</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--text3)">Modo gestor:</span>
+      <button id="btn-modo-gestor" onclick="toggleGestor()" class="btn btn-ghost btn-sm">Desativado</button>
+    </div>
+  </div>
+  <div id="gestor-auth" style="display:none;margin-bottom:12px">
+    <div class="card" style="display:flex;gap:8px;align-items:center;padding:12px">
+      <input type="password" id="gestor-senha" placeholder="Senha do gestor" style="flex:1;padding:9px 12px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:14px">
+      <button class="btn btn-accent btn-sm" onclick="autenticarGestor()">Entrar</button>
+    </div>
+  </div>
+  <div class="card"><div class="tabela-wrap"><table><thead><tr><th>Data</th><th>Setor</th><th>Produto</th><th class="td-r">Qtd</th><th>Obs</th><th id="th-acoes" style="display:none">Ações</th></tr></thead><tbody id="tbody-hist"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
   <button class="btn btn-ghost" onclick="exportCSV()">Exportar CSV</button>
+
+  <!-- Modal edição -->
+  <div id="modal-edit" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:400px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:16px">Editar lançamento</div>
+      <input type="hidden" id="edit-id">
+      <div class="field"><label class="field-label">Setor</label><select id="edit-setor"></select></div>
+      <div class="field"><label class="field-label">Produto</label><select id="edit-produto"></select></div>
+      <div class="field"><label class="field-label">Quantidade</label><input type="number" id="edit-qtd" min="1" inputmode="numeric"></div>
+      <div class="field" style="margin-bottom:16px"><label class="field-label">Observação</label><input type="text" id="edit-obs"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-accent" style="flex:1" onclick="salvarEdicao()">Salvar</button>
+      </div>
+    </div>
+  </div>
 </div></div>
 
 <!-- ── CONFIG ── -->
@@ -464,7 +520,7 @@ function init(){
   pop('f-setor',SETORES);pop('f-produto',PRODUTOS);pop('h-setor',SETORES);pop('dv-produto',PRODUTOS);
   const m=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   document.getElementById('topbar-mes').textContent=m.charAt(0).toUpperCase()+m.slice(1);
-  loadAll();
+  loadAll().then(()=>{atualizarDiasComLanc();initCal()});
 }
 
 function goTo(id,btn){
@@ -515,28 +571,32 @@ async function renderDash(){
 }
 function embalageMes(lancs){return lancs.filter(l=>l.setor==='Embalagem').reduce((a,l)=>a+l.qtd,0)}
 function renderKPIs(){
-  const mes=lancsMes(),sem=lancsSem();
-  const totM=embalageMes(mes),totS=embalageMes(sem);
-  const dias=[...new Set(mes.filter(l=>l.setor==='Embalagem').map(l=>l.data))].length||1,media=Math.round(totM/dias);
-  const meta=cachedMetas['Embalagem']||0,pctMeta=meta>0?Math.round(totM/meta*100):null;
+  const periodo=lancsNoPeriodo();
+  const totM=embalageMes(periodo);
+  const dias=[...new Set(periodo.filter(l=>l.setor==='Embalagem').map(l=>l.data))].length||1;
+  const media=Math.round(totM/dias);
+  const meta=cachedMetas['Embalagem']||0;
+  const pctMeta=meta>0?Math.round(totM/meta*100):null;
   const devTot=devMes().reduce((a,d)=>a+(d.quantidade||0),0);
   const taxa=totM>0?((devTot/totM)*100).toFixed(1):0;
   const corTaxa=parseFloat(taxa)<=2?'var(--green)':parseFloat(taxa)<=5?'var(--amber)':'var(--red)';
+  const lbl=labelPeriodo();
   document.getElementById('kpi-area').innerHTML=`
-    <div class="kpi kpi-accent"><div class="kpi-label">Prontas no mês</div><div class="kpi-val">${totM.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças embaladas</div></div>
-    <div class="kpi"><div class="kpi-label">Semana atual</div><div class="kpi-val">${totS.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças embaladas</div></div>
-    <div class="kpi"><div class="kpi-label">Média / dia</div><div class="kpi-val">${media.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças prontas/dia</div></div>
-    <div class="kpi"><div class="kpi-label">Taxa devolução</div><div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div><div class="kpi-sub">${devTot} devolvidas</div></div>`;
+    <div class="kpi kpi-accent"><div class="kpi-label">Embaladas — ${lbl}</div><div class="kpi-val">${totM.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças prontas</div></div>
+    <div class="kpi"><div class="kpi-label">Média / dia</div><div class="kpi-val">${media.toLocaleString('pt-BR')}</div><div class="kpi-sub">no período</div></div>
+    <div class="kpi"><div class="kpi-label">${pctMeta!==null?'Meta mensal':'Meta mensal'}</div><div class="kpi-val" style="font-size:22px">${pctMeta!==null?pctMeta+'%':'—'}</div><div class="kpi-sub">${pctMeta!==null?totM.toLocaleString('pt-BR')+' / '+meta.toLocaleString('pt-BR'):' sem meta definida'}</div></div>
+    <div class="kpi"><div class="kpi-label">Taxa devolução</div><div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div><div class="kpi-sub">${devTot} devolvidas no mês</div></div>`;
 }
 function renderChartSetores(){
-  const sem=lancsSem(),vals=SETORES.map(s=>sem.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
+  const sem=lancsNoPeriodo(),vals=SETORES.map(s=>sem.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
   document.getElementById('legend-setores').innerHTML=SETORES.map((s,i)=>`<div class="legend-item"><span class="legend-sq" style="background:${CORS[i]}"></span>${s}</div>`).join('');
   const ctx=document.getElementById('chart-setores').getContext('2d');
   if(charts.set)charts.set.destroy();
   charts.set=new Chart(ctx,{type:'bar',data:{labels:SETORES,datasets:[{data:vals,backgroundColor:CORS,borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw.toLocaleString('pt-BR')+' pç'}}},scales:{x:{grid:{display:false},ticks:{color:'#5a5855',font:{size:9},maxRotation:40,autoSkip:false}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5855',font:{size:10}}}}}});
 }
 function renderChartDia(){
-  const mes=lancsMes().filter(l=>l.setor==='Embalagem'),dias=[...new Set(mes.map(l=>l.data))].sort();
+  const base=periodoAtivo==='mes'?lancsMes():periodoAtivo==='semana'?lancsSem():lancsNoPeriodo();
+  const mes=base.filter(l=>l.setor==='Embalagem'),dias=[...new Set(mes.map(l=>l.data))].sort();
   const vals=dias.map(d=>mes.filter(l=>l.data===d).reduce((a,l)=>a+l.qtd,0));
   const ctx=document.getElementById('chart-dia').getContext('2d');
   if(charts.dia)charts.dia.destroy();
@@ -690,7 +750,31 @@ function renderHist(){
   let l=[...cachedLancs];
   if(setor)l=l.filter(x=>x.setor===setor);if(de)l=l.filter(x=>x.data>=de);if(ate)l=l.filter(x=>x.data<=ate);
   const tc=s=>{const i=SETORES.indexOf(s);return['tag-b','tag-g','tag-a','tag-r','tag-b','tag-r','tag-g','tag-a','tag-g'][i]||'tag-b'};
-  document.getElementById('tbody-hist').innerHTML=l.map(x=>`<tr><td style="white-space:nowrap">${fmt(x.data)}</td><td><span class="tag ${tc(x.setor)}">${x.setor.split(' ')[0]}</span></td><td style="color:var(--text2)">${x.produto}</td><td class="td-r">${x.qtd.toLocaleString('pt-BR')}</td><td style="color:var(--text3);font-size:11px">${x.obs||'—'}</td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--text3);padding:14px 6px">Nenhum registro.</td></tr>';
+  // Agrupar por dia para mostrar botão "apagar dia"
+  const diasUnicos=[...new Set(l.map(x=>x.data))].sort().reverse();
+  let html='';
+  diasUnicos.forEach(data=>{
+    const itens=l.filter(x=>x.data===data);
+    if(modoGestorAtivo){
+      html+=`<tr style="background:var(--ink3)"><td colspan="5" style="padding:6px 8px;font-size:11px;color:var(--text3);font-weight:500">${fmt(data)} — ${itens.length} item(s)</td><td style="padding:6px 8px;text-align:right"><button onclick="apagarDia('${data}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Apagar dia</button></td></tr>`;
+    }
+    itens.forEach(x=>{
+      html+=`<tr>
+        <td style="white-space:nowrap">${fmt(x.data)}</td>
+        <td><span class="tag ${tc(x.setor)}">${x.setor.split(' ')[0]}</span></td>
+        <td style="color:var(--text2)">${x.produto}</td>
+        <td class="td-r">${x.qtd.toLocaleString('pt-BR')}</td>
+        <td style="color:var(--text3);font-size:11px">${x.obs||'—'}</td>
+        <td style="display:${modoGestorAtivo?'table-cell':'none'}">
+          <div style="display:flex;gap:4px">
+            <button onclick="abrirEdicao('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);cursor:pointer">Editar</button>
+            <button onclick="apagarItem('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer">Apagar</button>
+          </div>
+        </td>
+      </tr>`;
+    });
+  });
+  document.getElementById('tbody-hist').innerHTML=html||'<tr><td colspan="6" style="color:var(--text3);padding:14px 6px">Nenhum registro.</td></tr>';
 }
 function exportCSV(){
   const rows=['Data,Setor,Produto,Quantidade,Observacao'];
@@ -776,6 +860,164 @@ function renderCompar(){
     <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:10px">POR PRODUTO</div>
     <div class="card" style="padding:0"><div class="tabela-wrap"><table><thead><tr><th>Produto</th><th class="td-r" style="color:var(--accent)">A</th><th class="td-r" style="color:var(--blue)">B</th><th class="td-r">Var.</th></tr></thead><tbody>${todosProd.map(p=>{const a=prodA[p]||0,b=prodB[p]||0,v=a>0?Math.round((b-a)/a*100):b>0?100:0,c=v>0?'var(--green)':v<0?'var(--red)':'var(--text3)';return`<tr><td>${p}</td><td class="td-r">${a||'—'}</td><td class="td-r">${b||'—'}</td><td class="td-r" style="color:${c};font-weight:600">${a>0||b>0?(v>=0?'+':'')+v+'%':'—'}</td></tr>`}).join('')}</tbody></table></div></div>`;
 }
+
+/* ── CALENDÁRIO ── */
+const SENHA_GESTOR = '1234'; // troque aqui
+let calAno, calMes, diasComLanc = new Set();
+let periodoAtivo = 'mes';
+let periodoCustom = null;
+let modoGestorAtivo = false;
+
+function initCal() {
+  const h = new Date();
+  calAno = h.getFullYear(); calMes = h.getMonth();
+  atualizarDiasComLanc();
+  renderCal();
+}
+
+function atualizarDiasComLanc() {
+  diasComLanc = new Set(cachedLancs.map(l => l.data));
+}
+
+function calNav(d) {
+  calMes += d;
+  if (calMes > 11) { calMes = 0; calAno++; }
+  if (calMes < 0) { calMes = 11; calAno--; }
+  renderCal();
+}
+
+function renderCal() {
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('cal-titulo').textContent = meses[calMes] + ' ' + calAno;
+  const grid = document.getElementById('cal-grid');
+  const primDia = new Date(calAno, calMes, 1).getDay();
+  const diasNoMes = new Date(calAno, calMes + 1, 0).getDate();
+  const hoje2 = hoje();
+  const dataSel = document.getElementById('f-data').value;
+  let html = '';
+  for (let i = 0; i < primDia; i++) html += '<div></div>';
+  for (let d = 1; d <= diasNoMes; d++) {
+    const iso = calAno + '-' + String(calMes + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const temLanc = diasComLanc.has(iso);
+    const isSel = iso === dataSel;
+    const isHoje = iso === hoje2;
+    let st = 'display:flex;align-items:center;justify-content:center;flex-direction:column;height:36px;border-radius:var(--r);cursor:pointer;font-size:12px;position:relative;transition:background .1s;';
+    if (isSel) st += 'background:var(--accent);color:var(--ink);font-weight:700;';
+    else if (isHoje) st += 'background:var(--ink3);color:var(--text);border:1px solid var(--line2);';
+    else st += 'color:var(--text2);';
+    const check = temLanc ? `<span style="position:absolute;top:2px;right:3px;font-size:8px;color:${isSel?'var(--ink)':'var(--green)'}">✓</span>` : '';
+    html += `<div style="${st}" onclick="selecionarDia('${iso}',${temLanc})">${d}${check}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function selecionarDia(iso, temLanc) {
+  document.getElementById('f-data').value = iso;
+  const av = document.getElementById('cal-aviso');
+  av.style.display = temLanc ? 'block' : 'none';
+  renderCal();
+}
+
+/* ── PERÍODO DO DASHBOARD ── */
+function setPeriodo(p, btn) {
+  periodoAtivo = p; periodoCustom = null;
+  document.querySelectorAll('#p-dia,#p-sem,#p-mes').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDash();
+}
+function setPeriodoCustom(val) {
+  periodoAtivo = 'custom'; periodoCustom = val;
+  document.querySelectorAll('#p-dia,#p-sem,#p-mes').forEach(b => b.classList.remove('active'));
+  renderDash();
+}
+function lancsNoPeriodo() {
+  if (periodoAtivo === 'dia') { const h = hoje(); return cachedLancs.filter(l => l.data === h); }
+  if (periodoAtivo === 'semana') { const [s, e] = semana(); return cachedLancs.filter(l => l.data >= s && l.data <= e); }
+  if (periodoAtivo === 'custom' && periodoCustom) return cachedLancs.filter(l => l.data === periodoCustom);
+  return lancsMes();
+}
+function labelPeriodo() {
+  if (periodoAtivo === 'dia') return 'Hoje';
+  if (periodoAtivo === 'semana') return 'Semana atual';
+  if (periodoAtivo === 'custom' && periodoCustom) return fmt(periodoCustom);
+  return 'Mês atual';
+}
+
+/* ── MODO GESTOR / EDIÇÃO ── */
+function toggleGestor() {
+  if (modoGestorAtivo) { desativarGestor(); return; }
+  const auth = document.getElementById('gestor-auth');
+  auth.style.display = auth.style.display === 'none' ? 'flex' : 'none';
+}
+function autenticarGestor() {
+  const s = document.getElementById('gestor-senha').value;
+  if (s === SENHA_GESTOR) {
+    modoGestorAtivo = true;
+    document.getElementById('gestor-auth').style.display = 'none';
+    document.getElementById('btn-modo-gestor').textContent = 'Ativado ✓';
+    document.getElementById('btn-modo-gestor').style.color = 'var(--green)';
+    document.getElementById('th-acoes').style.display = '';
+    document.getElementById('gestor-senha').value = '';
+    renderHist();
+    toast('Modo gestor ativado.');
+  } else { toast('Senha incorreta.'); }
+}
+function desativarGestor() {
+  modoGestorAtivo = false;
+  document.getElementById('btn-modo-gestor').textContent = 'Desativado';
+  document.getElementById('btn-modo-gestor').style.color = '';
+  document.getElementById('th-acoes').style.display = 'none';
+  renderHist();
+  toast('Modo gestor desativado.');
+}
+
+function abrirEdicao(id) {
+  const l = cachedLancs.find(x => x.id === id); if (!l) return;
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-qtd').value = l.qtd;
+  document.getElementById('edit-obs').value = l.obs || '';
+  const ss = document.getElementById('edit-setor'); ss.innerHTML = SETORES.map(s => `<option ${s===l.setor?'selected':''}>${s}</option>`).join('');
+  const sp = document.getElementById('edit-produto'); sp.innerHTML = PRODUTOS.map(p => `<option ${p===l.produto?'selected':''}>${p}</option>`).join('');
+  document.getElementById('modal-edit').style.display = 'flex';
+}
+function fecharModal() { document.getElementById('modal-edit').style.display = 'none'; }
+
+async function salvarEdicao() {
+  const id = document.getElementById('edit-id').value;
+  const setor = document.getElementById('edit-setor').value;
+  const produto = document.getElementById('edit-produto').value;
+  const qtd = parseInt(document.getElementById('edit-qtd').value) || 0;
+  const obs = document.getElementById('edit-obs').value.trim();
+  if (!qtd) { toast('Quantidade inválida.'); return; }
+  setSync('syncing');
+  try {
+    await sb(`lancamentos?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ setor, produto, qtd, obs: obs || null }), prefer: 'return=minimal' });
+    const idx = cachedLancs.findIndex(x => x.id === id);
+    if (idx >= 0) Object.assign(cachedLancs[idx], { setor, produto, qtd, obs });
+    fecharModal(); setSync('ok'); toast('Lançamento atualizado!'); renderHist();
+  } catch (e) { setSync('err'); toast('Erro ao salvar edição.'); }
+}
+
+async function apagarItem(id) {
+  if (!confirm('Apagar este item?')) return;
+  setSync('syncing');
+  try {
+    await sb(`lancamentos?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+    cachedLancs = cachedLancs.filter(x => x.id !== id);
+    atualizarDiasComLanc(); renderCal(); renderHist(); setSync('ok'); toast('Item apagado.');
+  } catch (e) { setSync('err'); toast('Erro ao apagar.'); }
+}
+
+async function apagarDia(data) {
+  if (!confirm(`Apagar TODOS os lançamentos de ${fmt(data)}?`)) return;
+  setSync('syncing');
+  try {
+    await sb(`lancamentos?data=eq.${data}`, { method: 'DELETE', prefer: 'return=minimal' });
+    cachedLancs = cachedLancs.filter(x => x.data !== data);
+    atualizarDiasComLanc(); renderCal(); renderHist(); setSync('ok'); toast('Dia apagado.');
+  } catch (e) { setSync('err'); toast('Erro ao apagar dia.'); }
+}
+
 
 init();
 </script>
