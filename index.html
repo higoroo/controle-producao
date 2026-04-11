@@ -215,6 +215,14 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
     Histórico
   </button>
+  <button class="sb-item" onclick="goTo('comp',this)" id="sb-comp">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    Compras
+  </button>
+  <button class="sb-item" onclick="goTo('materiais',this)" id="sb-mat">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/><path d="M8 7V5a2 2 0 00-4 0v2"/></svg>
+    Materiais
+  </button>
   <button class="sb-item" onclick="goTo('cfg',this)" id="sb-cfg">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Configurações
@@ -243,9 +251,9 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     Análise
   </button>
-  <button class="nav-item" onclick="goTo('cfg',this)">
-    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    Config
+  <button class="nav-item" onclick="goTo('comp',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    Compras
   </button>
 </div>
 
@@ -474,6 +482,105 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   <button class="btn btn-accent" onclick="salvarCfg()">Salvar configurações</button>
 </div></div>
 
+
+<!-- ── COMPRAS ── -->
+<div id="page-comp" class="page"><div class="content-inner">
+
+  <!-- FILTRO STATUS -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+    <div class="sec-title" style="margin:0">Solicitações</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="chip active" onclick="setFiltroComp('Todos',this)">Todos</button>
+      <button class="chip" onclick="setFiltroComp('Pendente',this)">Pendentes</button>
+      <button class="chip" onclick="setFiltroComp('Em andamento',this)">Em andamento</button>
+      <button class="chip" onclick="setFiltroComp('Concluído',this)">Concluídos</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="comp-kpis"></div>
+
+  <!-- NOVA SOLICITAÇÃO -->
+  <div class="sec-title">Nova solicitação</div>
+  <div class="card">
+    <div class="form-2col">
+      <div class="field"><label class="field-label">Setor</label><select id="sc-setor"><option value="">— selecione —</option></select></div>
+      <div class="field"><label class="field-label">Categoria</label><select id="sc-cat" onchange="filtrarMateriais()"><option value="">— selecione —</option></select></div>
+      <div class="field"><label class="field-label">Material</label><select id="sc-material"><option value="">— selecione —</option></select></div>
+      <div class="field"><label class="field-label">Quantidade</label><input type="number" id="sc-qtd" min="0.1" step="0.1" placeholder="0" inputmode="decimal"></div>
+      <div class="field"><label class="field-label">Unidade</label><select id="sc-unidade"><option>UN</option><option>KG</option><option>LT</option><option>MT</option><option>CX</option><option>PC</option><option>RL</option><option>GL</option></select></div>
+      <div class="field"><label class="field-label">Precisa até</label><input type="date" id="sc-prazo"></div>
+      <div class="field"><label class="field-label">Prioridade</label>
+        <select id="sc-prior">
+          <option>Média</option>
+          <option>Alta</option>
+          <option>Baixa</option>
+        </select>
+      </div>
+      <div class="field"><label class="field-label">Observações</label><input type="text" id="sc-obs" placeholder="Detalhes adicionais..."></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+      <button class="btn btn-accent" style="flex:2;min-width:180px" onclick="salvarSolicitacao()">Enviar solicitação</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('materiais',document.getElementById('sb-mat'))">+ Cadastrar material</button>
+    </div>
+  </div>
+
+  <!-- LISTA SOLICITAÇÕES -->
+  <div id="comp-lista"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+
+  <!-- GRÁFICOS -->
+  <div class="sec-title">Análise de compras</div>
+  <div class="charts-2col">
+    <div class="card">
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">TEMPO MÉDIO POR CATEGORIA (dias)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-comp-tempo" role="img" aria-label="Tempo médio por categoria">Tempo por categoria.</canvas></div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">SOLICITAÇÕES POR SETOR</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-comp-setor" role="img" aria-label="Solicitações por setor">Por setor.</canvas></div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAR COMPRA -->
+  <div id="modal-compra" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Registrar compra</div>
+      <div id="modal-compra-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
+      <input type="hidden" id="mc-id">
+      <div class="field"><label class="field-label">Comprador</label><input type="text" id="mc-comprador" placeholder="Seu nome"></div>
+      <div class="field"><label class="field-label">Data da compra</label><input type="date" id="mc-data"></div>
+      <div class="field"><label class="field-label">Fornecedor</label><input type="text" id="mc-forn" placeholder="Nome do fornecedor"></div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">Valor unitário (R$)</label><input type="number" id="mc-vunit" min="0" step="0.01" placeholder="0,00" oninput="calcTotal()"></div>
+        <div class="field"><label class="field-label">Valor total (R$)</label><input type="number" id="mc-vtotal" min="0" step="0.01" placeholder="0,00"></div>
+      </div>
+      <div class="field"><label class="field-label">Nota fiscal</label><input type="text" id="mc-nf" placeholder="Nº da NF"></div>
+      <div class="field" style="margin-bottom:16px"><label class="field-label">Observações</label><input type="text" id="mc-obs" placeholder="Observações da compra"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="fecharModalCompra()">Cancelar</button>
+        <button class="btn btn-accent" style="flex:1" onclick="confirmarCompra()">Confirmar compra</button>
+      </div>
+    </div>
+  </div>
+
+</div></div>
+
+<!-- ── MATERIAIS CADASTRADOS ── -->
+<div id="page-materiais" class="page"><div class="content-inner">
+  <div class="sec-title">Cadastrar novo material</div>
+  <div class="card">
+    <div class="form-2col">
+      <div class="field"><label class="field-label">Categoria</label><select id="nm-cat"><option value="">— selecione —</option></select></div>
+      <div class="field"><label class="field-label">Nome do material</label><input type="text" id="nm-nome" placeholder="Ex: MDF 18mm"></div>
+      <div class="field"><label class="field-label">Unidade padrão</label><select id="nm-unidade"><option>UN</option><option>KG</option><option>LT</option><option>MT</option><option>CX</option><option>PC</option><option>RL</option><option>GL</option></select></div>
+      <div class="field"><label class="field-label">Fornecedor padrão</label><input type="text" id="nm-forn" placeholder="Opcional"></div>
+    </div>
+    <button class="btn btn-accent" onclick="salvarMaterial()">Cadastrar material</button>
+  </div>
+  <div class="sec-title">Materiais cadastrados</div>
+  <div id="mat-lista"><div class="loading"><div class="spinner"></div></div></div>
+</div></div>
+
 </div><!-- /scroll-area -->
 <div id="toast"></div>
 
@@ -535,6 +642,8 @@ function goTo(id,btn){
   if(id==='dash')renderDash();
   if(id==='prod')renderProd();
   if(id==='dev'){Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
+  if(id==='comp'){loadCompras().then(()=>{initCompras();filtrarMateriais();renderCompLista()})}
+  if(id==='materiais'){loadCompras().then(()=>{initCompras();renderMatLista()})}
   if(id==='anal'){loadAll().then(()=>{renderInsights();preencherDatasCompar()})}
   if(id==='hist')loadAll().then(renderHist);
   if(id==='cfg')renderCfg();
@@ -860,6 +969,371 @@ function renderCompar(){
     <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:10px">POR PRODUTO</div>
     <div class="card" style="padding:0"><div class="tabela-wrap"><table><thead><tr><th>Produto</th><th class="td-r" style="color:var(--accent)">A</th><th class="td-r" style="color:var(--blue)">B</th><th class="td-r">Var.</th></tr></thead><tbody>${todosProd.map(p=>{const a=prodA[p]||0,b=prodB[p]||0,v=a>0?Math.round((b-a)/a*100):b>0?100:0,c=v>0?'var(--green)':v<0?'var(--red)':'var(--text3)';return`<tr><td>${p}</td><td class="td-r">${a||'—'}</td><td class="td-r">${b||'—'}</td><td class="td-r" style="color:${c};font-weight:600">${a>0||b>0?(v>=0?'+':'')+v+'%':'—'}</td></tr>`}).join('')}</tbody></table></div></div>`;
 }
+
+/* ── COMPRAS ── */
+const CATEGORIAS_COMP = ['Madeira','Materiais Secundários','Pintura','Elétrica','Embalagem','Caixas','Cúpulas'];
+
+const MATERIAIS_FIXOS = {
+  'Madeira': [
+    {nome:'MDF 6mm',unidade:'CH',forn:''},
+    {nome:'MDF 9mm',unidade:'CH',forn:''},
+    {nome:'MDF 18mm',unidade:'CH',forn:''},
+    {nome:'MDF 25mm',unidade:'CH',forn:''},
+    {nome:'Pinus 18mm',unidade:'CH',forn:''},
+    {nome:'Teca 18mm',unidade:'CH',forn:''},
+  ],
+  'Materiais Secundários': [
+    {nome:'Lixa de Cinta',unidade:'UN',forn:''},
+    {nome:'Lixa de Papel',unidade:'UN',forn:''},
+    {nome:'Bucha Abrasiva',unidade:'UN',forn:''},
+    {nome:'Parafuso 3x25',unidade:'CX',forn:''},
+    {nome:'Porca',unidade:'CX',forn:''},
+    {nome:'Bucha Americana',unidade:'CX',forn:''},
+    {nome:'Barra Roscada 1/4',unidade:'UN',forn:''},
+    {nome:'Pino de Pinador',unidade:'CX',forn:''},
+    {nome:'Cola Branca',unidade:'GL',forn:''},
+    {nome:'Cola Instantânea',unidade:'UN',forn:''},
+    {nome:'Fresas',unidade:'UN',forn:''},
+    {nome:'Esponja Abrasiva',unidade:'UN',forn:''},
+    {nome:'Massa de Acabamento',unidade:'GL',forn:''},
+    {nome:'Cavilhas',unidade:'CX',forn:''},
+    {nome:'Controlador Inteligente',unidade:'UN',forn:''},
+    {nome:'Ilhós',unidade:'CX',forn:''},
+    {nome:'Parafuso M4x25mm',unidade:'CX',forn:''},
+  ],
+  'Pintura': [
+    {nome:'Thinner',unidade:'LT',forn:''},
+    {nome:'Fundo PU Especial',unidade:'LT',forn:''},
+    {nome:'Catalizador de Fundo',unidade:'LT',forn:''},
+    {nome:'Verniz PU B200',unidade:'LT',forn:''},
+    {nome:'Catalizador PU Especial Fosco',unidade:'LT',forn:''},
+    {nome:'Diluente',unidade:'LT',forn:''},
+    {nome:'Tingidor Tabaco',unidade:'LT',forn:''},
+    {nome:'Tingidor Cedro 5L',unidade:'GL',forn:''},
+    {nome:'Tingidor Imbuia 5L',unidade:'GL',forn:''},
+    {nome:'Tingidor Mel Âmbar',unidade:'LT',forn:''},
+    {nome:'Preto Fosco PU',unidade:'LT',forn:''},
+    {nome:'Primer PU Branco',unidade:'LT',forn:''},
+    {nome:'Óleo Hidratante',unidade:'LT',forn:''},
+    {nome:'Mistura Fundo 5L',unidade:'GL',forn:''},
+    {nome:'Mistura Tingidor 6,6L',unidade:'GL',forn:''},
+    {nome:'Mistura Verniz 2L',unidade:'LT',forn:''},
+  ],
+  'Elétrica': [
+    {nome:'Cabo 3m',unidade:'UN',forn:''},
+    {nome:'Cabo 2m',unidade:'UN',forn:''},
+    {nome:'Cabo 1,8m',unidade:'UN',forn:''},
+    {nome:'Soquete',unidade:'UN',forn:''},
+    {nome:'Niples',unidade:'UN',forn:''},
+    {nome:'Niples 5cm',unidade:'UN',forn:''},
+    {nome:'Estanho',unidade:'UN',forn:''},
+    {nome:'Fita Isolante',unidade:'UN',forn:''},
+    {nome:'Soquete Cerâmica',unidade:'UN',forn:''},
+  ],
+  'Embalagem': [
+    {nome:'Papel para Embalagem',unidade:'KG',forn:''},
+    {nome:'Fita Larga Transparente 500m',unidade:'RL',forn:''},
+    {nome:'Saquinho Preto',unidade:'KG',forn:''},
+    {nome:'Plástico Bolha 1,20x1,00',unidade:'UN',forn:''},
+    {nome:'Elástico Fino',unidade:'UN',forn:''},
+    {nome:'Adesivo de Marcação',unidade:'UN',forn:''},
+    {nome:'Fita de Arquear',unidade:'RL',forn:''},
+  ],
+  'Caixas': [
+    {nome:'Caixa Nº1 1700x420x420',unidade:'UN',forn:''},
+    {nome:'Caixa Nº2 350x350x570',unidade:'UN',forn:''},
+    {nome:'Caixa Nº3 1530x330x180',unidade:'UN',forn:''},
+    {nome:'Caixa Nº4 650x650x140',unidade:'UN',forn:''},
+    {nome:'Caixa Nº5 120x120x1350',unidade:'UN',forn:''},
+    {nome:'Caixa Nº8 350x350x150',unidade:'UN',forn:''},
+    {nome:'Caixa Nº9 800x800x150',unidade:'UN',forn:''},
+    {nome:'Caixa Nº10 250x250x405',unidade:'UN',forn:''},
+    {nome:'Caixa Nº11 250x250x900',unidade:'UN',forn:''},
+    {nome:'Caixa Nº12 1450x460x460',unidade:'UN',forn:''},
+    {nome:'Caixa Nº13 450x450x280',unidade:'UN',forn:''},
+    {nome:'Caixa Nº14 550x550x300',unidade:'UN',forn:''},
+    {nome:'Caixa Nº15 1710x460x460',unidade:'UN',forn:''},
+    {nome:'Caixa Nº16 520x520x270',unidade:'UN',forn:''},
+    {nome:'Caixa Nº17 650x650x650',unidade:'UN',forn:''},
+    {nome:'Caixa Nº18 440x440x670',unidade:'UN',forn:''},
+    {nome:'Caixa Nº19 700x500x150',unidade:'UN',forn:''},
+    {nome:'Caixa Nº20 360x360x600',unidade:'UN',forn:''},
+    {nome:'Caixa Nº21 360x360x500',unidade:'UN',forn:''},
+    {nome:'Caixa Nº22 300x300x300',unidade:'UN',forn:''},
+    {nome:'Caixa Coluna 2 1450x420x420',unidade:'UN',forn:''},
+    {nome:'Caixa Cúpula 420x420',unidade:'UN',forn:''},
+    {nome:'Calço Vincado 680x420',unidade:'UN',forn:''},
+    {nome:'Calço em U 420x940',unidade:'UN',forn:''},
+  ],
+  'Cúpulas': [
+    {nome:'Cúpula Cilíndrica 40x40x25 c/ Aro',unidade:'UN',forn:''},
+    {nome:'Cúpula Cilíndrica 30x30x17 c/ Aro',unidade:'UN',forn:''},
+    {nome:'Cúpula Cilíndrica 40x40x25 s/ Aro',unidade:'UN',forn:''},
+    {nome:'Cúpula Cone P',unidade:'UN',forn:''},
+    {nome:'Cúpula Cone Mônaco',unidade:'UN',forn:''},
+    {nome:'Cúpula Tambor 15x25x16',unidade:'UN',forn:''},
+    {nome:'Cúpula Oval 30x30x20',unidade:'UN',forn:''},
+  ],
+};
+
+let cachedSolic=[], cachedMateriais=[], filtroComp='Todos';
+
+async function loadCompras(){
+  try{
+    const[solic,mats]=await Promise.all([
+      sb('solicitacoes?select=*&order=created_at.desc'),
+      sb('materiais?select=*&order=categoria,nome')
+    ]);
+    cachedSolic=solic;
+    // Mescla materiais do banco com os fixos (sem duplicar)
+    const nomesDB=new Set(mats.map(m=>m.nome.toLowerCase()));
+    cachedMateriais=mats;
+    // Se banco vazio, carrega os fixos
+    if(mats.length===0) await seedMateriais();
+    else cachedMateriais=mats;
+  }catch(e){toast('Erro ao carregar compras.')}
+}
+
+async function seedMateriais(){
+  const rows=[];
+  for(const [cat,lista] of Object.entries(MATERIAIS_FIXOS)){
+    lista.forEach(m=>rows.push({categoria:cat,nome:m.nome,unidade:m.unidade,fornecedor_padrao:m.forn||null}));
+  }
+  try{
+    const saved=await sb('materiais',{method:'POST',body:JSON.stringify(rows)});
+    cachedMateriais=saved||rows;
+    toast('Materiais carregados!');
+  }catch(e){}
+}
+
+function initCompras(){
+  // Popula selects de setor
+  const ss=document.getElementById('sc-setor');
+  if(ss&&ss.options.length<=1){SETORES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o)})}
+  // Popula selects de categoria
+  ['sc-cat','nm-cat'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel)return;
+    sel.innerHTML='<option value="">— selecione —</option>'+CATEGORIAS_COMP.map(c=>`<option>${c}</option>`).join('');
+  });
+  // Prazo padrão = 3 dias úteis
+  const d=new Date();d.setDate(d.getDate()+3);
+  document.getElementById('sc-prazo').value=d.toISOString().slice(0,10);
+}
+
+function filtrarMateriais(){
+  const cat=document.getElementById('sc-cat').value;
+  const sel=document.getElementById('sc-material');
+  const lista=cachedMateriais.filter(m=>!cat||m.categoria===cat).sort((a,b)=>a.nome.localeCompare(b.nome));
+  sel.innerHTML='<option value="">— selecione —</option>'+lista.map(m=>`<option value="${m.nome}" data-un="${m.unidade}" data-forn="${m.fornecedor_padrao||''}">${m.nome}</option>`).join('');
+  sel.onchange=()=>{
+    const opt=sel.options[sel.selectedIndex];
+    if(opt&&opt.dataset.un)document.getElementById('sc-unidade').value=opt.dataset.un;
+  };
+}
+
+function setFiltroComp(f,btn){
+  filtroComp=f;
+  document.querySelectorAll('#page-comp .chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCompLista();
+}
+
+function statusCor(s){
+  if(s==='Pendente')return{bg:'rgba(232,156,71,.12)',cor:'var(--amber)',borda:'rgba(232,156,71,.25)'};
+  if(s==='Em andamento')return{bg:'var(--blue-d)',cor:'var(--blue)',borda:'rgba(91,156,246,.25)'};
+  if(s==='Concluído')return{bg:'var(--green-d)',cor:'var(--green)',borda:'rgba(76,175,125,.25)'};
+  if(s==='Cancelado')return{bg:'var(--red-d)',cor:'var(--red)',borda:'rgba(224,92,92,.25)'};
+  return{bg:'var(--ink3)',cor:'var(--text3)',borda:'var(--line)'};
+}
+function priorCor(p){return p==='Alta'?'var(--red)':p==='Média'?'var(--amber)':'var(--text3)'}
+function diasAte(data){const d=Math.round((new Date(data+'T12:00')-new Date())/(1000*60*60*24));return d}
+function tempoResp(s){
+  if(!s.data_compra||!s.data_solicitacao)return null;
+  return Math.round((new Date(s.data_compra)-new Date(s.data_solicitacao))/(1000*60*60*24));
+}
+
+function renderCompKPIs(){
+  const total=cachedSolic.length;
+  const pend=cachedSolic.filter(s=>s.status==='Pendente').length;
+  const conc=cachedSolic.filter(s=>s.status==='Concluído');
+  const tempos=conc.map(s=>tempoResp(s)).filter(t=>t!==null);
+  const mediaResp=tempos.length?Math.round(tempos.reduce((a,t)=>a+t,0)/tempos.length):null;
+  const atrasados=cachedSolic.filter(s=>s.status!=='Concluído'&&s.status!=='Cancelado'&&diasAte(s.prazo_necessidade)<0).length;
+  const valTotal=conc.reduce((a,s)=>a+(s.valor_total||0),0);
+  document.getElementById('comp-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Total solicitações</div><div class="kpi-val">${total}</div><div class="kpi-sub">${pend} pendentes</div></div>
+    <div class="kpi ${atrasados>0?'':''}"><div class="kpi-label">Atrasadas</div><div class="kpi-val" style="color:${atrasados>0?'var(--red)':'var(--green)'}">${atrasados}</div><div class="kpi-sub">prazo vencido</div></div>
+    <div class="kpi"><div class="kpi-label">Tempo médio compra</div><div class="kpi-val" style="font-size:22px">${mediaResp!==null?mediaResp+'d':'—'}</div><div class="kpi-sub">solicitação → compra</div></div>
+    <div class="kpi"><div class="kpi-label">Total comprado</div><div class="kpi-val" style="font-size:18px">R$${valTotal.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}</div><div class="kpi-sub">em concluídas</div></div>`;
+}
+
+function renderCompLista(){
+  renderCompKPIs();
+  let lista=filtroComp==='Todos'?cachedSolic:cachedSolic.filter(s=>s.status===filtroComp);
+  const el=document.getElementById('comp-lista');
+  if(!lista.length){el.innerHTML='<div class="empty-msg">Nenhuma solicitação encontrada.</div>';renderCompCharts();return}
+  el.innerHTML=lista.map(s=>{
+    const sc=statusCor(s.status);
+    const dias=diasAte(s.prazo_necessidade);
+    const diasStr=dias<0?`<span style="color:var(--red);font-weight:600">${Math.abs(dias)}d atrasado</span>`:dias===0?`<span style="color:var(--amber)">Hoje!</span>`:`<span style="color:var(--text3)">${dias}d restantes</span>`;
+    const tr=tempoResp(s);
+    return`<div style="background:var(--ink2);border:1px solid ${sc.borda};border-radius:var(--r2);padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text)">${s.material}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.categoria} · ${s.setor} · ${s.solicitante}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;background:${sc.bg};color:${sc.cor}">${s.status}</span>
+          <span style="font-size:10px;font-weight:600;color:${priorCor(s.prioridade)}">${s.prioridade==='Alta'?'▲ Alta':s.prioridade==='Baixa'?'▽ Baixa':'— Média'}</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:10px">
+        <div style="font-size:11px"><span style="color:var(--text3)">Qtd: </span><b>${s.quantidade} ${s.unidade}</b></div>
+        <div style="font-size:11px"><span style="color:var(--text3)">Prazo: </span><b>${fmt(s.prazo_necessidade)}</b> ${diasStr}</div>
+        ${s.fornecedor_preferido?`<div style="font-size:11px"><span style="color:var(--text3)">Forn: </span>${s.fornecedor_preferido}</div>`:''}
+        ${tr!==null?`<div style="font-size:11px"><span style="color:var(--text3)">Respondido em: </span><b style="color:var(--green)">${tr}d</b></div>`:''}
+        ${s.valor_total?`<div style="font-size:11px"><span style="color:var(--text3)">Valor: </span><b>R$ ${parseFloat(s.valor_total).toLocaleString('pt-BR',{minimumFractionDigits:2})}</b></div>`:''}
+      </div>
+      ${s.obs?`<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Obs: ${s.obs}</div>`:''}
+      ${s.obs_compra?`<div style="font-size:11px;color:var(--blue);margin-bottom:10px">Compra: ${s.obs_compra}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${s.status==='Pendente'?`<button onclick="avancarStatus('${s.id}','Em andamento')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--blue-d);background:var(--blue-d);color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Em andamento</button>`:''}
+        ${s.status!=='Concluído'&&s.status!=='Cancelado'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Registrar compra</button>`:''}
+        ${s.status!=='Concluído'&&s.status!=='Cancelado'?`<button onclick="avancarStatus('${s.id}','Cancelado')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:none;color:var(--text3);cursor:pointer">Cancelar</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  renderCompCharts();
+}
+
+async function salvarSolicitacao(){
+  const setor=document.getElementById('sc-setor').value;
+  const cat=document.getElementById('sc-cat').value;
+  const mat=document.getElementById('sc-material').value;
+  const qtd=parseFloat(document.getElementById('sc-qtd').value)||0;
+  const un=document.getElementById('sc-unidade').value;
+  const prazo=document.getElementById('sc-prazo').value;
+  const prior=document.getElementById('sc-prior').value;
+  const obs=document.getElementById('sc-obs').value.trim();
+  if(!setor||!cat||!mat||qtd<=0||!prazo){toast('Preencha: setor, categoria, material, quantidade e prazo.');return}
+  setSync('syncing');
+  try{
+    const row={data_solicitacao:hoje(),solicitante:'Encarregado',setor,categoria:cat,material:mat,quantidade:qtd,unidade:un,prazo_necessidade:prazo,prioridade:prior,obs:obs||null,status:'Pendente'};
+    const saved=await sb('solicitacoes',{method:'POST',body:JSON.stringify(row)});
+    cachedSolic=[(saved&&saved[0]?saved[0]:row),...cachedSolic];
+    setSync('ok');toast('Solicitação enviada!');
+    ['sc-qtd','sc-obs'].forEach(id=>document.getElementById(id).value='');
+    ['sc-setor','sc-cat','sc-material'].forEach(id=>document.getElementById(id).selectedIndex=0);
+    renderCompLista();
+  }catch(e){setSync('err');toast('Erro ao salvar solicitação.')}
+}
+
+async function avancarStatus(id,novoStatus){
+  setSync('syncing');
+  try{
+    await sb(`solicitacoes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({status:novoStatus}),prefer:'return=minimal'});
+    const idx=cachedSolic.findIndex(s=>s.id===id);
+    if(idx>=0)cachedSolic[idx].status=novoStatus;
+    setSync('ok');renderCompLista();
+  }catch(e){setSync('err');toast('Erro ao atualizar status.')}
+}
+
+function abrirModalCompra(id){
+  const s=cachedSolic.find(x=>x.id===id);if(!s)return;
+  document.getElementById('mc-id').value=id;
+  document.getElementById('mc-data').value=hoje();
+  document.getElementById('mc-forn').value='';
+  document.getElementById('mc-comprador').value='';
+  document.getElementById('mc-vunit').value='';
+  document.getElementById('mc-vtotal').value='';
+  document.getElementById('mc-nf').value='';
+  document.getElementById('mc-obs').value='';
+  document.getElementById('modal-compra-info').textContent=`${s.material} — ${s.quantidade} ${s.unidade} · Solicitado por ${s.solicitante}`;
+  document.getElementById('modal-compra').style.display='flex';
+  document.getElementById('mc-qtd-ref')?document.getElementById('mc-qtd-ref').textContent=s.quantidade:'';
+}
+function fecharModalCompra(){document.getElementById('modal-compra').style.display='none'}
+function calcTotal(){
+  const vunit=parseFloat(document.getElementById('mc-vunit').value)||0;
+  const id=document.getElementById('mc-id').value;
+  const s=cachedSolic.find(x=>x.id===id);
+  if(s&&vunit>0)document.getElementById('mc-vtotal').value=(vunit*s.quantidade).toFixed(2);
+}
+
+async function confirmarCompra(){
+  const id=document.getElementById('mc-id').value;
+  const comp=document.getElementById('mc-comprador').value.trim();
+  const data=document.getElementById('mc-data').value;
+  const forn=document.getElementById('mc-forn').value.trim();
+  const vunit=parseFloat(document.getElementById('mc-vunit').value)||null;
+  const vtotal=parseFloat(document.getElementById('mc-vtotal').value)||null;
+  const nf=document.getElementById('mc-nf').value.trim();
+  const obs=document.getElementById('mc-obs').value.trim();
+  if(!comp||!data){toast('Preencha comprador e data da compra.');return}
+  setSync('syncing');
+  try{
+    const patch={status:'Concluído',comprador:comp,data_compra:data,fornecedor_preferido:forn||null,valor_unit:vunit,valor_total:vtotal,nota_fiscal:nf||null,obs_compra:obs||null};
+    await sb(`solicitacoes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch),prefer:'return=minimal'});
+    const idx=cachedSolic.findIndex(s=>s.id===id);
+    if(idx>=0)Object.assign(cachedSolic[idx],patch);
+    fecharModalCompra();setSync('ok');toast('Compra registrada!');renderCompLista();
+  }catch(e){setSync('err');toast('Erro ao confirmar compra.')}
+}
+
+function renderCompCharts(){
+  // Gráfico 1: tempo médio por categoria
+  const cats=CATEGORIAS_COMP;
+  const temposCat=cats.map(cat=>{
+    const concCat=cachedSolic.filter(s=>s.categoria===cat&&s.status==='Concluído');
+    const ts=concCat.map(s=>tempoResp(s)).filter(t=>t!==null);
+    return ts.length?Math.round(ts.reduce((a,t)=>a+t,0)/ts.length):0;
+  });
+  const ctx1=document.getElementById('chart-comp-tempo').getContext('2d');
+  if(charts.compTempo)charts.compTempo.destroy();
+  charts.compTempo=new Chart(ctx1,{type:'bar',data:{labels:cats,datasets:[{data:temposCat,backgroundColor:'#5b9cf6',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} dias`}}},scales:{x:{grid:{display:false},ticks:{color:'#5a5855',font:{size:9},maxRotation:35}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5855',font:{size:10}}}}}});
+
+  // Gráfico 2: solicitações por setor
+  const setorCount={};cachedSolic.forEach(s=>{setorCount[s.setor]=(setorCount[s.setor]||0)+1});
+  const setEntries=Object.entries(setorCount).sort((a,b)=>b[1]-a[1]);
+  const pal=['#e8c547','#4caf7d','#5b9cf6','#e89c47','#e05c5c','#a78bf6','#64c896','#8a8880','#3dd6ac'];
+  const ctx2=document.getElementById('chart-comp-setor').getContext('2d');
+  if(charts.compSetor)charts.compSetor.destroy();
+  charts.compSetor=new Chart(ctx2,{type:'doughnut',data:{labels:setEntries.map(e=>e[0]),datasets:[{data:setEntries.map(e=>e[1]),backgroundColor:pal,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#8a8880',font:{size:10},boxWidth:10,padding:8}}}}});
+}
+
+/* ── MATERIAIS ── */
+async function salvarMaterial(){
+  const cat=document.getElementById('nm-cat').value;
+  const nome=document.getElementById('nm-nome').value.trim();
+  const un=document.getElementById('nm-unidade').value;
+  const forn=document.getElementById('nm-forn').value.trim();
+  if(!cat||!nome){toast('Preencha categoria e nome.');return}
+  setSync('syncing');
+  try{
+    const row={categoria:cat,nome,unidade:un,fornecedor_padrao:forn||null};
+    const saved=await sb('materiais',{method:'POST',body:JSON.stringify(row)});
+    cachedMateriais=[(saved&&saved[0]?saved[0]:row),...cachedMateriais];
+    setSync('ok');toast('Material cadastrado!');
+    document.getElementById('nm-nome').value='';document.getElementById('nm-forn').value='';
+    renderMatLista();filtrarMateriais();
+  }catch(e){setSync('err');toast('Erro ao salvar material.')}
+}
+
+function renderMatLista(){
+  const el=document.getElementById('mat-lista');
+  const porCat={};cachedMateriais.forEach(m=>{if(!porCat[m.categoria])porCat[m.categoria]=[];porCat[m.categoria].push(m)});
+  el.innerHTML=Object.entries(porCat).map(([cat,items])=>`
+    <div style="margin-bottom:14px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">${cat}</div>
+      <div class="card" style="padding:0"><div class="tabela-wrap"><table>
+        <thead><tr><th>Material</th><th>Unidade</th><th>Fornecedor padrão</th></tr></thead>
+        <tbody>${items.map(m=>`<tr><td>${m.nome}</td><td style="color:var(--text3)">${m.unidade}</td><td style="color:var(--text3)">${m.fornecedor_padrao||'—'}</td></tr>`).join('')}</tbody>
+      </table></div></div>
+    </div>`).join('')||'<div class="empty-msg">Nenhum material cadastrado.</div>';
+}
+
 
 /* ── CALENDÁRIO ── */
 const SENHA_GESTOR = '1234'; // troque aqui
