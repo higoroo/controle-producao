@@ -190,11 +190,11 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 
 <!-- SIDEBAR DESKTOP -->
 <nav class="sidebar">
-  <button class="sb-item active" onclick="goTo('lanc',this)" id="sb-lanc">
+  <button class="sb-item" onclick="goTo('lanc',this)" id="sb-lanc">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     Lançamento
   </button>
-  <button class="sb-item" onclick="goTo('dash',this)" id="sb-dash">
+  <button class="sb-item active" onclick="goTo('dash',this)" id="sb-dash">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="13" width="4" height="8" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="5" width="4" height="16" rx="1"/></svg>
     Dashboard
   </button>
@@ -231,7 +231,7 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 
 <!-- BOTTOM NAV MOBILE -->
 <div class="bottom-nav">
-  <button class="nav-item active" onclick="goTo('lanc',this)">
+  <button class="nav-item" onclick="goTo('lanc',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     Lançar
   </button>
@@ -260,7 +260,7 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 <div class="scroll-area">
 
 <!-- ── LANÇAMENTO ── -->
-<div id="page-lanc" class="page active"><div class="content-inner">
+<div id="page-lanc" class="page"><div class="content-inner">
   <div class="sec-title">Selecione o dia</div>
   <div class="card" style="padding:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -299,7 +299,7 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 </div></div>
 
 <!-- ── DASHBOARD ── -->
-<div id="page-dash" class="page"><div class="content-inner">
+<div id="page-dash" class="page active"><div class="content-inner">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
     <div class="sec-title" style="margin:0">Resumo</div>
     <div style="display:flex;gap:6px">
@@ -505,8 +505,19 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   <div class="card">
     <div class="form-2col">
       <div class="field"><label class="field-label">Setor</label><select id="sc-setor"><option value="">— selecione —</option></select></div>
-      <div class="field"><label class="field-label">Categoria</label><select id="sc-cat" onchange="filtrarMateriais()"><option value="">— selecione —</option></select></div>
-      <div class="field"><label class="field-label">Material</label><select id="sc-material"><option value="">— selecione —</option></select></div>
+      <div class="field" style="grid-column:1/-1;position:relative">
+        <label class="field-label">Buscar material</label>
+        <input type="text" id="sc-busca" placeholder="Digite para buscar... ex: MDF, Thinner, Caixa Nº1" autocomplete="off"
+          oninput="buscarMaterial(this.value)" onfocus="buscarMaterial(this.value)" style="padding-right:36px">
+        <div id="sc-busca-clear" onclick="limparBuscaMat()" style="display:none;position:absolute;right:12px;top:32px;cursor:pointer;color:var(--text3);font-size:18px;line-height:1">×</div>
+        <div id="sc-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:400;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
+        <input type="hidden" id="sc-material">
+        <input type="hidden" id="sc-cat">
+      </div>
+      <div id="sc-mat-selecionado" style="display:none;grid-column:1/-1;background:var(--ink3);border:1px solid rgba(232,197,71,.25);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--text);display:none;align-items:center;justify-content:space-between;gap:8px">
+        <span id="sc-mat-nome" style="font-weight:500"></span>
+        <span id="sc-mat-cat" style="font-size:10px;color:var(--accent);font-weight:600"></span>
+      </div>
       <div class="field"><label class="field-label">Quantidade</label><input type="number" id="sc-qtd" min="0.1" step="0.1" placeholder="0" inputmode="decimal"></div>
       <div class="field"><label class="field-label">Unidade</label><select id="sc-unidade"><option>UN</option><option>KG</option><option>LT</option><option>MT</option><option>CX</option><option>PC</option><option>RL</option><option>GL</option></select></div>
       <div class="field"><label class="field-label">Precisa até</label><input type="date" id="sc-prazo"></div>
@@ -610,8 +621,14 @@ function devMes(){const m=mesAtual();return cachedDevs.filter(d=>d.data&&d.data.
 async function loadAll(){
   setSync('syncing');
   try{
-    const[lancs,metas]=await Promise.all([sb('lancamentos?select=*&order=data.desc,created_at.desc'),sb('metas?select=*')]);
-    cachedLancs=lancs;cachedMetas={};metas.forEach(m=>{cachedMetas[m.setor]=m.quantidade});
+    const[lancs,metas,devs]=await Promise.all([
+      sb('lancamentos?select=*&order=data.desc,created_at.desc'),
+      sb('metas?select=*'),
+      sb('devolucoes?select=*&order=data.desc,created_at.desc')
+    ]);
+    cachedLancs=lancs;
+    cachedMetas={};metas.forEach(m=>{cachedMetas[m.setor]=m.quantidade});
+    cachedDevs=devs;
     setSync('ok');
   }catch(e){setSync('err');toast('Sem conexão com o banco.')}
 }
@@ -627,7 +644,7 @@ function init(){
   pop('f-setor',SETORES);pop('f-produto',PRODUTOS);pop('h-setor',SETORES);pop('dv-produto',PRODUTOS);
   const m=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   document.getElementById('topbar-mes').textContent=m.charAt(0).toUpperCase()+m.slice(1);
-  loadAll().then(()=>{atualizarDiasComLanc();initCal()});
+  loadAll().then(()=>{atualizarDiasComLanc();initCal();renderDash()});
 }
 
 function goTo(id,btn){
@@ -924,31 +941,164 @@ function preencherDatasCompar(){
 function renderInsights(){
   const el=document.getElementById('insights-area');
   const emb=cachedLancs.filter(l=>l.setor==='Embalagem');
-  if(emb.length<3){el.innerHTML='<div class="empty-msg">Gere mais lançamentos para ver insights.<br>Mínimo de 3 dias com embalagem.</div>';return}
+  if(emb.length<3){
+    el.innerHTML=`<div style="text-align:center;padding:32px 20px;background:var(--ink2);border-radius:var(--r2);border:1px solid var(--line)">
+      <div style="font-size:32px;margin-bottom:12px">📊</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px">Ainda sem dados suficientes</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7">Lance pelo menos 3 dias de produção<br>para gerar os primeiros insights.</div>
+    </div>`;
+    return;
+  }
+
+  // ── Dados base ──
   const dias=[...new Set(emb.map(l=>l.data))].sort();
   const totPorDia=dias.map(d=>({d,v:emb.filter(l=>l.data===d).reduce((a,l)=>a+l.qtd,0)}));
   const media=Math.round(totPorDia.reduce((a,x)=>a+x.v,0)/totPorDia.length);
   const n=totPorDia.length,metade=Math.floor(n/2);
-  const mediaA=Math.round(totPorDia.slice(0,metade).reduce((a,x)=>a+x.v,0)/metade);
-  const mediaB=Math.round(totPorDia.slice(metade).reduce((a,x)=>a+x.v,0)/(n-metade));
+  const mediaA=Math.round(totPorDia.slice(0,metade).reduce((a,x)=>a+x.v,0)/metade||1);
+  const mediaB=Math.round(totPorDia.slice(metade).reduce((a,x)=>a+x.v,0)/(n-metade)||1);
   const tendencia=mediaB>mediaA?'subindo':mediaB<mediaA?'caindo':'estável';
-  const deltaTend=mediaA>0?Math.round((mediaB-mediaA)/mediaA*100):0;
+  const deltaTend=Math.round((mediaB-mediaA)/mediaA*100);
   const melhorDia=totPorDia.reduce((b,x)=>x.v>b.v?x:b,totPorDia[0]);
   const piorDia=totPorDia.reduce((b,x)=>x.v<b.v?x:b,totPorDia[0]);
-  const diasAbaixo=totPorDia.filter(x=>x.v<media*0.8).length;
-  const meta=cachedMetas['Embalagem']||0,totMes=emb.filter(l=>l.data.startsWith(mesAtual())).reduce((a,l)=>a+l.qtd,0);
-  const diasMes=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate(),diaAtual=new Date().getDate(),diasRestantes=diasMes-diaAtual;
+  const diasAbaixo=totPorDia.filter(x=>x.v<media*0.8);
+  const meta=cachedMetas['Embalagem']||0;
+  const totMes=emb.filter(l=>l.data.startsWith(mesAtual())).reduce((a,l)=>a+l.qtd,0);
+  const diasMes=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  const diaAtual=new Date().getDate();
+  const diasRestantes=diasMes-diaAtual;
   const ritmoNecessario=meta>0&&diasRestantes>0?Math.ceil((meta-totMes)/diasRestantes):null;
+
+  // ── Dados por setor ──
+  const setorStats=SETORES.map(s=>{
+    const lancS=cachedLancs.filter(l=>l.setor===s);
+    const diasS=[...new Set(lancS.map(l=>l.data))].sort();
+    const totS=lancS.reduce((a,l)=>a+l.qtd,0);
+    const mediaS=diasS.length?Math.round(totS/diasS.length):0;
+    const diasComLancS=new Set(diasS);
+    const diasTotais=new Set(cachedLancs.map(l=>l.data)).size||1;
+    const cobertura=Math.round(diasComLancS.size/diasTotais*100);
+    return{setor:s,total:totS,media:mediaS,dias:diasS.length,cobertura};
+  }).filter(s=>s.total>0);
+
+  // ── Devoluções ──
+  const devs=cachedDevs||[];
+  const devMesAtual=devs.filter(d=>d.data&&d.data.startsWith(mesAtual()));
+  const taxaDev=totMes>0?((devMesAtual.reduce((a,d)=>a+(d.quantidade||0),0)/totMes)*100).toFixed(1):0;
+  const canalDevs={};devMesAtual.forEach(d=>{if(d.motivo)canalDevs[d.motivo]=(canalDevs[d.motivo]||0)+(d.quantidade||0)});
+  const topCanal=Object.entries(canalDevs).sort((a,b)=>b[1]-a[1])[0];
+
+  // ── Produtos ──
   const prodTot={};emb.forEach(l=>{prodTot[l.produto]=(prodTot[l.produto]||0)+l.qtd});
-  const topProd=Object.entries(prodTot).sort((a,b)=>b[1]-a[1]).slice(0,3);
-  const card=(corBorda,bg,titulo,desc)=>`<div style="display:flex;gap:12px;align-items:flex-start;background:var(--ink2);border:1px solid ${corBorda};border-radius:var(--r2);padding:14px;margin-bottom:10px"><div style="width:36px;height:36px;min-width:36px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:16px">${bg.includes('125')?'↑':bg.includes('224')?'↓':bg.includes('197')?'★':'◎'}</div><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px">${titulo}</div><div style="font-size:12px;color:var(--text3);line-height:1.6">${desc}</div></div></div>`;
-  const corT=tendencia==='subindo'?'rgba(76,175,125,.15)':tendencia==='caindo'?'rgba(224,92,92,.15)':'rgba(91,156,246,.15)';
-  const borT=tendencia==='subindo'?'rgba(76,175,125,.3)':tendencia==='caindo'?'rgba(224,92,92,.3)':'rgba(91,156,246,.3)';
-  let html=card(borT,corT,`Tendência ${tendencia} (${deltaTend>=0?'+':''}${deltaTend}%)`,`1ª metade: <b>${mediaA.toLocaleString('pt-BR')} pç/dia</b> → 2ª metade: <b>${mediaB.toLocaleString('pt-BR')} pç/dia</b>.`);
-  html+=card('rgba(232,197,71,.2)','rgba(232,197,71,.15)',`Melhor dia: ${fmt(melhorDia.d)}`,`<b>${melhorDia.v.toLocaleString('pt-BR')} peças</b> — ${Math.round(melhorDia.v/media*100)}% acima da média de ${media.toLocaleString('pt-BR')} pç/dia.`);
-  if(diasAbaixo>0)html+=card('rgba(224,92,92,.2)','rgba(224,92,92,.15)',`${diasAbaixo} dia${diasAbaixo>1?'s':''} abaixo de 80% da média`,`Pior dia foi ${fmt(piorDia.d)} com ${piorDia.v.toLocaleString('pt-BR')} pç. Verifique paradas ou manutenções.`);
-  if(ritmoNecessario!==null){const v=ritmoNecessario<=media*1.3;html+=card(v?'rgba(76,175,125,.3)':'rgba(224,92,92,.3)',v?'rgba(76,175,125,.15)':'rgba(224,92,92,.15)',`Meta: ${v?'no ritmo certo':'desafio alto'}`,`Faltam <b>${(meta-totMes).toLocaleString('pt-BR')} peças</b>. Nos ${diasRestantes} dias restantes, precisam de <b>${ritmoNecessario.toLocaleString('pt-BR')} pç/dia</b> (atual: ${media.toLocaleString('pt-BR')}).`)}
-  if(topProd.length)html+=card('rgba(91,156,246,.2)','rgba(91,156,246,.15)','Top produtos do histórico',topProd.map(([p,v],i)=>`${i+1}. <b>${p}</b> — ${v.toLocaleString('pt-BR')} pç`).join('<br>'));
+  const sorted=Object.entries(prodTot).sort((a,b)=>b[1]-a[1]);
+  const top3=sorted.slice(0,3);
+  const concentracao=sorted.length>0?Math.round(top3.reduce((a,e)=>a+e[1],0)/sorted.reduce((a,e)=>a+e[1],0)*100):0;
+
+  // ── Setores sem lançamento recente ──
+  const hoje2=hoje();
+  const semLanc7d=SETORES.filter(s=>{
+    const ult=cachedLancs.filter(l=>l.setor===s).map(l=>l.data).sort().reverse()[0];
+    if(!ult)return false;
+    const diff=Math.round((new Date(hoje2)-new Date(ult+'T12:00'))/(1000*60*60*24));
+    return diff>7;
+  });
+
+  // ── Dia da semana mais produtivo ──
+  const porDiaSemana={0:[],1:[],2:[],3:[],4:[],5:[],6:[]};
+  totPorDia.forEach(({d,v})=>{const ds=new Date(d+'T12:00').getDay();porDiaSemana[ds].push(v)});
+  const mediaDiaSemana=Object.entries(porDiaSemana).map(([ds,vs])=>({ds:parseInt(ds),med:vs.length?Math.round(vs.reduce((a,v)=>a+v,0)/vs.length):0}));
+  const nomesDias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const melhorDS=mediaDiaSemana.filter(x=>x.med>0).sort((a,b)=>b.med-a.med)[0];
+  const piorDS=mediaDiaSemana.filter(x=>x.med>0).sort((a,b)=>a.med-b.med)[0];
+
+  // ── Função para cards ──
+  const card=(cfg)=>`
+    <div style="background:var(--ink2);border:1px solid ${cfg.borda};border-radius:var(--r2);padding:16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:${cfg.detalhe?'10px':'0'}">
+        <div style="width:40px;height:40px;min-width:40px;border-radius:var(--r);background:${cfg.bg};display:flex;align-items:center;justify-content:center;font-size:18px">${cfg.icone}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;color:${cfg.cor};font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">${cfg.categoria}</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text);line-height:1.3">${cfg.titulo}</div>
+        </div>
+        ${cfg.badge?`<div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:${cfg.cor};flex-shrink:0">${cfg.badge}</div>`:''}
+      </div>
+      ${cfg.detalhe?`<div style="font-size:12px;color:var(--text3);line-height:1.7;padding-left:52px">${cfg.detalhe}</div>`:''}
+      ${cfg.barra?`<div style="margin-top:10px;padding-left:52px"><div style="height:5px;background:var(--ink3);border-radius:3px;overflow:hidden"><div style="width:${cfg.barra}%;height:100%;background:${cfg.cor};border-radius:3px"></div></div></div>`:''}
+    </div>`;
+
+  let html='';
+
+  // SECAO: Produção geral
+  html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px">Produção — embalagem</div>`;
+
+  // Tendência
+  const corTend=tendencia==='subindo'?'var(--green)':tendencia==='caindo'?'var(--red)':'var(--blue)';
+  const bgTend=tendencia==='subindo'?'rgba(76,175,125,.12)':tendencia==='caindo'?'rgba(224,92,92,.12)':'rgba(91,156,246,.12)';
+  const borTend=tendencia==='subindo'?'rgba(76,175,125,.25)':tendencia==='caindo'?'rgba(224,92,92,.25)':'rgba(91,156,246,.25)';
+  html+=card({icone:tendencia==='subindo'?'↑':tendencia==='caindo'?'↓':'→',bg:bgTend,cor:corTend,borda:borTend,categoria:'Tendência geral',titulo:`Produção ${tendencia}`,badge:`${deltaTend>=0?'+':''}${deltaTend}%`,detalhe:`Média da 1ª metade do histórico: <b>${mediaA.toLocaleString('pt-BR')} pç/dia</b>. Segunda metade: <b>${mediaB.toLocaleString('pt-BR')} pç/dia</b>. Média geral: ${media.toLocaleString('pt-BR')} pç/dia.`});
+
+  // Melhor/pior dia da semana
+  if(melhorDS&&piorDS&&melhorDS.ds!==piorDS.ds){
+    html+=card({icone:'📅',bg:'rgba(232,197,71,.1)',cor:'var(--accent)',borda:'rgba(232,197,71,.2)',categoria:'Padrão semanal',titulo:`${nomesDias[melhorDS.ds]} é o dia mais produtivo`,badge:melhorDS.med.toLocaleString('pt-BR'),detalhe:`Média de <b>${melhorDS.med.toLocaleString('pt-BR')} pç</b> às ${nomesDias[melhorDS.ds]}s vs <b>${piorDS.med.toLocaleString('pt-BR')} pç</b> às ${nomesDias[piorDS.ds]}s. ${melhorDS.med>0&&piorDS.med>0?'Diferença de '+Math.round((melhorDS.med-piorDS.med)/melhorDS.med*100)+'% entre o melhor e pior dia.':''}`});
+  }
+
+  // Meta
+  if(ritmoNecessario!==null){
+    const viavel=ritmoNecessario<=media*1.3;
+    const pct=meta>0?Math.min(100,Math.round(totMes/meta*100)):0;
+    html+=card({icone:viavel?'◎':'⚠',bg:viavel?'rgba(76,175,125,.12)':'rgba(224,92,92,.12)',cor:viavel?'var(--green)':'var(--red)',borda:viavel?'rgba(76,175,125,.25)':'rgba(224,92,92,.25)',categoria:'Meta mensal',titulo:viavel?'No ritmo para bater a meta':'Ritmo abaixo da meta',badge:pct+'%',detalhe:`${totMes.toLocaleString('pt-BR')} de ${meta.toLocaleString('pt-BR')} peças. Faltam <b>${(meta-totMes).toLocaleString('pt-BR')} pç</b> em ${diasRestantes} dias úteis — precisa de <b>${ritmoNecessario.toLocaleString('pt-BR')} pç/dia</b> ${viavel?'(factível com o ritmo atual)':'(acima da média atual de '+media.toLocaleString('pt-BR')+')'}.`,barra:pct});
+  }
+
+  // Dias abaixo
+  if(diasAbaixo.length>0){
+    const mediaAbaixo=Math.round(diasAbaixo.reduce((a,x)=>a+x.v,0)/diasAbaixo.length);
+    html+=card({icone:'↓',bg:'rgba(224,92,92,.1)',cor:'var(--red)',borda:'rgba(224,92,92,.2)',categoria:'Atenção — quedas de produção',titulo:`${diasAbaixo.length} dia${diasAbaixo.length>1?'s':''} com queda significativa`,detalhe:`Dias com menos de 80% da média: ${diasAbaixo.map(x=>`<b>${fmt(x.d)}</b> (${x.v} pç)`).join(', ')}. Média nesses dias: ${mediaAbaixo} pç. Verifique manutenções, faltas ou gargalos nesses períodos.`});
+  }
+
+  // SECAO: Produtos
+  html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px">Mix de produtos</div>`;
+
+  if(top3.length){
+    const total=sorted.reduce((a,e)=>a+e[1],0);
+    html+=card({icone:'▦',bg:'rgba(91,156,246,.1)',cor:'var(--blue)',borda:'rgba(91,156,246,.2)',categoria:'Concentração do mix',titulo:`Top 3 respondem por ${concentracao}% da produção`,detalhe:top3.map(([p,v],i)=>`${['🥇','🥈','🥉'][i]} <b>${p}</b> — ${v.toLocaleString('pt-BR')} pç (${Math.round(v/total*100)}%)`).join('<br>')});
+    if(concentracao>80){
+      html+=card({icone:'⚡',bg:'rgba(232,156,71,.1)',cor:'var(--amber)',borda:'rgba(232,156,71,.2)',categoria:'Risco de concentração',titulo:'Produção muito concentrada em poucos modelos',detalhe:`${concentracao}% da produção em 3 modelos pode indicar dependência excessiva. Se a demanda desses modelos cair, impacta diretamente o volume total. Considere diversificar ou manter estoque estratégico.`});
+    }
+  }
+
+  // SECAO: Setores
+  html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px">Desempenho por setor</div>`;
+
+  // Setores sem lançamento recente
+  if(semLanc7d.length>0){
+    html+=card({icone:'?',bg:'rgba(232,156,71,.1)',cor:'var(--amber)',borda:'rgba(232,156,71,.2)',categoria:'Setores sem lançamento recente',titulo:`${semLanc7d.length} setor${semLanc7d.length>1?'es':''} sem dados há mais de 7 dias`,detalhe:`<b>${semLanc7d.join(', ')}</b>. Verifique se o lançamento está sendo feito corretamente ou se há parada nesses setores.`});
+  }
+
+  // Setor mais e menos produtivo
+  if(setorStats.length>=2){
+    const top=setorStats.sort((a,b)=>b.total-a.total)[0];
+    const bot=setorStats[setorStats.length-1];
+    html+=card({icone:'★',bg:'rgba(76,175,125,.1)',cor:'var(--green)',borda:'rgba(76,175,125,.2)',categoria:'Setor destaque',titulo:`${top.setor} lidera o histórico`,badge:top.total.toLocaleString('pt-BR'),detalhe:`Média de <b>${top.media.toLocaleString('pt-BR')} pç/dia</b> em ${top.dias} dias registrados. Cobertura de ${top.cobertura}% dos dias com algum lançamento.`});
+    if(bot.setor!==top.setor){
+      html+=card({icone:'⚠',bg:'rgba(224,92,92,.08)',cor:'var(--text3)',borda:'var(--line)',categoria:'Setor com menor volume',titulo:`${bot.setor} com volume mais baixo`,detalhe:`Total histórico: <b>${bot.total.toLocaleString('pt-BR')} pç</b>, média de ${bot.media.toLocaleString('pt-BR')} pç/dia. Pode indicar gargalo ou menor demanda nesse setor.`});
+    }
+  }
+
+  // SECAO: Devoluções
+  if(devs.length>0){
+    html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px">Devoluções</div>`;
+    const corDev=parseFloat(taxaDev)<=2?'var(--green)':parseFloat(taxaDev)<=5?'var(--amber)':'var(--red)';
+    const bgDev=parseFloat(taxaDev)<=2?'rgba(76,175,125,.1)':parseFloat(taxaDev)<=5?'rgba(232,156,71,.1)':'rgba(224,92,92,.1)';
+    const borDev=parseFloat(taxaDev)<=2?'rgba(76,175,125,.2)':parseFloat(taxaDev)<=5?'rgba(232,156,71,.2)':'rgba(224,92,92,.2)';
+    html+=card({icone:'↩',bg:bgDev,cor:corDev,borda:borDev,categoria:'Taxa de devolução — mês atual',titulo:parseFloat(taxaDev)<=2?'Taxa saudável de devoluções':parseFloat(taxaDev)<=5?'Taxa de devolução em atenção':'Taxa de devolução alta',badge:taxaDev+'%',detalhe:`${devMesAtual.reduce((a,d)=>a+(d.quantidade||0),0)} peças devolvidas de ${totMes.toLocaleString('pt-BR')} embaladas.${topCanal?` Canal com mais devoluções: <b>${topCanal[0]}</b> (${topCanal[1]} pç).`:''}`});
+
+    const quebrados=devs.filter(d=>d.status_fisico==='Quebrado'||d.status_fisico==='Com avaria').length;
+    if(quebrados>0){
+      const pctQue=Math.round(quebrados/devs.length*100);
+      html+=card({icone:'⚠',bg:'rgba(224,92,92,.08)',cor:'var(--red)',borda:'rgba(224,92,92,.2)',categoria:'Qualidade — danos no transporte/fabricação',titulo:`${pctQue}% das devoluções com produto danificado`,detalhe:`${quebrados} de ${devs.length} devoluções registradas com produto quebrado ou com avaria. ${pctQue>30?'Índice elevado — recomenda-se revisar embalagem e processo logístico.':'Monitore para identificar padrões de fragilidade.'}`});
+    }
+  }
+
   el.innerHTML=html;
 }
 function renderCompar(){
@@ -1119,17 +1269,64 @@ function initCompras(){
   // Prazo padrão = 3 dias úteis
   const d=new Date();d.setDate(d.getDate()+3);
   document.getElementById('sc-prazo').value=d.toISOString().slice(0,10);
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('#sc-busca')&&!e.target.closest('#sc-dropdown')){
+      document.getElementById('sc-dropdown').style.display='none';
+    }
+  },{once:false});
 }
 
-function filtrarMateriais(){
-  const cat=document.getElementById('sc-cat').value;
-  const sel=document.getElementById('sc-material');
-  const lista=cachedMateriais.filter(m=>!cat||m.categoria===cat).sort((a,b)=>a.nome.localeCompare(b.nome));
-  sel.innerHTML='<option value="">— selecione —</option>'+lista.map(m=>`<option value="${m.nome}" data-un="${m.unidade}" data-forn="${m.fornecedor_padrao||''}">${m.nome}</option>`).join('');
-  sel.onchange=()=>{
-    const opt=sel.options[sel.selectedIndex];
-    if(opt&&opt.dataset.un)document.getElementById('sc-unidade').value=opt.dataset.un;
-  };
+function filtrarMateriais(){}
+
+function buscarMaterial(q){
+  const dd=document.getElementById('sc-dropdown');
+  const clr=document.getElementById('sc-busca-clear');
+  clr.style.display=q?'block':'none';
+  if(!q){dd.style.display='none';return}
+  const termo=q.toLowerCase().trim();
+  const lista=cachedMateriais
+    .filter(m=>m.nome.toLowerCase().includes(termo)||m.categoria.toLowerCase().includes(termo))
+    .sort((a,b)=>{
+      const ai=a.nome.toLowerCase().indexOf(termo),bi=b.nome.toLowerCase().indexOf(termo);
+      return ai-bi||a.nome.localeCompare(b.nome);
+    })
+    .slice(0,20);
+  if(!lista.length){
+    dd.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--text3)">Nenhum material encontrado</div>';
+    dd.style.display='block';return;
+  }
+  const grupos={};lista.forEach(m=>{if(!grupos[m.categoria])grupos[m.categoria]=[];grupos[m.categoria].push(m)});
+  let html='';
+  Object.entries(grupos).forEach(([cat,items])=>{
+    html+=`<div style="padding:6px 14px 4px;font-size:9px;color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase;border-top:0.5px solid var(--line);margin-top:2px">${cat}</div>`;
+    items.forEach(m=>{
+      const dest=m.nome.replace(new RegExp('('+termo.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', 'gi'),'<b style="color:var(--accent)">$1</b>');
+      html+=`<div onclick="selecionarMaterial('${m.nome.replace(/'/g,"\'")}','${m.categoria.replace(/'/g,"\'")}','${m.unidade}')" style="padding:10px 14px;font-size:13px;color:var(--text);cursor:pointer;border-radius:var(--r);margin:2px 4px;transition:background .1s" onmouseover="this.style.background='var(--ink3)'" onmouseout="this.style.background=''">${dest} <span style="font-size:10px;color:var(--text3)">${m.unidade}</span></div>`;
+    });
+  });
+  dd.innerHTML=html;dd.style.display='block';
+}
+
+function selecionarMaterial(nome,cat,un){
+  document.getElementById('sc-material').value=nome;
+  document.getElementById('sc-cat').value=cat;
+  document.getElementById('sc-busca').value=nome;
+  document.getElementById('sc-busca-clear').style.display='block';
+  document.getElementById('sc-dropdown').style.display='none';
+  document.getElementById('sc-unidade').value=un;
+  const sel=document.getElementById('sc-mat-selecionado');
+  sel.style.display='flex';
+  document.getElementById('sc-mat-nome').textContent=nome;
+  document.getElementById('sc-mat-cat').textContent=cat;
+}
+
+function limparBuscaMat(){
+  document.getElementById('sc-busca').value='';
+  document.getElementById('sc-material').value='';
+  document.getElementById('sc-cat').value='';
+  document.getElementById('sc-busca-clear').style.display='none';
+  document.getElementById('sc-dropdown').style.display='none';
+  document.getElementById('sc-mat-selecionado').style.display='none';
 }
 
 function setFiltroComp(f,btn){
@@ -1225,7 +1422,8 @@ async function salvarSolicitacao(){
     cachedSolic=[(saved&&saved[0]?saved[0]:row),...cachedSolic];
     setSync('ok');toast('Solicitação enviada!');
     ['sc-qtd','sc-obs'].forEach(id=>document.getElementById(id).value='');
-    ['sc-setor','sc-cat','sc-material'].forEach(id=>document.getElementById(id).selectedIndex=0);
+    ['sc-setor'].forEach(id=>document.getElementById(id).selectedIndex=0);
+    limparBuscaMat();
     renderCompLista();
   }catch(e){setSync('err');toast('Erro ao salvar solicitação.')}
 }
@@ -1379,8 +1577,8 @@ function renderCal() {
     if (isSel) st += 'background:var(--accent);color:var(--ink);font-weight:700;';
     else if (isHoje) st += 'background:var(--ink3);color:var(--text);border:1px solid var(--line2);';
     else st += 'color:var(--text2);';
-    const check = temLanc ? `<span style="position:absolute;top:2px;right:3px;font-size:8px;color:${isSel?'var(--ink)':'var(--green)'}">✓</span>` : '';
-    html += `<div style="${st}" onclick="selecionarDia('${iso}',${temLanc})">${d}${check}</div>`;
+    if(temLanc&&!isSel) st += 'background:var(--ink3);color:var(--text2);font-weight:500;';
+    html += `<div style="${st}" onclick="selecionarDia('${iso}',${temLanc})">${d}</div>`;
   }
   grid.innerHTML = html;
 }
