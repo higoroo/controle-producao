@@ -407,9 +407,35 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   <div class="sec-title">Devoluções pendentes de nota</div>
   <div class="card" id="dev-pendentes-nota"><div class="loading"><div class="spinner"></div></div></div>
 
+  <div class="sec-title" style="margin-top:24px">Histórico por período</div>
+  <div class="card">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="chip active" onclick="setFiltroDevPeriodo('mes',this)">Mês atual</button>
+      <button class="chip" onclick="setFiltroDevPeriodo('mesant',this)">Mês anterior</button>
+      <button class="chip" onclick="setFiltroDevPeriodo('tudo',this)">Todo histórico</button>
+      <button class="chip" onclick="setFiltroDevPeriodo('range',this)">Período ▾</button>
+    </div>
+    <div id="dev-range-painel" style="display:none;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">De</label>
+        <input type="date" id="dev-range-de" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px"></div>
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Até</label>
+        <input type="date" id="dev-range-ate" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="aplicarDevRange()">Aplicar</button>
+    </div>
+
+    <!-- KPIs do período selecionado -->
+    <div id="dev-hist-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px"></div>
+
+    <!-- Gráfico evolução mensal devoluções -->
+    <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:10px">EVOLUÇÃO MENSAL — TAXA DE DEVOLUÇÃO</div>
+    <div class="chart-wrap" style="height:180px"><canvas id="chart-dev-evolucao" role="img" aria-label="Evolução da taxa de devolução">Evolução da taxa.</canvas></div>
+  </div>
+
   <div class="sec-title">Todas as devoluções</div>
   <div class="card"><div class="tabela-wrap">
-    <table><thead><tr><th>Data</th><th>Cliente</th><th>Produto</th><th>Status</th><th>Motivo</th><th class="td-r">Qtd</th><th>Nota ERP</th><th>Foto</th></tr></thead>
+    <table><thead><tr><th>Data</th><th>Cliente</th><th>Produto</th><th>Status</th><th>Canal</th><th class="td-r">Qtd</th><th>Nota ERP</th><th>Foto</th></tr></thead>
     <tbody id="dev-tbody"><tr><td colspan="8"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table>
   </div></div>
 </div></div>
@@ -418,7 +444,23 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 <div id="page-anal" class="page"><div class="content-inner">
   <div class="sec-title">Insights automáticos</div>
   <div id="insights-area"><div class="loading"><div class="spinner"></div>Calculando...</div></div>
-  <div class="sec-title" style="margin-top:8px">Comparar períodos</div>
+  <div class="sec-title" style="margin-top:8px">Comparativo mensal inteligente</div>
+  <div class="card" id="comp-mensal-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px">
+        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Mês A</label>
+        <input type="month" id="cmp-mes-a" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+      </div>
+      <div style="flex:1;min-width:120px">
+        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Mês B</label>
+        <input type="month" id="cmp-mes-b" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+      </div>
+      <button class="btn btn-ghost btn-sm" style="align-self:flex-end;white-space:nowrap" onclick="renderCompMensal()">Comparar</button>
+    </div>
+    <div id="comp-mensal-resultado"><div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0">Selecione dois meses e clique em Comparar.</div></div>
+  </div>
+
+  <div class="sec-title">Comparar períodos livres</div>
   <div class="card">
     <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Compare a produção da Embalagem entre dois períodos</div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -633,6 +675,103 @@ function lancsMes(){const m=mesAtual();return cachedLancs.filter(l=>l.data.start
 function lancsSem(){const[s,e]=semana();return cachedLancs.filter(l=>l.data>=s&&l.data<=e)}
 function devMes(){const m=mesAtual();return cachedDevs.filter(d=>d.data&&d.data.startsWith(m))}
 
+let filtroDevPeriodo='mes', devRangeAtivo=null;
+
+function setFiltroDevPeriodo(f,btn){
+  filtroDevPeriodo=f;
+  document.querySelectorAll('#page-dev .chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const rp=document.getElementById('dev-range-painel');
+  if(f==='range'){rp.style.display='block';return}
+  rp.style.display='none';
+  devRangeAtivo=null;
+  renderDevHistorico();
+}
+
+function aplicarDevRange(){
+  const de=document.getElementById('dev-range-de').value;
+  const ate=document.getElementById('dev-range-ate').value;
+  if(!de||!ate){toast('Selecione as datas.');return}
+  devRangeAtivo={de,ate};
+  document.getElementById('dev-range-painel').style.display='none';
+  renderDevHistorico();
+}
+
+function devDoPeriodoHist(){
+  if(filtroDevPeriodo==='mesant'){const m=mesAnterior();return cachedDevs.filter(d=>d.data&&d.data.startsWith(m))}
+  if(filtroDevPeriodo==='tudo')return cachedDevs;
+  if(filtroDevPeriodo==='range'&&devRangeAtivo)return cachedDevs.filter(d=>d.data>=devRangeAtivo.de&&d.data<=devRangeAtivo.ate);
+  return devMes();
+}
+
+function renderDevHistorico(){
+  const lista=devDoPeriodoHist();
+  const embBase=filtroDevPeriodo==='mesant'
+    ?cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data.startsWith(mesAnterior())).reduce((a,l)=>a+l.qtd,0)
+    :filtroDevPeriodo==='tudo'
+    ?cachedLancs.filter(l=>l.setor==='Embalagem').reduce((a,l)=>a+l.qtd,0)
+    :filtroDevPeriodo==='range'&&devRangeAtivo
+    ?cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data>=devRangeAtivo.de&&l.data<=devRangeAtivo.ate).reduce((a,l)=>a+l.qtd,0)
+    :cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data.startsWith(mesAtual())).reduce((a,l)=>a+l.qtd,0);
+
+  const totalDev=lista.reduce((a,d)=>a+(d.quantidade||0),0);
+  const taxa=embBase>0?((totalDev/embBase)*100).toFixed(1):0;
+  const corTaxa=parseFloat(taxa)<=2?'var(--green)':parseFloat(taxa)<=5?'var(--amber)':'var(--red)';
+  const pendNota=lista.filter(d=>!d.nota_emitida).length;
+
+  document.getElementById('dev-hist-kpis').innerHTML=`
+    <div class="kpi" style="border-color:rgba(224,92,92,.2)"><div class="kpi-label">Total devolvidas</div><div class="kpi-val" style="color:var(--red);font-size:22px">${totalDev}</div><div class="kpi-sub">${lista.length} ocorrências</div></div>
+    <div class="kpi"><div class="kpi-label">Taxa devolução</div><div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div><div class="kpi-sub">vs ${embBase.toLocaleString('pt-BR')} embaladas</div></div>
+    <div class="kpi" style="${pendNota>0?'border-color:rgba(232,156,71,.3)':''}"><div class="kpi-label">Notas pendentes</div><div class="kpi-val" style="color:${pendNota>0?'var(--amber)':'var(--green)'};font-size:22px">${pendNota}</div><div class="kpi-sub">sem nota ERP</div></div>`;
+
+  // Gráfico evolução mensal
+  renderChartDevEvolucao();
+}
+
+function renderChartDevEvolucao(){
+  // Pega os últimos 6 meses
+  const meses=[];
+  const d=new Date();
+  for(let i=5;i>=0;i--){
+    const dt=new Date(d.getFullYear(),d.getMonth()-i,1);
+    const key=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+    const label=dt.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'});
+    const devs=cachedDevs.filter(x=>x.data&&x.data.startsWith(key)).reduce((a,x)=>a+(x.quantidade||0),0);
+    const emb=cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data.startsWith(key)).reduce((a,l)=>a+l.qtd,0);
+    const taxa=emb>0?parseFloat((devs/emb*100).toFixed(1)):0;
+    meses.push({label,taxa,devs,emb});
+  }
+  const ctx=document.getElementById('chart-dev-evolucao').getContext('2d');
+  if(charts.devEv)charts.devEv.destroy();
+  charts.devEv=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:meses.map(m=>m.label),
+      datasets:[{
+        label:'Taxa %',data:meses.map(m=>m.taxa),
+        borderColor:'#e05c5c',backgroundColor:'rgba(224,92,92,0.08)',
+        borderWidth:2,pointRadius:5,pointBackgroundColor:meses.map(m=>m.taxa<=2?'#4caf7d':m.taxa<=5?'#e89c47':'#e05c5c'),
+        fill:true,tension:0.3
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}% (${meses[c.dataIndex].devs} dev / ${meses[c.dataIndex].emb} emb)`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#5a5855',font:{size:10}}},
+        y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5855',font:{size:10},callback:v=>v+'%'},min:0}
+      }
+    }
+  });
+}
+function devNoPeriodo(){
+  if(periodoAtivo==='dia'){const h=hoje();return cachedDevs.filter(d=>d.data===h)}
+  if(periodoAtivo==='semana'){const[s,e]=semana();return cachedDevs.filter(d=>d.data>=s&&d.data<=e)}
+  if(periodoAtivo==='mesant'){const m=mesAnterior();return cachedDevs.filter(d=>d.data&&d.data.startsWith(m))}
+  if(periodoAtivo==='range'&&periodoRange)return cachedDevs.filter(d=>d.data>=periodoRange.de&&d.data<=periodoRange.ate);
+  return devMes();
+}
+
 async function loadAll(){
   setSync('syncing');
   try{
@@ -676,7 +815,7 @@ function goTo(id,btn){
   if(id==='dev'){Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
   if(id==='comp'){loadCompras().then(()=>{initCompras();filtrarMateriais();renderCompLista()})}
   if(id==='materiais'){loadCompras().then(()=>{initCompras();renderMatLista()})}
-  if(id==='anal'){loadAll().then(()=>{renderInsights();preencherDatasCompar()})}
+  if(id==='anal'){loadAll().then(()=>{renderInsights();preencherDatasCompar();preencherMesesCompar()})}
   if(id==='hist')loadAll().then(renderHist);
   if(id==='cfg')renderCfg();
 }
@@ -718,7 +857,8 @@ function renderKPIs(){
   const media=Math.round(totM/dias);
   const meta=cachedMetas['Embalagem']||0;
   const pctMeta=meta>0?Math.round(totM/meta*100):null;
-  const devTot=devMes().reduce((a,d)=>a+(d.quantidade||0),0);
+  const devPeriodo=devNoPeriodo();
+  const devTot=devPeriodo.reduce((a,d)=>a+(d.quantidade||0),0);
   const taxa=totM>0?((devTot/totM)*100).toFixed(1):0;
   const corTaxa=parseFloat(taxa)<=2?'var(--green)':parseFloat(taxa)<=5?'var(--amber)':'var(--red)';
   const lbl=labelPeriodo();
@@ -726,7 +866,7 @@ function renderKPIs(){
     <div class="kpi kpi-accent"><div class="kpi-label">Embaladas — ${lbl}</div><div class="kpi-val">${totM.toLocaleString('pt-BR')}</div><div class="kpi-sub">peças prontas</div></div>
     <div class="kpi"><div class="kpi-label">Média / dia</div><div class="kpi-val">${media.toLocaleString('pt-BR')}</div><div class="kpi-sub">no período</div></div>
     <div class="kpi"><div class="kpi-label">${pctMeta!==null?'Meta mensal':'Meta mensal'}</div><div class="kpi-val" style="font-size:22px">${pctMeta!==null?pctMeta+'%':'—'}</div><div class="kpi-sub">${pctMeta!==null?totM.toLocaleString('pt-BR')+' / '+meta.toLocaleString('pt-BR'):' sem meta definida'}</div></div>
-    <div class="kpi"><div class="kpi-label">Taxa devolução</div><div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div><div class="kpi-sub">${devTot} devolvidas no mês</div></div>`;
+    <div class="kpi"><div class="kpi-label">Taxa devolução — ${lbl}</div><div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div><div class="kpi-sub">${devTot} devolvidas no período</div></div>`;
 }
 function renderChartSetores(){
   const sem=lancsNoPeriodo(),vals=SETORES.map(s=>sem.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
@@ -910,6 +1050,7 @@ function renderDevDash(){
   </tr>`).join('')}</tbody></table></div>`:'<div style="font-size:12px;color:var(--green);padding:4px 0">Todas as notas foram emitidas.</div>';
 
   // Tabela geral
+  renderDevHistorico();
   const corStatus2=s=>s==='Inteiro'?'tag-g':s==='Quebrado'?'tag-r':s==='Com avaria'?'tag-a':'tag-b';
   document.getElementById('dev-tbody').innerHTML=cachedDevs.length?cachedDevs.map(d=>`<tr>
     <td style="white-space:nowrap">${fmt(d.data)}</td>
@@ -984,6 +1125,15 @@ async function salvarCfg(){
 function embDoPeriodo(de,ate){return cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data>=de&&l.data<=ate).reduce((a,l)=>a+l.qtd,0)}
 function diasUteisEntre(de,ate){return cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data>=de&&l.data<=ate).map(l=>l.data)}
 function produtosDoPeriodo(de,ate){const tot={};cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data>=de&&l.data<=ate).forEach(l=>{tot[l.produto]=(tot[l.produto]||0)+l.qtd});return tot}
+function preencherMesesCompar(){
+  const d=new Date();
+  const mAtual=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  const mAnt=mesAnterior();
+  const inpA=document.getElementById('cmp-mes-a');
+  const inpB=document.getElementById('cmp-mes-b');
+  if(inpA&&!inpA.value){inpA.value=mAnt;inpB.value=mAtual;}
+}
+
 function preencherDatasCompar(){
   const hoje2=hoje(),d=new Date();
   const priDiaMes=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01';
@@ -1154,6 +1304,146 @@ function renderInsights(){
 
   el.innerHTML=html;
 }
+function renderCompMensal(){
+  const mA=document.getElementById('cmp-mes-a').value;
+  const mB=document.getElementById('cmp-mes-b').value;
+  if(!mA||!mB){toast('Selecione os dois meses.');return}
+
+  function dadosMes(m){
+    const lancs=cachedLancs.filter(l=>l.data.startsWith(m));
+    const emb=lancs.filter(l=>l.setor==='Embalagem');
+    const embTot=emb.reduce((a,l)=>a+l.qtd,0);
+    const dias=[...new Set(emb.map(l=>l.data))].length||1;
+    const media=Math.round(embTot/dias);
+    const devs=cachedDevs.filter(d=>d.data&&d.data.startsWith(m));
+    const devTot=devs.reduce((a,d)=>a+(d.quantidade||0),0);
+    const taxa=embTot>0?parseFloat((devTot/embTot*100).toFixed(1)):0;
+    const setorTots={};
+    SETORES.forEach(s=>{setorTots[s]=lancs.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0)});
+    const prodTot={};emb.forEach(l=>{prodTot[l.produto]=(prodTot[l.produto]||0)+l.qtd});
+    const topProd=Object.entries(prodTot).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    const canais={};devs.filter(d=>d.motivo).forEach(d=>{canais[d.motivo]=(canais[d.motivo]||0)+(d.quantidade||0)});
+    const topCanal=Object.entries(canais).sort((a,b)=>b[1]-a[1])[0];
+    return{embTot,dias,media,devTot,taxa,setorTots,topProd,topCanal,label:new Date(m+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'})};
+  }
+
+  const dA=dadosMes(mA), dB=dadosMes(mB);
+  const meta=cachedMetas['Embalagem']||0;
+
+  function delta(a,b,inv=false){
+    if(!a)return{pct:0,cor:'var(--text3)',seta:'—'};
+    const p=Math.round((b-a)/a*100);
+    const bom=inv?p<=0:p>=0;
+    return{pct:p,cor:bom?'var(--green)':'var(--red)',seta:p>=0?`▲ +${p}%`:`▼ ${p}%`};
+  }
+
+  const dEmb=delta(dA.embTot,dB.embTot);
+  const dMedia=delta(dA.media,dB.media);
+  const dTaxa=delta(dA.taxa,dB.taxa,true); // invertido: menor é melhor
+  const dDev=delta(dA.devTot,dB.devTot,true);
+
+  // Grid comparativo
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div style="background:rgba(232,197,71,.08);border:1px solid rgba(232,197,71,.2);border-radius:var(--r2);padding:14px">
+      <div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:6px;text-transform:uppercase">Mês A — ${dA.label}</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--text)">${dA.embTot.toLocaleString('pt-BR')}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">${dA.dias} dias · ${dA.media.toLocaleString('pt-BR')} pç/dia</div>
+      <div style="font-size:11px;color:var(--red);margin-top:2px">Devol: ${dA.devTot} (${dA.taxa}%)</div>
+    </div>
+    <div style="background:rgba(91,156,246,.08);border:1px solid rgba(91,156,246,.2);border-radius:var(--r2);padding:14px">
+      <div style="font-size:10px;color:var(--blue);font-weight:600;margin-bottom:6px;text-transform:uppercase">Mês B — ${dB.label}</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--text)">${dB.embTot.toLocaleString('pt-BR')}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">${dB.dias} dias · ${dB.media.toLocaleString('pt-BR')} pç/dia</div>
+      <div style="font-size:11px;color:var(--red);margin-top:2px">Devol: ${dB.devTot} (${dB.taxa}%)</div>
+    </div>
+  </div>`;
+
+  // Métricas comparativas
+  html+=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px">
+    <div style="background:var(--ink3);border-radius:var(--r);padding:10px 12px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Volume embalado</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:${dEmb.cor}">${dEmb.seta}</div>
+      <div style="font-size:11px;color:var(--text3)">${Math.abs(dB.embTot-dA.embTot).toLocaleString('pt-BR')} pç de diferença</div>
+    </div>
+    <div style="background:var(--ink3);border-radius:var(--r);padding:10px 12px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Média diária</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:${dMedia.cor}">${dMedia.seta}</div>
+      <div style="font-size:11px;color:var(--text3)">${dA.media} → ${dB.media} pç/dia</div>
+    </div>
+    <div style="background:var(--ink3);border-radius:var(--r);padding:10px 12px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Taxa devolução</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:${dTaxa.cor}">${dTaxa.seta}</div>
+      <div style="font-size:11px;color:var(--text3)">${dA.taxa}% → ${dB.taxa}%</div>
+    </div>
+    <div style="background:var(--ink3);border-radius:var(--r);padding:10px 12px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Meta (${meta.toLocaleString('pt-BR')} pç)</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:${dB.embTot>=meta?'var(--green)':'var(--red)'}">${meta>0?Math.round(dB.embTot/meta*100)+'%':'—'}</div>
+      <div style="font-size:11px;color:var(--text3)">Mês A: ${meta>0?Math.round(dA.embTot/meta*100)+'%':'—'}</div>
+    </div>
+  </div>`;
+
+  // Variação por setor
+  html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:10px">VARIAÇÃO POR SETOR</div>`;
+  html+=`<div class="tabela-wrap"><table><thead><tr><th>Setor</th><th class="td-r">Mês A</th><th class="td-r">Mês B</th><th class="td-r">Variação</th></tr></thead><tbody>`;
+  SETORES.forEach(s=>{
+    const a=dA.setorTots[s]||0,b=dB.setorTots[s]||0;
+    if(a===0&&b===0)return;
+    const p=a>0?Math.round((b-a)/a*100):b>0?100:0;
+    const cor=p>=0?'var(--green)':'var(--red)';
+    html+=`<tr><td>${s}</td><td class="td-r" style="color:var(--text2)">${a.toLocaleString('pt-BR')}</td><td class="td-r">${b.toLocaleString('pt-BR')}</td><td class="td-r" style="color:${cor};font-weight:600">${a>0||b>0?(p>=0?'+':'')+p+'%':'—'}</td></tr>`;
+  });
+  html+=`</tbody></table></div>`;
+
+  // ── SUGESTÕES INTELIGENTES ──
+  const sugs=[];
+
+  if(dEmb.pct<-10) sugs.push({tipo:'critico',icone:'⚠',titulo:'Queda expressiva no volume',texto:`O mês B produziu ${Math.abs(dEmb.pct)}% menos que o mês A. Investigue se houve falta de material, absenteísmo, manutenções não programadas ou queda de pedidos. Se foi queda de pedidos, avalie campanhas ou precificação nos marketplaces.`});
+  else if(dEmb.pct>10) sugs.push({tipo:'ok',icone:'🚀',titulo:'Crescimento significativo',texto:`Aumento de ${dEmb.pct}% no volume. Verifique se o time está sendo reconhecido e se o ritmo é sustentável sem comprometer a qualidade.`});
+
+  if(dB.taxa>dA.taxa&&dB.taxa>3) sugs.push({tipo:'critico',icone:'↩',titulo:'Taxa de devolução em alta',texto:`Subiu de ${dA.taxa}% para ${dB.taxa}%. ${dB.topCanal?'Canal com mais retornos: '+dB.topCanal[0]+'.':''} Avalie qualidade da embalagem, processo de picking e comunicação com o cliente.`});
+  else if(dB.taxa<dA.taxa&&dA.taxa>0) sugs.push({tipo:'ok',icone:'✓',titulo:'Melhora na taxa de devolução',texto:`Caiu de ${dA.taxa}% para ${dB.taxa}%. Bom sinal — mantenha o processo que gerou essa melhora.`});
+
+  if(dB.media<dA.media*0.85) sugs.push({tipo:'atencao',icone:'📉',titulo:'Queda na produtividade diária',texto:`Média caiu de ${dA.media} para ${dB.media} pç/dia. Se o volume total foi similar, pode indicar mais dias trabalhados com menor intensidade. Se o volume caiu junto, investigue gargalos de processo.`});
+
+  const setorCaiuMais=SETORES.map(s=>({s,a:dA.setorTots[s]||0,b:dB.setorTots[s]||0})).filter(x=>x.a>0).sort((x,y)=>(x.b-x.a)/x.a-(y.b-y.a)/y.a)[0];
+  if(setorCaiuMais&&dA.setorTots[setorCaiuMais.s]>0){
+    const pct=Math.round((setorCaiuMais.b-setorCaiuMais.a)/setorCaiuMais.a*100);
+    if(pct<-20) sugs.push({tipo:'atencao',icone:'⚙',titulo:`Gargalo potencial: ${setorCaiuMais.s}`,texto:`Queda de ${Math.abs(pct)}% nesse setor entre os dois meses. Se os outros setores mantiveram o ritmo, esse pode ser um gargalo que está limitando a produção total.`});
+  }
+
+  const metaA=meta>0?Math.round(dA.embTot/meta*100):null;
+  const metaB=meta>0?Math.round(dB.embTot/meta*100):null;
+  if(metaB!==null&&metaB<80) sugs.push({tipo:'critico',icone:'🎯',titulo:'Meta distante no mês B',texto:`${metaB}% da meta atingida. Para alcançar ${meta.toLocaleString('pt-BR')} pç, seria necessário ${Math.ceil(meta/dB.dias)} pç/dia — ${Math.ceil(meta/dB.dias)>dB.media?'acima':'dentro'} do ritmo atual de ${dB.media} pç/dia.`});
+
+  if(dB.topProd.length&&dA.topProd.length){
+    const prodA=dA.topProd[0][0], prodB=dB.topProd[0][0];
+    if(prodA!==prodB) sugs.push({tipo:'info',icone:'▦',titulo:'Mudança no produto líder',texto:`No mês A o campeão foi <b>${prodA}</b>. No mês B passou a ser <b>${prodB}</b>. Verifique se isso reflete mudança de demanda dos marketplaces ou ajuste de mix intencional.`});
+  }
+
+  if(sugs.length===0) sugs.push({tipo:'ok',icone:'◎',titulo:'Desempenho estável entre os meses',texto:'Os indicadores se mantiveram sem variações expressivas. Continue monitorando para identificar oportunidades de melhoria.'});
+
+  const corTipo={critico:'rgba(224,92,92,.15)',atencao:'rgba(232,156,71,.12)',ok:'rgba(76,175,125,.12)',info:'rgba(91,156,246,.1)'};
+  const borTipo={critico:'rgba(224,92,92,.3)',atencao:'rgba(232,156,71,.25)',ok:'rgba(76,175,125,.25)',info:'rgba(91,156,246,.2)'};
+  const corLbl={critico:'var(--red)',atencao:'var(--amber)',ok:'var(--green)',info:'var(--blue)'};
+  const lblTipo={critico:'Atenção',atencao:'Atenção',ok:'Positivo',info:'Observação'};
+
+  html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin:16px 0 10px">SUGESTÕES E ANÁLISE</div>`;
+  sugs.forEach(s=>{
+    html+=`<div style="background:${corTipo[s.tipo]};border:1px solid ${borTipo[s.tipo]};border-radius:var(--r2);padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:18px">${s.icone}</span>
+        <div>
+          <div style="font-size:9px;color:${corLbl[s.tipo]};font-weight:600;letter-spacing:.06em;text-transform:uppercase">${lblTipo[s.tipo]}</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text)">${s.titulo}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;padding-left:26px">${s.texto}</div>
+    </div>`;
+  });
+
+  document.getElementById('comp-mensal-resultado').innerHTML=html;
+}
+
 function renderCompar(){
   const deA=document.getElementById('ca-de').value,ateA=document.getElementById('ca-ate').value,deB=document.getElementById('cb-de').value,ateB=document.getElementById('cb-ate').value;
   if(!deA||!ateA||!deB||!ateB){toast('Preencha todos os campos de data.');return}
