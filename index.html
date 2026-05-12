@@ -19,11 +19,20 @@
   --blue:#5b9cf6;--blue-d:#0e1f3d;
   --r:10px;--r2:16px;--sidebar:240px;--top-h:56px;--nav-h:64px;
 }
+/* ── MODO CLARO ── */
+[data-theme="light"]{
+  --ink:#f5f4f0;--ink2:#ffffff;--ink3:#eae9e4;
+  --line:rgba(0,0,0,0.07);--line2:rgba(0,0,0,0.13);
+  --text:#1a1a18;--text2:#5a5855;--text3:#9a9994;
+  --accent:#b8960a;--green:#1a8a58;--green-d:#d4f0e4;
+  --red:#c0392b;--red-d:#fde8e6;--amber:#c07a10;--amber-d:#fef0d8;
+  --blue:#2563c8;--blue-d:#dbeafe;
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;overscroll-behavior:none}
+html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;overscroll-behavior:none;transition:background .3s,color .3s}
 
 /* ── TOPBAR ── */
-.topbar{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--top-h);background:var(--ink);border-bottom:1px solid var(--line2);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--top-h);background:var(--ink);border-bottom:1px solid var(--line2);display:flex;align-items:center;justify-content:space-between;padding:0 20px;transition:background .3s,border-color .3s}
 .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.03em}
 .logo em{color:var(--accent);font-style:normal}
 .topbar-right{display:flex;align-items:center;gap:12px}
@@ -62,7 +71,7 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 }
 
 /* ── SIDEBAR (desktop) ── */
-.sidebar{position:fixed;top:var(--top-h);left:0;bottom:0;width:var(--sidebar);background:var(--ink2);border-right:1px solid var(--line2);z-index:200;flex-direction:column;padding:20px 12px}
+.sidebar{position:fixed;top:var(--top-h);left:0;bottom:0;width:var(--sidebar);background:var(--ink2);border-right:1px solid var(--line2);z-index:200;flex-direction:column;padding:20px 12px;transition:background .3s}
 .sb-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:var(--r);cursor:pointer;border:none;background:none;color:var(--text3);font-family:'DM Mono',monospace;font-size:13px;width:100%;text-align:left;transition:all .15s;margin-bottom:4px}.sb-item svg{width:18px;height:18px;flex-shrink:0}
 .sb-item:hover{background:var(--ink3);color:var(--text2)}
 .sb-item.active{background:var(--ink3);color:var(--accent);font-weight:500}
@@ -81,18 +90,19 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 .page.active{display:block}
 
 /* ── COMPONENTES ── */
-.sec-title{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:20px 0 10px}
+.sec-title{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin:24px 0 12px}
 .sec-title:first-child{margin-top:0}
-.card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:16px;margin-bottom:12px}
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:16px;margin-bottom:12px;transition:background .3s,border-color .3s}
 
 /* Grid responsivo para cards de KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
 @media(min-width:768px){.kpi-grid{grid-template-columns:repeat(4,1fr)}.charts-2col{gap:20px}}
-.kpi{background:var(--ink3);border-radius:var(--r2);padding:14px 16px;border:1px solid var(--line)}
-.kpi-label{font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.04em}
-.kpi-val{font-family:'Syne',sans-serif;font-weight:700;font-size:24px;line-height:1;color:var(--text)}
-.kpi-sub{font-size:10px;color:var(--text3);margin-top:4px}
-.kpi-accent{border-color:rgba(232,197,71,.25)}.kpi-accent .kpi-val{color:var(--accent)}
+.kpi{background:var(--ink3);border-radius:var(--r2);padding:16px 18px;border:1px solid var(--line);transition:background .3s,border-color .3s}
+.kpi-label{font-size:11px;color:var(--text2);margin-bottom:8px;letter-spacing:.05em;font-weight:500;text-transform:uppercase}
+.kpi-val{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;line-height:1;color:var(--text)}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.4}
+.kpi-accent{border-color:rgba(232,197,71,.3);background:rgba(232,197,71,.04)}.kpi-accent .kpi-val{color:var(--accent)}
+[data-theme="light"] .kpi-accent{background:rgba(184,150,10,.06)}
 
 /* Grid de 2 colunas no desktop para formulários */
 .form-2col{display:grid;grid-template-columns:1fr;gap:0}
@@ -124,12 +134,12 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 
 .prog-wrap{margin-bottom:12px}.prog-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
 .prog-nome{font-family:'Syne',sans-serif;font-weight:600;font-size:12px;color:var(--text)}.prog-vals{font-size:11px;color:var(--text3)}
-.prog-bg{height:6px;background:var(--ink3);border-radius:3px;overflow:hidden}.prog-bar{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.prog-bg{height:8px;background:var(--ink3);border-radius:4px;overflow:hidden}.prog-bar{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 
 .tabela-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{font-size:10px;font-weight:500;color:var(--text3);text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
-td{padding:10px 8px;border-bottom:1px solid var(--line);color:var(--text);vertical-align:middle}
+th{font-size:11px;font-weight:600;color:var(--text2);text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+td{padding:12px 8px;border-bottom:1px solid var(--line);color:var(--text);vertical-align:middle;font-size:13px}
 tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:tabular-nums}
 
 .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)}.legend-sq{width:8px;height:8px;border-radius:2px;flex-shrink:0}
@@ -184,6 +194,10 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   <div class="logo">IW<em>.</em></div>
   <div class="topbar-right">
     <div class="topbar-mes" id="topbar-mes"></div>
+    <button id="btn-tema" onclick="toggleTema()" title="Alternar modo claro/escuro"
+      style="background:none;border:1px solid var(--line2);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:16px;line-height:1;color:var(--text2);transition:all .2s">
+      🌙
+    </button>
     <div class="sync-dot" id="sync-dot"></div>
   </div>
 </div>
@@ -797,7 +811,28 @@ function init(){
   pop('f-setor',SETORES);pop('f-produto',PRODUTOS);pop('h-setor',SETORES);pop('dv-produto',PRODUTOS);
   const m=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   document.getElementById('topbar-mes').textContent=m.charAt(0).toUpperCase()+m.slice(1);
+  // Restaurar tema salvo
+  const temaSalvo = localStorage.getItem('iw_tema');
+  if(temaSalvo === 'light'){
+    document.documentElement.setAttribute('data-theme','light');
+    const btn = document.getElementById('btn-tema');
+    if(btn) btn.textContent = '☀️';
+  }
   loadAll().then(()=>{atualizarDiasComLanc();initCal();renderDash()});
+}
+
+function toggleTema(){
+  const atual = document.documentElement.getAttribute('data-theme');
+  const btn = document.getElementById('btn-tema');
+  if(atual === 'light'){
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('iw_tema','dark');
+    if(btn) btn.textContent = '🌙';
+  } else {
+    document.documentElement.setAttribute('data-theme','light');
+    localStorage.setItem('iw_tema','light');
+    if(btn) btn.textContent = '☀️';
+  }
 }
 
 function goTo(id,btn){
@@ -935,13 +970,13 @@ function renderKPIs(){
       <div class="kpi-label">Embaladas — ${lbl}</div>
       <div class="kpi-val">${totM.toLocaleString('pt-BR')}</div>
       <div class="kpi-sub">peças prontas</div>
-      ${antEmb>0?`<span style="font-size:10px;color:${totM>=antEmb?'var(--green)':'var(--red)'};display:block;margin-top:3px">${totM>=antEmb?'▲':'▼'} ${Math.abs(Math.round((totM-antEmb)/antEmb*100))}% vs ${ant.label} (${antEmb.toLocaleString('pt-BR')})</span>`:''}
+      ${antEmb>0?`<span style="font-size:10px;color:${totM>=antEmb?'var(--green)':'var(--red)'};display:block;margin-top:3px">${totM>=antEmb?'▲':'▼'} ${Math.abs(Math.round((totM-antEmb)/antEmb*100))}% vs mesmo período anterior</span>`:''}
     </div>
     <div class="kpi">
       <div class="kpi-label">Média / dia</div>
       <div class="kpi-val">${media.toLocaleString('pt-BR')}</div>
       <div class="kpi-sub">peças por dia</div>
-      ${antMedia>0?`<span style="font-size:10px;color:${media>=antMedia?'var(--green)':'var(--red)'};display:block;margin-top:3px">${media>=antMedia?'▲':'▼'} ${Math.abs(Math.round((media-antMedia)/antMedia*100))}% vs ${ant.label} (${antMedia})</span>`:''}
+      ${antMedia>0?`<span style="font-size:10px;color:${media>=antMedia?'var(--green)':'var(--red)'};display:block;margin-top:3px">${media>=antMedia?'▲':'▼'} ${Math.abs(Math.round((media-antMedia)/antMedia*100))}% vs mesmo período anterior</span>`:''}
     </div>
     <div class="kpi">
       <div class="kpi-label">${pctMeta!==null?'Meta mensal':'Meta mensal'}</div>
@@ -952,7 +987,7 @@ function renderKPIs(){
       <div class="kpi-label">Taxa devolução — ${lbl}</div>
       <div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div>
       <div class="kpi-sub">${devTot} devolvidas</div>
-      ${antTaxa>0?`<span style="font-size:10px;color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'};display:block;margin-top:3px">${parseFloat(taxa)<=antTaxa?'▼ Melhorou':'▲ Piorou'} vs ${ant.label} (${antTaxa}%)</span>`:''}
+      ${antTaxa>0?`<span style="font-size:10px;color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'};display:block;margin-top:3px">${parseFloat(taxa)<=antTaxa?'▼ Melhorou':'▲ Piorou'} vs mesmo período anterior</span>`:''}
     </div>`;
 }
 function renderChartSetores(){
@@ -960,15 +995,12 @@ function renderChartSetores(){
   document.getElementById('legend-setores').innerHTML=SETORES.map((s,i)=>`<div class="legend-item"><span class="legend-sq" style="background:${CORS[i]}"></span>${s}</div>`).join('');
   const ctx=document.getElementById('chart-setores').getContext('2d');
   if(charts.set)charts.set.destroy();
-  charts.set=new Chart(ctx,{type:'bar',data:{labels:SETORES,datasets:[{data:vals,backgroundColor:CORS,borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw.toLocaleString('pt-BR')+' pç'}}},scales:{x:{grid:{display:false},ticks:{color:'#5a5855',font:{size:9},maxRotation:40,autoSkip:false}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5855',font:{size:10}}}}}});
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const tickClr=isDark?'#5a5855':'#9a9994';
+  const gridClr=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
+  charts.set=new Chart(ctx,{type:'bar',data:{labels:SETORES,datasets:[{data:vals,backgroundColor:CORS,borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw.toLocaleString('pt-BR')+' pç'}}},scales:{x:{grid:{display:false},ticks:{color:tickClr,font:{size:9},maxRotation:40,autoSkip:false}},y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}}}}}});
 }
 let chartDiaMode = 'emb';
-function setToggleDia(mode, btn) {
-  chartDiaMode = mode;
-  document.querySelectorAll('#chart-dia-emb,#chart-dia-exp,#chart-dia-amb').forEach(b => b && b.classList.remove('active'));
-  btn.classList.add('active');
-  renderChartDia();
-}
 
 let toggleDia='emb';
 function setToggleDia(modo,btn){
@@ -990,7 +1022,7 @@ function renderChartDia(){
     datasets.push({label:'Embalagem',data:valsEmb,borderColor:'#e8c547',backgroundColor:'rgba(232,197,71,0.07)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#e8c547',fill:toggleDia==='emb',tension:0.3});
   if(toggleDia==='exp'||toggleDia==='ambos')
     datasets.push({label:'Expedição',data:valsExp,borderColor:'#5b9cf6',backgroundColor:'rgba(91,156,246,0.06)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#5b9cf6',fill:toggleDia==='exp',tension:0.3});
-  charts.dia=new Chart(ctx,{type:'line',data:{labels:allDias.map(fmt),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:toggleDia==='ambos',labels:{color:'#8a8880',font:{size:11},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{color:'#5a5855',font:{size:9},maxRotation:45}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5855',font:{size:10}}}}}});
+  charts.dia=new Chart(ctx,{type:'line',data:{labels:allDias.map(fmt),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:toggleDia==='ambos',labels:{color:'#8a8880',font:{size:11},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{color:document.documentElement.getAttribute('data-theme')==='light'?'#9a9994':'#5a5855',font:{size:9},maxRotation:45}},y:{grid:{color:document.documentElement.getAttribute('data-theme')==='light'?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.05)'},ticks:{color:document.documentElement.getAttribute('data-theme')==='light'?'#9a9994':'#5a5855',font:{size:10}}}}}});
 }
 
 function renderMetasProg(){
@@ -998,7 +1030,7 @@ function renderMetasProg(){
   const pant=periodoAnteriorEquivalente();
   const mesAnt=pant.lancs;
   const lblPeriodo=labelPeriodo();
-  const lblAnt=pant.lbl;
+  const lblAnt=pant.label||'período ant.';
 
   function varSeta(atual, ant) {
     if(!ant) return '';
@@ -1024,7 +1056,7 @@ function renderMetasProg(){
       </div>
     </div>
     <div class="prog-bg" style="margin-bottom:6px"><div class="prog-bar" style="width:${embPct}%;background:${embCor}"></div></div>
-    ${embAnt>0?`<div style="font-size:11px;color:var(--text3)">${lblAnt}: <b>${embAnt.toLocaleString('pt-BR')} pç</b></div>`:''}
+    ${embAnt>0?`<div style="font-size:11px;color:var(--text3)">período ant.: <b>${embAnt.toLocaleString('pt-BR')} pç</b></div>`:''}
   </div>
   <div style="font-size:10px;color:var(--text3);letter-spacing:.06em;margin-bottom:10px;font-weight:600">PRODUÇÃO POR SETOR</div>`;
 
@@ -1033,7 +1065,8 @@ function renderMetasProg(){
     const ant=mesAnt.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0);
     const meta=cachedMetas[s]||0;
     const pct=meta>0?Math.min(100,Math.round(real/meta*100)):0;
-    const cor=pct>=100?'#4caf7d':pct>=70?'#e89c47':'#e05c5c';
+    // Cor gradativa: vermelho → laranja → amarelo → verde
+    const cor=pct>=100?'#4caf7d':pct>=85?'#64c896':pct>=70?'#e8c547':pct>=50?'#e89c47':'#e05c5c';
     const delta=ant>0?Math.round((real-ant)/ant*100):null;
     const corDelta=delta>=0?'var(--green)':'var(--red)';
     return`<div class="prog-wrap">
@@ -1044,7 +1077,7 @@ function renderMetasProg(){
           ${delta!==null?`<span style="font-size:10px;color:${corDelta};margin-left:5px">${delta>=0?'▲':'▼'}${Math.abs(delta)}%</span>`:''}
         </div>
       </div>
-      ${ant>0?`<div style="font-size:10px;color:var(--text3);margin-bottom:3px">${lblAnt}: ${ant.toLocaleString('pt-BR')} pç</div>`:''}
+      ${ant>0?`<div style="font-size:10px;color:var(--text3);margin-bottom:3px">período ant.: ${ant.toLocaleString('pt-BR')} pç</div>`:''}
       <div class="prog-bg"><div class="prog-bar" style="width:${pct}%;background:${cor}"></div></div>
     </div>`;
   }).join('');
