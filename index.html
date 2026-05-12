@@ -441,6 +441,16 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
       <div id="dev-motivos"></div>
     </div>
   </div>
+  <div class="charts-2col" style="margin-top:0">
+    <div class="card">
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">DESTINO DOS PRODUTOS</div>
+      <div id="dev-destinos"></div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">PRODUTOS MAIS DEVOLVIDOS</div>
+      <div id="dev-produtos"></div>
+    </div>
+  </div>
 
   <div class="sec-title">Devoluções pendentes de nota</div>
   <div class="card" id="dev-pendentes-nota"><div class="loading"><div class="spinner"></div></div></div>
@@ -1231,12 +1241,34 @@ function renderDevDash(){
   }).join('');
 
   // Motivos
+    // Canal de vendas
   const motivos={};mes.filter(d=>d.motivo).forEach(d=>{motivos[d.motivo]=(motivos[d.motivo]||0)+(d.quantidade||0)});
   const sortedM=Object.entries(motivos).sort((a,b)=>b[1]-a[1]),totalM=sortedM.reduce((a,e)=>a+e[1],0)||1;
-  document.getElementById('dev-motivos').innerHTML=sortedM.length?sortedM.map(([m,v])=>{
+  const elMotivos=document.getElementById('dev-motivos');
+  if(elMotivos) elMotivos.innerHTML=sortedM.length?sortedM.map(([mot,v])=>{
     const pct=Math.round(v/totalM*100);
-    return`<div class="prog-wrap"><div class="prog-header"><span class="prog-nome" style="font-size:12px">${m}</span><span class="prog-vals">${v} pç (${pct}%)</span></div><div class="prog-bg"><div class="prog-bar" style="width:${pct}%;background:var(--blue)"></div></div></div>`;
-  }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Nenhum motivo registrado ainda.<br>O gestor pode preencher após análise.</div>';
+    return`<div class="prog-wrap"><div class="prog-header"><span class="prog-nome" style="font-size:12px">${mot}</span><span class="prog-vals">${v} pç (${pct}%)</span></div><div class="prog-bg"><div class="prog-bar" style="width:${pct}%;background:var(--blue)"></div></div></div>`;
+  }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Nenhum canal registrado ainda.</div>';
+
+  // Destino dos produtos
+  const destinos={};mes.filter(d=>d.destino).forEach(d=>{destinos[d.destino]=(destinos[d.destino]||0)+(d.quantidade||0)});
+  const sortedD=Object.entries(destinos).sort((a,b)=>b[1]-a[1]),totalD=sortedD.reduce((a,e)=>a+e[1],0)||1;
+  const corDest=d=>d.includes('reparo')||d.includes('Retrabalho')?'var(--amber)':d.includes('Reembalagem')?'var(--green)':'var(--red)';
+  const elDest=document.getElementById('dev-destinos');
+  if(elDest) elDest.innerHTML=sortedD.length?sortedD.map(([dest,v])=>{
+    const pct=Math.round(v/totalD*100);
+    return`<div class="prog-wrap"><div class="prog-header"><span class="prog-nome" style="font-size:12px">${dest}</span><span class="prog-vals">${v} pç (${pct}%)</span></div><div class="prog-bg"><div class="prog-bar" style="width:${pct}%;background:${corDest(dest)}"></div></div></div>`;
+  }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Nenhum destino registrado.</div>';
+
+  // Produtos mais devolvidos
+  const prodsDev={};mes.filter(d=>d.produto).forEach(d=>{prodsDev[d.produto]=(prodsDev[d.produto]||0)+(d.quantidade||0)});
+  const sortedP=Object.entries(prodsDev).sort((a,b)=>b[1]-a[1]).slice(0,8),totalP=sortedP.reduce((a,e)=>a+e[1],0)||1;
+  const elProds=document.getElementById('dev-produtos');
+  if(elProds) elProds.innerHTML=sortedP.length?sortedP.map(([prod,v])=>{
+    const pct=Math.round(v/totalP*100);
+    return`<div class="prog-wrap"><div class="prog-header"><span class="prog-nome" style="font-size:12px">${prod}</span><span class="prog-vals">${v} pç (${pct}%)</span></div><div class="prog-bg"><div class="prog-bar" style="width:${pct}%;background:var(--red)"></div></div></div>`;
+  }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Nenhum produto registrado.</div>';
+
 
   // Pendentes de nota
   const pendentes=cachedDevs.filter(d=>!d.nota_emitida);
