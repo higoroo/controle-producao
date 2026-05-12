@@ -1199,10 +1199,9 @@ async function renderDash(){
 }
 function embalageMes(lancs){return lancs.filter(l=>l.setor==='Embalagem').reduce((a,l)=>a+l.qtd,0)}
 function periodoAnteriorEquivalente(){
-  // Retorna lançamentos do período equivalente anterior para comparação
-  const hoje2 = hoje();
+  const hoje2=hoje();
   if(periodoAtivo==='dia'){
-    const d=new Date(); d.setDate(d.getDate()-1);
+    const d=new Date();d.setDate(d.getDate()-1);
     const ant=d.toISOString().slice(0,10);
     return{lancs:cachedLancs.filter(l=>l.data===ant),devs:cachedDevs.filter(d=>d.data===ant),label:'ontem'};
   }
@@ -1214,24 +1213,34 @@ function periodoAnteriorEquivalente(){
     return{lancs:cachedLancs.filter(l=>l.data>=sa&&l.data<=ea),devs:cachedDevs.filter(d=>d.data>=sa&&d.data<=ea),label:'semana ant.'};
   }
   if(periodoAtivo==='mesant'){
-    // Mês anterior ao mês anterior = 2 meses atrás
+    // Comparar o mesmo número de dias do mês anterior ao mês anterior
     const d2=new Date();
-    const ano=d2.getMonth()<=1?d2.getFullYear()-1:d2.getFullYear();
-    const mes=d2.getMonth()<=1?d2.getMonth()+10:d2.getMonth()-1;
-    const m2=ano+'-'+String(mes).padStart(2,'0');
-    return{lancs:cachedLancs.filter(l=>l.data.startsWith(m2)),devs:cachedDevs.filter(d=>d.data&&d.data.startsWith(m2)),label:'2 meses atrás'};
+    const diaAtual=d2.getDate();
+    const d3=new Date(d2.getFullYear(),d2.getMonth()-1,1); // 2 meses atrás início
+    const m2=d3.getFullYear()+'-'+String(d3.getMonth()+1).padStart(2,'0');
+    const diasNoMes2=new Date(d3.getFullYear(),d3.getMonth()+1,0).getDate();
+    const diaFim=Math.min(diaAtual,diasNoMes2);
+    const de2=m2+'-01';
+    const ate2=m2+'-'+String(diaFim).padStart(2,'0');
+    return{lancs:cachedLancs.filter(l=>l.data>=de2&&l.data<=ate2),devs:cachedDevs.filter(d=>d.data>=de2&&d.data<=ate2),label:'mesmo período 2 m. atrás'};
   }
   if(periodoAtivo==='range'&&periodoRange){
     const de=new Date(periodoRange.de+'T12:00'),ate=new Date(periodoRange.ate+'T12:00');
     const diff=Math.round((ate-de)/(1000*60*60*24))+1;
-    const antAte=new Date(de); antAte.setDate(antAte.getDate()-1);
-    const antDe=new Date(antAte); antDe.setDate(antAte.getDate()-diff+1);
+    const antAte=new Date(de);antAte.setDate(antAte.getDate()-1);
+    const antDe=new Date(antAte);antDe.setDate(antAte.getDate()-diff+1);
     const sa=antDe.toISOString().slice(0,10),ea=antAte.toISOString().slice(0,10);
     return{lancs:cachedLancs.filter(l=>l.data>=sa&&l.data<=ea),devs:cachedDevs.filter(d=>d.data>=sa&&d.data<=ea),label:'período ant.'};
   }
-  // Mês atual → mês anterior
-  const m=mesAnterior();
-  return{lancs:cachedLancs.filter(l=>l.data.startsWith(m)),devs:cachedDevs.filter(d=>d.data&&d.data.startsWith(m)),label:'mês ant.'};
+  // Mês atual → mesmo período do mês anterior (dia 1 até dia atual)
+  const d=new Date();
+  const diaAtual=d.getDate();
+  const mAnt=mesAnterior();
+  const diasNoMesAnt=new Date(d.getFullYear(),d.getMonth(),0).getDate();
+  const diaFim=Math.min(diaAtual,diasNoMesAnt);
+  const deAnt=mAnt+'-01';
+  const ateAnt=mAnt+'-'+String(diaFim).padStart(2,'0');
+  return{lancs:cachedLancs.filter(l=>l.data>=deAnt&&l.data<=ateAnt),devs:cachedDevs.filter(d=>d.data&&d.data>=deAnt&&d.data<=ateAnt),label:`mês ant. (1-${diaFim})`};
 }
 
 function fmtDelta(atual, ant) {
@@ -1629,13 +1638,7 @@ function preencherMesesCompar(){
   if(inpA&&!inpA.value){inpA.value=mAnt;inpB.value=mAtual;}
 }
 
-function preencherDatasCompar(){
-  const hoje2=hoje(),d=new Date();
-  const priDiaMes=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01';
-  const ultMes=new Date(d.getFullYear(),d.getMonth(),0),priDiaUltMes=new Date(d.getFullYear(),d.getMonth()-1,1);
-  const fmtISO=x=>x.toISOString().slice(0,10);
-  if(!document.getElementById('ca-de').value){document.getElementById('ca-de').value=fmtISO(priDiaUltMes);document.getElementById('ca-ate').value=fmtISO(ultMes);document.getElementById('cb-de').value=priDiaMes;document.getElementById('cb-ate').value=hoje2}
-}
+function preencherDatasCompar(){}
 function renderInsights(){
   const el=document.getElementById('insights-area');
   const emb=cachedLancs.filter(l=>l.setor==='Embalagem');
@@ -1939,24 +1942,6 @@ function renderCompMensal(){
   document.getElementById('comp-mensal-resultado').innerHTML=html;
 }
 
-function renderCompar(){
-  const deA=document.getElementById('ca-de').value,ateA=document.getElementById('ca-ate').value,deB=document.getElementById('cb-de').value,ateB=document.getElementById('cb-ate').value;
-  if(!deA||!ateA||!deB||!ateB){toast('Preencha todos os campos de data.');return}
-  const totA=embDoPeriodo(deA,ateA),totB=embDoPeriodo(deB,ateB);
-  const diasA=[...new Set(diasUteisEntre(deA,ateA))].length||1,diasB=[...new Set(diasUteisEntre(deB,ateB))].length||1;
-  const mediaA=Math.round(totA/diasA),mediaB=Math.round(totB/diasB);
-  const delta=totA>0?Math.round((totB-totA)/totA*100):0,corD=delta>=0?'var(--green)':'var(--red)';
-  const prodA=produtosDoPeriodo(deA,ateA),prodB=produtosDoPeriodo(deB,ateB);
-  const todosProd=[...new Set([...Object.keys(prodA),...Object.keys(prodB)])].sort((a,b)=>(prodB[b]||0)-(prodA[a]||0));
-  document.getElementById('compar-resultado').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 10px">
-      <div style="background:rgba(232,197,71,.08);border:1px solid rgba(232,197,71,.2);border-radius:var(--r2);padding:14px"><div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:6px">PERÍODO A</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px">${totA.toLocaleString('pt-BR')}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${diasA} dias · ${mediaA.toLocaleString('pt-BR')} pç/dia</div></div>
-      <div style="background:rgba(91,156,246,.08);border:1px solid rgba(91,156,246,.2);border-radius:var(--r2);padding:14px"><div style="font-size:10px;color:var(--blue);font-weight:600;margin-bottom:6px">PERÍODO B</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px">${totB.toLocaleString('pt-BR')}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${diasB} dias · ${mediaB.toLocaleString('pt-BR')} pç/dia</div></div>
-    </div>
-    <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:${corD}">${delta>=0?'+':''}${delta}%</div><div style="font-size:12px;color:var(--text3);line-height:1.6">variação total<br>Média/dia: ${mediaA.toLocaleString('pt-BR')} → <b style="color:${corD}">${mediaB.toLocaleString('pt-BR')} pç</b></div></div>
-    <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:10px">POR PRODUTO</div>
-    <div class="card" style="padding:0"><div class="tabela-wrap"><table><thead><tr><th>Produto</th><th class="td-r" style="color:var(--accent)">A</th><th class="td-r" style="color:var(--blue)">B</th><th class="td-r">Var.</th></tr></thead><tbody>${todosProd.map(p=>{const a=prodA[p]||0,b=prodB[p]||0,v=a>0?Math.round((b-a)/a*100):b>0?100:0,c=v>0?'var(--green)':v<0?'var(--red)':'var(--text3)';return`<tr><td>${p}</td><td class="td-r">${a||'—'}</td><td class="td-r">${b||'—'}</td><td class="td-r" style="color:${c};font-weight:600">${a>0||b>0?(v>=0?'+':'')+v+'%':'—'}</td></tr>`}).join('')}</tbody></table></div></div>`;
-}
 
 /* ── COMPRAS ── */
 const CATEGORIAS_COMP = ['Madeira','Materiais Secundários','Pintura','Elétrica','Embalagem','Caixas','Cúpulas'];
