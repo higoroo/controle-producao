@@ -641,7 +641,7 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 </div></div>
 
 <!-- ── DASHBOARD ── -->
-<div id="page-dash" class="page active"><div class="content-inner">
+<div id="page-dash" class="page"><div class="content-inner">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
     <div class="sec-title" style="margin:0">Resumo</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1184,40 +1184,6 @@ async function salvarDia(){
 }
 
 /* ── DASHBOARD ── */
-async function renderDash(){
-  await loadAll();renderKPIs();renderChartSetores();renderChartDia();renderMetasProg();
-}
-function embalageMes(lancs){return lancs.filter(l=>l.setor==='Embalagem').reduce((a,l)=>a+l.qtd,0)}
-
-function periodoAnteriorEquivalente(){
-  if(periodoAtivo==='dia'){
-    const ant=new Date(hoje()+'T12:00');ant.setDate(ant.getDate()-1);
-    const d=ant.toISOString().slice(0,10);
-    return{lancs:cachedLancs.filter(l=>l.data===d),devs:cachedDevs.filter(x=>x.data===d),lbl:'ontem'};
-  }
-  if(periodoAtivo==='semana'){
-    const[s,e]=semana();
-    const ds=new Date(s+'T12:00');ds.setDate(ds.getDate()-7);
-    const de2=new Date(e+'T12:00');de2.setDate(de2.getDate()-7);
-    const s2=ds.toISOString().slice(0,10),e2=de2.toISOString().slice(0,10);
-    return{lancs:cachedLancs.filter(l=>l.data>=s2&&l.data<=e2),devs:cachedDevs.filter(x=>x.data>=s2&&x.data<=e2),lbl:'semana ant.'};
-  }
-  if(periodoAtivo==='mesant'){
-    const d2=new Date();d2.setMonth(d2.getMonth()-2);
-    const m2=d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0');
-    return{lancs:cachedLancs.filter(l=>l.data.startsWith(m2)),devs:cachedDevs.filter(x=>x.data&&x.data.startsWith(m2)),lbl:'2 meses atrás'};
-  }
-  if(periodoAtivo==='range'&&periodoRange){
-    const diffMs=new Date(periodoRange.ate+'T12:00')-new Date(periodoRange.de+'T12:00');
-    const diffDias=Math.round(diffMs/(1000*60*60*24))+1;
-    const de2=new Date(periodoRange.de+'T12:00');de2.setDate(de2.getDate()-diffDias);
-    const ate2=new Date(periodoRange.ate+'T12:00');ate2.setDate(ate2.getDate()-diffDias);
-    const s2=de2.toISOString().slice(0,10),e2=ate2.toISOString().slice(0,10);
-    return{lancs:cachedLancs.filter(l=>l.data>=s2&&l.data<=e2),devs:cachedDevs.filter(x=>x.data>=s2&&x.data<=e2),lbl:'período ant.'};
-  }
-  const m=mesAnterior();
-  return{lancs:cachedLancs.filter(l=>l.data.startsWith(m)),devs:cachedDevs.filter(x=>x.data&&x.data.startsWith(m)),lbl:'mês ant.'};
-}
 
 function kpiDelta(atual, ant, inv=false){
   if(!ant||ant===0) return '';
@@ -1225,49 +1191,6 @@ function kpiDelta(atual, ant, inv=false){
   const bom=inv?pct<=0:pct>=0;
   const cor=bom?'var(--green)':'var(--red)';
   return `<span style="font-size:10px;color:${cor};font-weight:600">${pct>=0?'▲':'▼'} ${Math.abs(pct)}% vs ${periodoAnteriorEquivalente().lbl}</span>`;
-}
-
-function renderKPIs(){
-  const periodo=lancsNoPeriodo();
-  const totM=embalageMes(periodo);
-  const dias=[...new Set(periodo.filter(l=>l.setor==='Embalagem').map(l=>l.data))].length||1;
-  const media=Math.round(totM/dias);
-  const meta=cachedMetas['Embalagem']||0;
-  const pctMeta=meta>0?Math.round(totM/meta*100):null;
-  const devPeriodo=devNoPeriodo();
-  const devTot=devPeriodo.reduce((a,d)=>a+(d.quantidade||0),0);
-  const taxa=totM>0?((devTot/totM)*100).toFixed(1):0;
-  const corTaxa=parseFloat(taxa)<=2?'var(--green)':parseFloat(taxa)<=5?'var(--amber)':'var(--red)';
-  const lbl=labelPeriodo();
-  const pant=periodoAnteriorEquivalente();
-  const totAnt=pant.lancs.filter(l=>l.setor==='Embalagem').reduce((a,l)=>a+l.qtd,0);
-  const diasAnt=[...new Set(pant.lancs.filter(l=>l.setor==='Embalagem').map(l=>l.data))].length||1;
-  const mediaAnt=Math.round(totAnt/diasAnt);
-  const devAnt=pant.devs.reduce((a,d)=>a+(d.quantidade||0),0);
-  const taxaAnt=totAnt>0?((devAnt/totAnt)*100).toFixed(1):null;
-  const pctTaxaDelta=taxaAnt!==null&&parseFloat(taxaAnt)>0?Math.round((parseFloat(taxa)-parseFloat(taxaAnt))/parseFloat(taxaAnt)*100):null;
-  const corTaxaDelta=pctTaxaDelta!==null?(pctTaxaDelta<=0?'var(--green)':'var(--red)'):null;
-  document.getElementById('kpi-area').innerHTML=`
-    <div class="kpi kpi-accent">
-      <div class="kpi-label">Embaladas — ${lbl}</div>
-      <div class="kpi-val">${totM.toLocaleString('pt-BR')}</div>
-      <div class="kpi-sub">${totAnt>0?kpiDelta(totM,totAnt):'peças prontas'}</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Média / dia</div>
-      <div class="kpi-val">${media.toLocaleString('pt-BR')}</div>
-      <div class="kpi-sub">${mediaAnt>0?kpiDelta(media,mediaAnt):'pç/dia no período'}</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Meta mensal</div>
-      <div class="kpi-val" style="font-size:22px">${pctMeta!==null?pctMeta+'%':'—'}</div>
-      <div class="kpi-sub">${pctMeta!==null?totM.toLocaleString('pt-BR')+' / '+meta.toLocaleString('pt-BR'):'sem meta definida'}</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Taxa devolução — ${lbl}</div>
-      <div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div>
-      <div class="kpi-sub">${corTaxaDelta?`<span style="font-size:10px;color:${corTaxaDelta};font-weight:600">${pctTaxaDelta>=0?'▲':'▼'} ${Math.abs(pctTaxaDelta)}% vs ${pant.lbl}</span>`:devTot+' devolvidas'}</div>
-    </div>`;
 }
 
 
@@ -2342,16 +2265,6 @@ async function salvarSolicitacao(){
     limparBuscaMat();
     renderCompLista();
   }catch(e){setSync('err');toast('Erro ao salvar solicitação.')}
-}
-
-async function apagarSolicitacao(id){
-  if(!confirm('Apagar esta solicitação permanentemente?'))return;
-  setSync('syncing');
-  try{
-    await sb(`solicitacoes?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
-    cachedSolic=cachedSolic.filter(s=>s.id!==id);
-    setSync('ok');toast('Solicitação apagada.');renderCompLista();
-  }catch(e){setSync('err');toast('Erro ao apagar.')}
 }
 
 async function avancarStatus(id,novoStatus){
