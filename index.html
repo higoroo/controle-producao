@@ -97,10 +97,11 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 /* Grid responsivo para cards de KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
 @media(min-width:768px){.kpi-grid{grid-template-columns:repeat(4,1fr)}.charts-2col{gap:20px}}
-.kpi{background:var(--ink3);border-radius:var(--r2);padding:16px 18px;border:1px solid var(--line);transition:background .3s,border-color .3s}
-.kpi-label{font-size:11px;color:var(--text2);margin-bottom:8px;letter-spacing:.05em;font-weight:500;text-transform:uppercase}
-.kpi-val{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;line-height:1;color:var(--text)}
-.kpi-sub{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.4}
+.kpi{background:var(--ink3);border-radius:var(--r2);padding:14px 16px;border:1px solid var(--line);transition:background .3s,border-color .3s;min-width:0}
+.kpi-label{font-size:10px;color:var(--text2);margin-bottom:5px;letter-spacing:.04em;font-weight:600;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-val{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;line-height:1.1;color:var(--text);white-space:nowrap}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-delta{font-size:10px;margin-top:4px;display:flex;align-items:center;gap:3px;white-space:nowrap;font-weight:600}
 .kpi-accent{border-color:rgba(232,197,71,.3);background:rgba(232,197,71,.04)}.kpi-accent .kpi-val{color:var(--accent)}
 [data-theme="light"] .kpi-accent{background:rgba(184,150,10,.06)}
 
@@ -967,27 +968,27 @@ function renderKPIs(){
   const antTaxa=antEmb>0?parseFloat((antDev/antEmb*100).toFixed(1)):0;
   document.getElementById('kpi-area').innerHTML=`
     <div class="kpi kpi-accent">
-      <div class="kpi-label">Embaladas — ${lbl}</div>
+      <div class="kpi-label">Embaladas</div>
       <div class="kpi-val">${totM.toLocaleString('pt-BR')}</div>
-      <div class="kpi-sub">peças prontas</div>
-      ${antEmb>0?`<span style="font-size:10px;color:${totM>=antEmb?'var(--green)':'var(--red)'};display:block;margin-top:3px">${totM>=antEmb?'▲':'▼'} ${Math.abs(Math.round((totM-antEmb)/antEmb*100))}% vs mesmo período anterior</span>`:''}
+      <div class="kpi-sub">peças · ${lbl}</div>
+      ${antEmb>0?`<div class="kpi-delta" style="color:${totM>=antEmb?'var(--green)':'var(--red)'}">${totM>=antEmb?'▲':'▼'} ${Math.abs(Math.round((totM-antEmb)/antEmb*100))}% vs período ant.</div>`:''}
     </div>
     <div class="kpi">
       <div class="kpi-label">Média / dia</div>
       <div class="kpi-val">${media.toLocaleString('pt-BR')}</div>
       <div class="kpi-sub">peças por dia</div>
-      ${antMedia>0?`<span style="font-size:10px;color:${media>=antMedia?'var(--green)':'var(--red)'};display:block;margin-top:3px">${media>=antMedia?'▲':'▼'} ${Math.abs(Math.round((media-antMedia)/antMedia*100))}% vs mesmo período anterior</span>`:''}
+      ${antMedia>0?`<div class="kpi-delta" style="color:${media>=antMedia?'var(--green)':'var(--red)'}">${media>=antMedia?'▲':'▼'} ${Math.abs(Math.round((media-antMedia)/antMedia*100))}% vs período ant.</div>`:''}
     </div>
     <div class="kpi">
-      <div class="kpi-label">${pctMeta!==null?'Meta mensal':'Meta mensal'}</div>
-      <div class="kpi-val" style="font-size:22px">${pctMeta!==null?pctMeta+'%':'—'}</div>
-      <div class="kpi-sub">${pctMeta!==null?totM.toLocaleString('pt-BR')+' / '+meta.toLocaleString('pt-BR'):' sem meta definida'}</div>
+      <div class="kpi-label">Meta mensal</div>
+      <div class="kpi-val">${pctMeta!==null?pctMeta+'%':'—'}</div>
+      <div class="kpi-sub">${pctMeta!==null?totM.toLocaleString('pt-BR')+' / '+meta.toLocaleString('pt-BR')+' pç':'sem meta definida'}</div>
     </div>
     <div class="kpi">
-      <div class="kpi-label">Taxa devolução — ${lbl}</div>
-      <div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div>
-      <div class="kpi-sub">${devTot} devolvidas</div>
-      ${antTaxa>0?`<span style="font-size:10px;color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'};display:block;margin-top:3px">${parseFloat(taxa)<=antTaxa?'▼ Melhorou':'▲ Piorou'} vs mesmo período anterior</span>`:''}
+      <div class="kpi-label">Taxa devolução</div>
+      <div class="kpi-val" style="color:${corTaxa}">${taxa}%</div>
+      <div class="kpi-sub">${devTot} devolvidas · ${lbl}</div>
+      ${antTaxa>0?`<div class="kpi-delta" style="color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'}">${parseFloat(taxa)<=antTaxa?'▼ Melhorou':'▲ Piorou'} vs período ant.</div>`:''}
     </div>`;
 }
 function renderChartSetores(){
