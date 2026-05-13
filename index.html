@@ -873,7 +873,20 @@ function init(){
     const btn = document.getElementById('btn-tema');
     if(btn) btn.textContent = '☀️';
   }
-  loadAll().then(()=>{atualizarDiasComLanc();initCal();renderDash()});
+  loadAll().then(()=>{
+    atualizarDiasComLanc();
+    initCal();
+    // Navegar para a página indicada no hash da URL
+    const hash = window.location.hash.replace('#','');
+    const paginasValidas = ['lanc','dash','prod','dev','anal','hist','cfg','comp','materiais'];
+    if(hash && paginasValidas.includes(hash)){
+      const btn = document.getElementById('sb-'+hash) || document.querySelector(`[onclick*="goTo('${hash}'"]`);
+      if(btn) goTo(hash, btn);
+      else renderDash();
+    } else {
+      renderDash();
+    }
+  });
 }
 
 function toggleTema(){
@@ -2059,7 +2072,7 @@ function renderCompLista(){
       ${s.obs_compra?`<div style="font-size:11px;color:var(--blue);margin-bottom:8px">📦 ${s.obs_compra}</div>`:''}
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         ${s.status==='Pendente'?`<button onclick="avancarStatusData('${s.id}','Em andamento','data_em_andamento')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:var(--blue-d);color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">▶ Em andamento</button>`:''}
-        ${s.status==='Em andamento'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(232,156,71,.3);background:var(--amber-d);color:var(--amber);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">🛒 Registrar compra</button>`:''}
+        ${s.status==='Pendente'||s.status==='Em andamento'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(232,156,71,.3);background:var(--amber-d);color:var(--amber);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">🛒 Registrar compra</button>`:''}
         ${s.status==='Comprado'?`<button onclick="avancarStatusData('${s.id}','Recebido','data_recebido')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">✓ Marcar como recebido</button>`:''}
         ${s.status!=='Recebido'&&s.status!=='Cancelado'?`<button onclick="avancarStatus('${s.id}','Cancelado')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:none;background:none;color:var(--text3);cursor:pointer">Cancelar</button>`:''}
         ${modoGestorAtivo?`<button onclick="apagarSolicitacao('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Apagar</button>`:''}
