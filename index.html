@@ -1260,22 +1260,34 @@ function limparSlot(num, e){
   document.getElementById('dv-foto-'+num).value='';
 }
 async function uploadFoto(file){
-  const ext=file.name.split('.').pop()||'jpg',nome=`dev_${Date.now()}.${ext}`;
-  const res=await fetch(`${SB_URL}/storage/v1/object/fotos-devolucoes/${nome}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type},body:file});
-  if(!res.ok)throw new Error('Erro no upload');
-  return`${SB_URL}/storage/v1/object/public/fotos-devolucoes/${nome}`;
+  try{
+    const ext=file.name.split('.').pop()||'jpg',nome=`dev_${Date.now()}.${ext}`;
+    const res=await fetch(`${SB_URL}/storage/v1/object/fotos-devolucoes/${nome}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type},body:file});
+    if(!res.ok){console.warn('Upload foto falhou:',await res.text());return null;}
+    return`${SB_URL}/storage/v1/object/public/fotos-devolucoes/${nome}`;
+  }catch(e){console.warn('Erro upload foto:',e);return null;}
 }
 async function salvarDevolucao(){
+  const data=document.getElementById('dv-data').value;
+  const cliente=document.getElementById('dv-cliente').value.trim();
+  const produto=document.getElementById('dv-produto').value;
+  const qtd=parseFloat(document.getElementById('dv-qtd').value)||0;
+  const nf=document.getElementById('dv-nf').value.trim();
+  const motivo=document.getElementById('dv-motivo').value;
+  const destino=document.getElementById('dv-destino').value;
+  const obs=document.getElementById('dv-obs').value.trim();
+  const status=dvStatusSelecionado||document.getElementById('dv-status').value;
   const f1=document.getElementById('dv-foto-1');
   const f2=document.getElementById('dv-foto-2');
   const f3=document.getElementById('dv-foto-3');
   if(!data||!cliente||!produto||qtd<=0||!status||!destino){toast('Preencha: data, cliente, produto, quantidade, status físico e destino.');return}
-  if(!f1||!f1.files[0]){toast('Pelo menos 1 foto é obrigatória.');return}
+  // Foto opcional no mobile — não bloqueia o salvamento
+  const temFoto = f1&&f1.files&&f1.files[0];
   const btn=document.getElementById('btn-dev-salvar');btn.disabled=true;btn.textContent='Enviando...';setSync('syncing');
   try{
-    const foto_url=await uploadFoto(f1.files[0]);
-    const foto_url_2=f2&&f2.files[0]?await uploadFoto(f2.files[0]):null;
-    const foto_url_3=f3&&f3.files[0]?await uploadFoto(f3.files[0]):null;
+    const foto_url=temFoto?await uploadFoto(f1.files[0]):null;
+    const foto_url_2=f2&&f2.files&&f2.files[0]?await uploadFoto(f2.files[0]):null;
+    const foto_url_3=f3&&f3.files&&f3.files[0]?await uploadFoto(f3.files[0]):null;
     const row={data,cliente,produto,quantidade:qtd,nf:nf||null,motivo:motivo||null,destino,obs:obs||null,status_fisico:status,foto_url,foto_url_2,foto_url_3,nota_emitida:false};
     const saved=await sb('devolucoes',{method:'POST',body:JSON.stringify(row)});
     cachedDevs=[...(saved||[row]),...cachedDevs];
