@@ -1931,6 +1931,29 @@ function limparBuscaMat(){
   document.getElementById('sc-mat-selecionado').style.display='none';
 }
 
+function irParaFiltroComp(filtro){
+  // Mapear para o chip correto e ativar
+  const mapa={
+    'Pendente':'Pendentes',
+    'Atrasadas':'Pendentes', // atrasadas ficam nos pendentes/em aberto
+    'Em andamento':'Andamento',
+    'Comprado':'Comprado',
+    'Recebido':'Recebidos',
+    'Todos':'Em aberto'
+  };
+  // Encontrar o chip pelo texto
+  const chips=document.querySelectorAll('#page-comp .chip');
+  const textoAlvo=mapa[filtro]||'Em aberto';
+  let chipAlvo=null;
+  chips.forEach(ch=>{ if(ch.textContent.trim()===textoAlvo) chipAlvo=ch; });
+  if(chipAlvo){
+    setFiltroComp(filtro==='Atrasadas'?'Todos':filtro, chipAlvo);
+  }
+  // Scroll para a lista
+  const lista=document.getElementById('comp-lista');
+  if(lista) lista.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function setFiltroComp(f,btn){
   filtroComp=f;
   document.querySelectorAll('#page-comp .chip').forEach(b=>b.classList.remove('active'));
@@ -1942,7 +1965,7 @@ function statusCor(s){
   if(s==='Pendente')return{bg:'rgba(232,156,71,.12)',cor:'var(--amber)',borda:'rgba(232,156,71,.25)'};
   if(s==='Em andamento')return{bg:'var(--blue-d)',cor:'var(--blue)',borda:'rgba(91,156,246,.25)'};
   if(s==='Comprado')return{bg:'rgba(232,197,71,.1)',cor:'var(--accent)',borda:'rgba(232,197,71,.25)'};
-  if(s==='Recebido')return{bg:'var(--green-d)',cor:'var(--green)',borda:'rgba(76,175,125,.25)'};
+  if(s==='Recebido'||s==='Concluído')return{bg:'var(--green-d)',cor:'var(--green)',borda:'rgba(76,175,125,.25)'};
   if(s==='Cancelado')return{bg:'var(--red-d)',cor:'var(--red)',borda:'rgba(224,92,92,.25)'};
   return{bg:'var(--ink3)',cor:'var(--text3)',borda:'var(--line)'};
 }
@@ -1964,22 +1987,22 @@ function renderCompKPIs(){
   const emAndamento=cachedSolic.filter(s=>s.status==='Em andamento').length;
   const comprado=cachedSolic.filter(s=>s.status==='Comprado').length;
   // Tempo médio solicitação → recebimento
-  const concluidas=cachedSolic.filter(s=>s.status==='Recebido'&&s.data_solicitacao&&s.data_recebido);
+  const concluidas=cachedSolic.filter(s=>(s.status==='Recebido'||s.status==='Concluído')&&s.data_solicitacao);
   const temposRec=concluidas.map(s=>Math.round((new Date(s.data_recebido)-new Date(s.data_solicitacao))/(1000*60*60*24)));
   const mediaRec=temposRec.length?Math.round(temposRec.reduce((a,t)=>a+t,0)/temposRec.length):null;
   document.getElementById('comp-kpis').innerHTML=`
-    <div class="kpi" style="cursor:pointer" onclick="setFiltroComp('Pendente',document.querySelector('#page-comp .chip'))">
+    <div class="kpi" style="cursor:pointer;transition:opacity .15s" onclick="irParaFiltroComp('Pendente')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
       <div class="kpi-label">Pendentes ↗</div>
       <div class="kpi-val" style="color:${pend>0?'var(--amber)':'var(--green)'}">${pend}</div>
       <div class="kpi-sub">${total} solicitações no total</div>
     </div>
-    <div class="kpi ${atrasados>0?'':''}">
-      <div class="kpi-label">Atrasadas</div>
+    <div class="kpi" style="cursor:pointer;transition:opacity .15s" onclick="irParaFiltroComp('Atrasadas')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+      <div class="kpi-label">Atrasadas ↗</div>
       <div class="kpi-val" style="color:${atrasados>0?'var(--red)':'var(--green)'}">${atrasados}</div>
       <div class="kpi-sub">prazo vencido</div>
     </div>
-    <div class="kpi">
-      <div class="kpi-label">Em andamento / Comprado</div>
+    <div class="kpi" style="cursor:pointer;transition:opacity .15s" onclick="irParaFiltroComp('Em andamento')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+      <div class="kpi-label">Em andamento / Comprado ↗</div>
       <div class="kpi-val" style="font-size:22px">${emAndamento} / ${comprado}</div>
       <div class="kpi-sub">aguardando recebimento</div>
     </div>
@@ -1995,11 +2018,11 @@ function renderCompLista(){
   const el=document.getElementById('comp-lista');
   const statusAtivos=['Pendente','Em andamento','Comprado'];
   const ativas=cachedSolic.filter(s=>statusAtivos.includes(s.status));
-  const concluidas=cachedSolic.filter(s=>s.status==='Recebido');
+  const concluidas=cachedSolic.filter(s=>s.status==='Recebido'||s.status==='Concluído');
   const canceladas=cachedSolic.filter(s=>s.status==='Cancelado');
   let lista;
   if(filtroComp==='Todos') lista=ativas;
-  else if(filtroComp==='Recebido') lista=concluidas;
+  else if(filtroComp==='Recebido'||filtroComp==='Concluído') lista=concluidas;
   else if(filtroComp==='Cancelado') lista=canceladas;
   else lista=cachedSolic.filter(s=>s.status===filtroComp);
   lista=[...lista].sort((a,b)=>diasAte(a.prazo_necessidade)-diasAte(b.prazo_necessidade));
