@@ -304,7 +304,14 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   <div class="card">
     <div class="form-2col">
       <div class="field"><label class="field-label">Setor</label><select id="f-setor"><option value="">— selecione —</option></select></div>
-      <div class="field"><label class="field-label">Produto</label><select id="f-produto"><option value="">— selecione —</option></select></div>
+      <div class="field">
+        <label class="field-label">Produto</label>
+        <select id="f-produto"><option value="">— selecione —</option></select>
+      </div>
+      <div class="field" id="novo-produto-wrap" style="display:none">
+        <label class="field-label">Nome do novo produto</label>
+        <input type="text" id="f-produto-novo" placeholder="Ex: Pendente Rubi, Arandela Oslo...">
+      </div>
       <div class="field"><label class="field-label">Quantidade (peças)</label><input type="number" id="f-qtd" min="1" placeholder="0" inputmode="numeric"></div>
       <div class="field"><label class="field-label">Observação (opcional)</label><input type="text" id="f-obs" placeholder="ex: retrabalho, lote especial..."></div>
     </div>
@@ -840,19 +847,47 @@ function devNoPeriodo(){
   return devMes();
 }
 
+let produtosExtra=[];
+
 async function loadAll(){
   setSync('syncing');
   try{
-    const[lancs,metas,devs]=await Promise.all([
+    const[lancs,metas,devs,prods]=await Promise.all([
       sb('lancamentos?select=*&order=data.desc,created_at.desc'),
       sb('metas?select=*'),
-      sb('devolucoes?select=*&order=data.desc,created_at.desc')
+      sb('devolucoes?select=*&order=data.desc,created_at.desc'),
+      sb('produtos_extra?select=*&order=nome')
     ]);
     cachedLancs=lancs;
     cachedMetas={};metas.forEach(m=>{cachedMetas[m.setor]=m.quantidade});
     cachedDevs=devs;
+    produtosExtra=prods.map(p=>p.nome);
+    atualizarDropdownProdutos();
     setSync('ok');
   }catch(e){setSync('err');toast('Sem conexão com o banco.')}
+}
+
+function atualizarDropdownProdutos(){
+  const sel=document.getElementById('f-produto');
+  if(!sel)return;
+  // Manter opção vazia
+  sel.innerHTML='<option value="">— selecione —</option>';
+  // Produtos padrão
+  PRODUTOS.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p;o.textContent=p;sel.appendChild(o);
+  });
+  // Produtos extras do banco
+  produtosExtra.forEach(p=>{
+    if(!PRODUTOS.includes(p)){
+      const o=document.createElement('option');
+      o.value=p;o.textContent=p+' ✦';sel.appendChild(o);
+    }
+  });
+  // Opção novo produto
+  const oNovo=document.createElement('option');
+  oNovo.value='— Novo produto';oNovo.textContent='— Novo produto';
+  sel.appendChild(oNovo);
 }
 async function loadDevs(){
   try{const devs=await sb('devolucoes?select=*&order=data.desc,created_at.desc');cachedDevs=devs;}
@@ -863,7 +898,18 @@ function init(){
   document.getElementById('f-data').value=hoje();
   document.getElementById('dv-data').value=hoje();
   const pop=(id,lista)=>{const sel=document.getElementById(id);lista.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)})};
-  pop('f-setor',SETORES);pop('f-produto',PRODUTOS);pop('h-setor',SETORES);pop('dv-produto',PRODUTOS);
+  pop('f-setor',SETORES);pop('f-produto',[...PRODUTOS,'— Novo produto']);pop('h-setor',SETORES);pop('dv-produto',PRODUTOS);
+  // Mostrar/ocultar campo de novo produto
+  document.getElementById('f-produto').addEventListener('change', function(){
+    const wrap = document.getElementById('novo-produto-wrap');
+    if(this.value === '— Novo produto'){
+      wrap.style.display = 'block';
+      document.getElementById('f-produto-novo').focus();
+    } else {
+      wrap.style.display = 'none';
+      document.getElementById('f-produto-novo').value = '';
+    }
+  });
   const m=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   document.getElementById('topbar-mes').textContent=m.charAt(0).toUpperCase()+m.slice(1);
   // Restaurar tema salvo
@@ -923,8 +969,24 @@ function goTo(id,btn){
 }
 
 /* ── LANÇAMENTO ── */
-function addPendente(){
-  const data=document.getElementById('f-data').value,setor=document.getElementById('f-setor').value,produto=document.getElementById('f-produto').value,qtd=parseInt(document.getElementById('f-qtd').value)||0,obs=document.getElementById('f-obs').value.trim();
+async function addPendente(){
+  const data=document.getElementById('f-data').value;
+  const setor=document.getElementById('f-setor').value;
+  const produtoSel=document.getElementById('f-produto').value;
+  const produtoNovo=(document.getElementById('f-produto-novo')||{}).value||'';
+  const produto=produtoSel==='— Novo produto'?produtoNovo.trim():produtoSel;
+  const qtd=parseInt(document.getElementById('f-qtd').value)||0;
+  const obs=document.getElementById('f-obs').value.trim();
+  if(produtoSel==='— Novo produto'&&!produto){toast('Digite o nome do novo produto.');return}
+  // Salvar novo produto no banco se não existir ainda
+  if(produtoSel==='— Novo produto'&&produto&&!produtosExtra.includes(produto)){
+    try{
+      await sb('produtos_extra',{method:'POST',body:JSON.stringify({nome:produto})});
+      produtosExtra.push(produto);
+      atualizarDropdownProdutos();
+      toast('Novo produto "'+produto+'" salvo!');
+    }catch(e){ /* ignora se já existe */ }
+  }
   if(!data||!setor||!produto||qtd<=0){toast('Preencha todos os campos.');return}
   pendentes.push({data,setor,produto,qtd,obs,_id:Date.now()+Math.random()});
   document.getElementById('f-qtd').value='';document.getElementById('f-obs').value='';renderPend();
