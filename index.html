@@ -607,10 +607,11 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
       <div id="comp-gestor-badge" style="display:none;font-size:10px;color:var(--green);background:var(--green-d);padding:3px 8px;border-radius:20px;font-weight:600">Modo gestor ativo</div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="chip active" onclick="setFiltroComp('Todos',this)">Todos</button>
+      <button class="chip active" onclick="setFiltroComp('Todos',this)">Em aberto</button>
       <button class="chip" onclick="setFiltroComp('Pendente',this)">Pendentes</button>
-      <button class="chip" onclick="setFiltroComp('Em andamento',this)">Em andamento</button>
-      <button class="chip" onclick="setFiltroComp('Concluído',this)">Concluídos</button>
+      <button class="chip" onclick="setFiltroComp('Em andamento',this)">Andamento</button>
+      <button class="chip" onclick="setFiltroComp('Comprado',this)">Comprado</button>
+      <button class="chip" onclick="setFiltroComp('Recebido',this)">Recebidos</button>
     </div>
   </div>
 
@@ -675,7 +676,14 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
       <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Registrar compra</div>
       <div id="modal-compra-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
       <input type="hidden" id="mc-id">
-      <div class="field"><label class="field-label">Comprador</label><input type="text" id="mc-comprador" placeholder="Seu nome"></div>
+      <div class="field">
+        <label class="field-label">Comprador</label>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <button onclick="document.getElementById('mc-comprador').value='Gabi'" style="padding:6px 14px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--line2)';this.style.color='var(--text2)'">Gabi</button>
+          <button onclick="document.getElementById('mc-comprador').value='Higor'" style="padding:6px 14px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--line2)';this.style.color='var(--text2)'">Higor</button>
+        </div>
+        <input type="text" id="mc-comprador" placeholder="ou digite o nome">
+      </div>
       <div class="field"><label class="field-label">Data da compra</label><input type="date" id="mc-data"></div>
       <div class="field"><label class="field-label">Fornecedor</label><input type="text" id="mc-forn" placeholder="Nome do fornecedor"></div>
       <div class="field-row">
@@ -1933,7 +1941,8 @@ function setFiltroComp(f,btn){
 function statusCor(s){
   if(s==='Pendente')return{bg:'rgba(232,156,71,.12)',cor:'var(--amber)',borda:'rgba(232,156,71,.25)'};
   if(s==='Em andamento')return{bg:'var(--blue-d)',cor:'var(--blue)',borda:'rgba(91,156,246,.25)'};
-  if(s==='Concluído')return{bg:'var(--green-d)',cor:'var(--green)',borda:'rgba(76,175,125,.25)'};
+  if(s==='Comprado')return{bg:'rgba(232,197,71,.1)',cor:'var(--accent)',borda:'rgba(232,197,71,.25)'};
+  if(s==='Recebido')return{bg:'var(--green-d)',cor:'var(--green)',borda:'rgba(76,175,125,.25)'};
   if(s==='Cancelado')return{bg:'var(--red-d)',cor:'var(--red)',borda:'rgba(224,92,92,.25)'};
   return{bg:'var(--ink3)',cor:'var(--text3)',borda:'var(--line)'};
 }
@@ -1952,52 +1961,106 @@ function renderCompKPIs(){
   const mediaResp=tempos.length?Math.round(tempos.reduce((a,t)=>a+t,0)/tempos.length):null;
   const atrasados=cachedSolic.filter(s=>s.status!=='Concluído'&&s.status!=='Cancelado'&&diasAte(s.prazo_necessidade)<0).length;
   const valTotal=conc.reduce((a,s)=>a+(s.valor_total||0),0);
+  const emAndamento=cachedSolic.filter(s=>s.status==='Em andamento').length;
+  const comprado=cachedSolic.filter(s=>s.status==='Comprado').length;
+  // Tempo médio solicitação → recebimento
+  const concluidas=cachedSolic.filter(s=>s.status==='Recebido'&&s.data_solicitacao&&s.data_recebido);
+  const temposRec=concluidas.map(s=>Math.round((new Date(s.data_recebido)-new Date(s.data_solicitacao))/(1000*60*60*24)));
+  const mediaRec=temposRec.length?Math.round(temposRec.reduce((a,t)=>a+t,0)/temposRec.length):null;
   document.getElementById('comp-kpis').innerHTML=`
-    <div class="kpi"><div class="kpi-label">Total solicitações</div><div class="kpi-val">${total}</div><div class="kpi-sub">${pend} pendentes</div></div>
-    <div class="kpi ${atrasados>0?'':''}"><div class="kpi-label">Atrasadas</div><div class="kpi-val" style="color:${atrasados>0?'var(--red)':'var(--green)'}">${atrasados}</div><div class="kpi-sub">prazo vencido</div></div>
-    <div class="kpi"><div class="kpi-label">Tempo médio compra</div><div class="kpi-val" style="font-size:22px">${mediaResp!==null?mediaResp+'d':'—'}</div><div class="kpi-sub">solicitação → compra</div></div>
-    <div class="kpi"><div class="kpi-label">Total comprado</div><div class="kpi-val" style="font-size:18px">R$${valTotal.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}</div><div class="kpi-sub">em concluídas</div></div>`;
+    <div class="kpi" style="cursor:pointer" onclick="setFiltroComp('Pendente',document.querySelector('#page-comp .chip'))">
+      <div class="kpi-label">Pendentes ↗</div>
+      <div class="kpi-val" style="color:${pend>0?'var(--amber)':'var(--green)'}">${pend}</div>
+      <div class="kpi-sub">${total} solicitações no total</div>
+    </div>
+    <div class="kpi ${atrasados>0?'':''}">
+      <div class="kpi-label">Atrasadas</div>
+      <div class="kpi-val" style="color:${atrasados>0?'var(--red)':'var(--green)'}">${atrasados}</div>
+      <div class="kpi-sub">prazo vencido</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Em andamento / Comprado</div>
+      <div class="kpi-val" style="font-size:22px">${emAndamento} / ${comprado}</div>
+      <div class="kpi-sub">aguardando recebimento</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Tempo médio recebimento</div>
+      <div class="kpi-val" style="font-size:22px">${mediaRec!==null?mediaRec+'d':'—'}</div>
+      <div class="kpi-sub">solicitação → recebido</div>
+    </div>`;
 }
 
 function renderCompLista(){
   renderCompKPIs();
-  let lista=filtroComp==='Todos'?cachedSolic:cachedSolic.filter(s=>s.status===filtroComp);
   const el=document.getElementById('comp-lista');
-  if(!lista.length){el.innerHTML='<div class="empty-msg">Nenhuma solicitação encontrada.</div>';renderCompCharts();return}
-  el.innerHTML=lista.map(s=>{
+  const statusAtivos=['Pendente','Em andamento','Comprado'];
+  const ativas=cachedSolic.filter(s=>statusAtivos.includes(s.status));
+  const concluidas=cachedSolic.filter(s=>s.status==='Recebido');
+  const canceladas=cachedSolic.filter(s=>s.status==='Cancelado');
+  let lista;
+  if(filtroComp==='Todos') lista=ativas;
+  else if(filtroComp==='Recebido') lista=concluidas;
+  else if(filtroComp==='Cancelado') lista=canceladas;
+  else lista=cachedSolic.filter(s=>s.status===filtroComp);
+  lista=[...lista].sort((a,b)=>diasAte(a.prazo_necessidade)-diasAte(b.prazo_necessidade));
+
+  function cardSolic(s){
     const sc=statusCor(s.status);
     const dias=diasAte(s.prazo_necessidade);
-    const diasStr=dias<0?`<span style="color:var(--red);font-weight:600">${Math.abs(dias)}d atrasado</span>`:dias===0?`<span style="color:var(--amber)">Hoje!</span>`:`<span style="color:var(--text3)">${dias}d restantes</span>`;
-    const tr=tempoResp(s);
+    const diasStr=dias<0?`<span style="color:var(--red);font-weight:600">⚠ ${Math.abs(dias)}d atrasado</span>`:dias===0?`<span style="color:var(--amber);font-weight:600">Hoje!</span>`:dias<=2?`<span style="color:var(--amber)">${dias}d restantes</span>`:`<span style="color:var(--text3)">${dias}d</span>`;
+    const tl=[];
+    if(s.data_solicitacao) tl.push({l:'Solicitado',d:fmt(s.data_solicitacao),c:'var(--text3)'});
+    if(s.data_em_andamento) tl.push({l:'Andamento',d:fmt(s.data_em_andamento),c:'var(--blue)'});
+    if(s.data_comprado) tl.push({l:'Comprado',d:fmt(s.data_comprado),c:'var(--amber)'});
+    if(s.data_recebido) tl.push({l:'Recebido',d:fmt(s.data_recebido),c:'var(--green)'});
+    const tempoTotal=s.data_solicitacao&&s.data_recebido?Math.round((new Date(s.data_recebido)-new Date(s.data_solicitacao))/(1000*60*60*24)):null;
     return`<div style="background:var(--ink2);border:1px solid ${sc.borda};border-radius:var(--r2);padding:14px 16px;margin-bottom:10px">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-        <div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <div style="flex:1;min-width:0">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text)">${s.material}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.categoria} · ${s.setor} · ${s.solicitante}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.categoria} · ${s.setor}</div>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0">
           <span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;background:${sc.bg};color:${sc.cor}">${s.status}</span>
-          <span style="font-size:10px;font-weight:600;color:${priorCor(s.prioridade)}">${s.prioridade==='Alta'?'▲ Alta':s.prioridade==='Baixa'?'▽ Baixa':'— Média'}</span>
+          <span style="font-size:10px;font-weight:600;color:${priorCor(s.prioridade)}">${s.prioridade==='Alta'?'⚡ Alta':s.prioridade==='Baixa'?'▽ Baixa':'● Média'}</span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:10px">
-        <div style="font-size:11px"><span style="color:var(--text3)">Qtd: </span><b>${s.quantidade} ${s.unidade}</b></div>
-        <div style="font-size:11px"><span style="color:var(--text3)">Prazo: </span><b>${fmt(s.prazo_necessidade)}</b> ${diasStr}</div>
-        ${s.fornecedor_preferido?`<div style="font-size:11px"><span style="color:var(--text3)">Forn: </span>${s.fornecedor_preferido}</div>`:''}
-        ${tr!==null?`<div style="font-size:11px"><span style="color:var(--text3)">Respondido em: </span><b style="color:var(--green)">${tr}d</b></div>`:''}
-        ${s.valor_total?`<div style="font-size:11px"><span style="color:var(--text3)">Valor: </span><b>R$ ${parseFloat(s.valor_total).toLocaleString('pt-BR',{minimumFractionDigits:2})}</b></div>`:''}
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;margin-bottom:8px">
+        <span><span style="color:var(--text3)">Qtd: </span><b>${s.quantidade} ${s.unidade}</b></span>
+        <span><span style="color:var(--text3)">Prazo: </span><b>${fmt(s.prazo_necessidade)}</b> ${diasStr}</span>
+        ${s.comprador?`<span><span style="color:var(--text3)">Comprador: </span><b>${s.comprador}</b></span>`:''}
+        ${tempoTotal!==null?`<span style="color:var(--green)">✓ Concluído em <b>${tempoTotal}d</b></span>`:''}
       </div>
-      ${s.obs?`<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Obs: ${s.obs}</div>`:''}
-      ${s.obs_compra?`<div style="font-size:11px;color:var(--blue);margin-bottom:10px">Compra: ${s.obs_compra}</div>`:''}
+      ${tl.length>1?`<div style="display:flex;align-items:flex-start;gap:0;margin-bottom:10px">${tl.map((t,i)=>`${i>0?`<div style="flex:1;height:2px;background:${t.c};margin-top:7px"></div>`:''}<div style="text-align:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:${t.c};margin:2px auto 3px"></div><div style="font-size:9px;color:${t.c};white-space:nowrap">${t.l}</div><div style="font-size:9px;color:var(--text3)">${t.d}</div></div>`).join('')}</div>`:''}
+      ${s.obs?`<div style="font-size:11px;color:var(--text3);margin-bottom:8px;padding:6px 10px;background:var(--ink3);border-radius:var(--r)">${s.obs}</div>`:''}
+      ${s.obs_compra?`<div style="font-size:11px;color:var(--blue);margin-bottom:8px">📦 ${s.obs_compra}</div>`:''}
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${s.status==='Pendente'?`<button onclick="avancarStatus('${s.id}','Em andamento')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--blue-d);background:var(--blue-d);color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Em andamento</button>`:''}
-        ${s.status!=='Concluído'&&s.status!=='Cancelado'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Registrar compra</button>`:''}
-        ${s.status!=='Concluído'&&s.status!=='Cancelado'?`<button onclick="avancarStatus('${s.id}','Cancelado')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:none;color:var(--text3);cursor:pointer">Cancelar</button>`:''}
+        ${s.status==='Pendente'?`<button onclick="avancarStatusData('${s.id}','Em andamento','data_em_andamento')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:var(--blue-d);color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">▶ Em andamento</button>`:''}
+        ${s.status==='Em andamento'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(232,156,71,.3);background:var(--amber-d);color:var(--amber);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">🛒 Registrar compra</button>`:''}
+        ${s.status==='Comprado'?`<button onclick="avancarStatusData('${s.id}','Recebido','data_recebido')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">✓ Marcar como recebido</button>`:''}
+        ${s.status!=='Recebido'&&s.status!=='Cancelado'?`<button onclick="avancarStatus('${s.id}','Cancelado')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:none;background:none;color:var(--text3);cursor:pointer">Cancelar</button>`:''}
         ${modoGestorAtivo?`<button onclick="apagarSolicitacao('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Apagar</button>`:''}
       </div>
     </div>`;
-  }).join('');
+  }
+
+  if(!lista.length){
+    el.innerHTML=`<div class="empty-msg">Nenhuma solicitação ${filtroComp==='Todos'?'em aberto':filtroComp==='Recebido'?'concluída':'encontrada'}.</div>`;
+  } else {
+    el.innerHTML=lista.map(s=>cardSolic(s)).join('');
+  }
+  if(filtroComp==='Todos'&&(concluidas.length||canceladas.length)){
+    el.innerHTML+=`<button onclick="toggleHistComp(this)" style="width:100%;padding:10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text2);font-size:12px;cursor:pointer;text-align:left;font-family:'DM Mono',monospace;margin-top:4px">▼ Ver concluídas e canceladas (${concluidas.length+canceladas.length})</button><div id="hist-comp-extra" style="display:none;margin-top:8px">${[...concluidas,...canceladas].sort((a,b)=>new Date(b.data_solicitacao)-new Date(a.data_solicitacao)).map(s=>cardSolic(s)).join('')}</div>`;
+  }
   renderCompCharts();
+}
+
+function toggleHistComp(btn){
+  const el=document.getElementById('hist-comp-extra');
+  if(!el)return;
+  const aberto=el.style.display!=='none';
+  el.style.display=aberto?'none':'block';
+  btn.textContent=(aberto?'▼':'▲')+btn.textContent.slice(1);
 }
 
 async function salvarSolicitacao(){
@@ -2021,6 +2084,17 @@ async function salvarSolicitacao(){
     limparBuscaMat();
     renderCompLista();
   }catch(e){setSync('err');toast('Erro ao salvar solicitação.')}
+}
+
+async function avancarStatusData(id,novoStatus,campoDat){
+  setSync('syncing');
+  try{
+    const patch={status:novoStatus,[campoDat]:hoje()};
+    await sb(`solicitacoes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch),prefer:'return=minimal'});
+    const idx=cachedSolic.findIndex(s=>s.id===id);
+    if(idx>=0)Object.assign(cachedSolic[idx],patch);
+    setSync('ok');renderCompLista();
+  }catch(e){setSync('err');toast('Erro ao atualizar status.')}
 }
 
 async function avancarStatus(id,novoStatus){
@@ -2077,7 +2151,7 @@ async function confirmarCompra(){
   if(!comp||!data){toast('Preencha comprador e data da compra.');return}
   setSync('syncing');
   try{
-    const patch={status:'Concluído',comprador:comp,data_compra:data,fornecedor_preferido:forn||null,valor_unit:vunit,valor_total:vtotal,nota_fiscal:nf||null,obs_compra:obs||null};
+    const patch={status:'Comprado',comprador:comp,data_compra:data,data_comprado:data,fornecedor_preferido:forn||null,valor_unit:vunit,valor_total:vtotal,nota_fiscal:nf||null,obs_compra:obs||null};
     await sb(`solicitacoes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch),prefer:'return=minimal'});
     const idx=cachedSolic.findIndex(s=>s.id===id);
     if(idx>=0)Object.assign(cachedSolic[idx],patch);
