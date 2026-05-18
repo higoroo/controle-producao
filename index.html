@@ -460,6 +460,12 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   </div>
 
   <div class="sec-title">Devoluções pendentes de nota</div>
+  <div style="position:relative;margin-bottom:10px">
+    <input type="text" id="dev-busca-pend" placeholder="🔍  Buscar pendentes..." 
+      oninput="filtrarDevPendentes()"
+      style="width:100%;padding:10px 36px 10px 14px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;box-sizing:border-box">
+    <button onclick="limparBuscaDevPend()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1">×</button>
+  </div>
   <div class="card" id="dev-pendentes-nota"><div class="loading"><div class="spinner"></div></div></div>
 
   <div class="sec-title" style="margin-top:24px">Histórico por período</div>
@@ -489,6 +495,12 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   </div>
 
   <div class="sec-title">Todas as devoluções</div>
+  <div style="position:relative;margin-bottom:10px">
+    <input type="text" id="dev-busca" placeholder="🔍  Buscar por cliente, produto, NF, canal..." 
+      oninput="filtrarDevCards()"
+      style="width:100%;padding:10px 36px 10px 14px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;box-sizing:border-box">
+    <button id="dev-busca-clear" onclick="limparBuscaDev()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1">×</button>
+  </div>
   <div class="card" style="padding:0">
     <div id="dev-cards-lista" style="padding:0">
       <div class="loading" style="padding:24px"><div class="spinner"></div></div>
@@ -2612,6 +2624,76 @@ function renderDevCards(lista){
       </div>
     </div>`;
   }).join('');
+}
+
+/* ── BUSCA DEVOLUÇÕES ── */
+function filtrarDevCards(){
+  const q = (document.getElementById('dev-busca').value||'').toLowerCase().trim();
+  const clr = document.getElementById('dev-busca-clear');
+  if(clr) clr.style.display = q ? 'block' : 'none';
+  const lista = q ? cachedDevs.filter(d =>
+    (d.cliente||'').toLowerCase().includes(q) ||
+    (d.produto||'').toLowerCase().includes(q) ||
+    (d.nf||'').toLowerCase().includes(q) ||
+    (d.motivo||'').toLowerCase().includes(q) ||
+    (d.status_fisico||'').toLowerCase().includes(q) ||
+    (d.destino||'').toLowerCase().includes(q) ||
+    (d.obs||'').toLowerCase().includes(q)
+  ) : cachedDevs;
+  renderDevCards(lista);
+  // Atualizar contagem
+  const el = document.getElementById('dev-cards-lista');
+  if(q && lista.length === 0){
+    el.innerHTML = `<div style="padding:20px;text-align:center;font-size:12px;color:var(--text3)">Nenhuma devolução encontrada para "<b>${q}</b>".</div>`;
+  }
+}
+
+function limparBuscaDev(){
+  const inp = document.getElementById('dev-busca');
+  if(inp) inp.value = '';
+  const clr = document.getElementById('dev-busca-clear');
+  if(clr) clr.style.display = 'none';
+  renderDevCards(cachedDevs);
+}
+
+function filtrarDevPendentes(){
+  const q = (document.getElementById('dev-busca-pend').value||'').toLowerCase().trim();
+  const pendentes = cachedDevs.filter(d => !d.nota_emitida);
+  const lista = q ? pendentes.filter(d =>
+    (d.cliente||'').toLowerCase().includes(q) ||
+    (d.produto||'').toLowerCase().includes(q) ||
+    (d.nf||'').toLowerCase().includes(q) ||
+    (d.motivo||'').toLowerCase().includes(q) ||
+    (d.status_fisico||'').toLowerCase().includes(q)
+  ) : pendentes;
+  const el = document.getElementById('dev-pendentes-nota');
+  if(!el) return;
+  if(!lista.length){
+    el.innerHTML = q
+      ? `<div style="padding:14px;font-size:12px;color:var(--text3)">Nenhuma pendência encontrada para "<b>${q}</b>".</div>`
+      : '<div style="padding:14px;font-size:12px;color:var(--green)">✓ Todas as notas foram emitidas!</div>';
+    return;
+  }
+  const corStatus = s => s==='Inteiro'?{bg:'var(--green-d)',cor:'var(--green)'}:s==='Quebrado'?{bg:'var(--red-d)',cor:'var(--red)'}:s==='Com avaria'?{bg:'var(--amber-d)',cor:'var(--amber)'}:{bg:'var(--blue-d)',cor:'var(--blue)'};
+  el.innerHTML = lista.map(d => {
+    const cs = corStatus(d.status_fisico||'');
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px;color:var(--text)">${d.produto}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${d.cliente} · ${fmt(d.data)} ${d.nf?'· NF: <b>'+d.nf+'</b>':''}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        ${d.status_fisico?`<span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;background:${cs.bg};color:${cs.cor}">${d.status_fisico}</span>`:''}
+        <button onclick="marcarNotaEmitida('${d.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;white-space:nowrap">Emitir nota</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function limparBuscaDevPend(){
+  const inp = document.getElementById('dev-busca-pend');
+  if(inp) inp.value = '';
+  filtrarDevPendentes();
 }
 
 init();
