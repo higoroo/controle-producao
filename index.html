@@ -2081,7 +2081,17 @@ function renderCompKPIs(){
   const conc=cachedSolic.filter(s=>s.status==='Concluído');
   const tempos=conc.map(s=>tempoResp(s)).filter(t=>t!==null);
   const mediaResp=tempos.length?Math.round(tempos.reduce((a,t)=>a+t,0)/tempos.length):null;
-  const atrasados=cachedSolic.filter(s=>s.status!=='Concluído'&&s.status!=='Cancelado'&&diasAte(s.prazo_necessidade)<0).length;
+  const atrasados=cachedSolic.filter(s=>{
+    if(['Cancelado'].includes(s.status)) return false;
+    if(['Recebido','Concluído'].includes(s.status)){
+      // Só conta se foi recebido depois do prazo
+      const dataRec=s.data_recebido||s.data_compra||null;
+      if(!dataRec||!s.prazo_necessidade) return false;
+      return new Date(dataRec+'T00:00:00')>new Date(s.prazo_necessidade+'T00:00:00');
+    }
+    // Em aberto: conta se prazo vencido
+    return diasAte(s.prazo_necessidade)<0;
+  }).length;
   const valTotal=conc.reduce((a,s)=>a+(s.valor_total||0),0);
   const emAndamento=cachedSolic.filter(s=>s.status==='Em andamento').length;
   const comprado=cachedSolic.filter(s=>s.status==='Comprado').length;
