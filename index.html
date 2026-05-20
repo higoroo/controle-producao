@@ -873,15 +873,17 @@ let produtosExtra=[];
 async function loadAll(){
   setSync('syncing');
   try{
-    const[lancs,metas,devs,prods]=await Promise.all([
+    const[lancs,metas,devs,prods,solic]=await Promise.all([
       sb('lancamentos?select=*&order=data.desc,created_at.desc'),
       sb('metas?select=*'),
       sb('devolucoes?select=*&order=data.desc,created_at.desc'),
-      sb('produtos_extra?select=*&order=nome')
+      sb('produtos_extra?select=*&order=nome'),
+      sb('solicitacoes?select=*&order=created_at.desc')
     ]);
     cachedLancs=lancs;
     cachedMetas={};metas.forEach(m=>{cachedMetas[m.setor]=m.quantidade});
     cachedDevs=devs;
+    cachedSolic=solic;
     produtosExtra=prods.map(p=>p.nome);
     atualizarDropdownProdutos();
     setSync('ok');
@@ -1122,13 +1124,13 @@ function renderKPIs(){
       <div class="kpi-label">Embaladas</div>
       <div class="kpi-val">${totM.toLocaleString('pt-BR')}</div>
       <div class="kpi-sub">peças · ${lbl}</div>
-      ${antEmb>0?`<div class="kpi-delta" style="color:${totM>=antEmb?'var(--green)':'var(--red)'}">${totM>=antEmb?'▲':'▼'} ${Math.abs(Math.round((totM-antEmb)/antEmb*100))}% vs período antKpi.</div>`:''}
+      ${antEmb>0?`<div class="kpi-delta" style="color:${totM>=antEmb?'var(--green)':'var(--red)'}">${totM>=antEmb?'▲':'▼'} ${Math.abs(Math.round((totM-antEmb)/antEmb*100))}% · ${antEmb.toLocaleString('pt-BR')} ant.</div>`:''}
     </div>
     <div class="kpi">
       <div class="kpi-label">Média / dia</div>
       <div class="kpi-val">${media.toLocaleString('pt-BR')}</div>
       <div class="kpi-sub">peças por dia</div>
-      ${antMedia>0?`<div class="kpi-delta" style="color:${media>=antMedia?'var(--green)':'var(--red)'}">${media>=antMedia?'▲':'▼'} ${Math.abs(Math.round((media-antMedia)/antMedia*100))}% vs período antKpi.</div>`:''}
+      ${antMedia>0?`<div class="kpi-delta" style="color:${media>=antMedia?'var(--green)':'var(--red)'}">${media>=antMedia?'▲':'▼'} ${Math.abs(Math.round((media-antMedia)/antMedia*100))}% · ${antMedia} ant.</div>`:''}
     </div>
     <div class="kpi">
       <div class="kpi-label">Meta mensal</div>
@@ -1139,7 +1141,7 @@ function renderKPIs(){
       <div class="kpi-label">Taxa devolução ↗</div>
       <div class="kpi-val" style="color:${corTaxa}">${taxa}%</div>
       <div class="kpi-sub">${devTot} devolvidas · ${lbl}</div>
-      ${antTaxa>0?`<div class="kpi-delta" style="color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'}">${parseFloat(taxa)<=antTaxa?'▼ Melhorou':'▲ Piorou'} vs período antKpi.</div>`:''}
+      ${antTaxa>0?`<div class="kpi-delta" style="color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'}">${parseFloat(taxa)<=antTaxa?'▼':'▲'} ${antTaxa}% ant.</div>`:''}
     </div>`;
 }
 function renderChartSetores(){
