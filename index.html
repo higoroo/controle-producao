@@ -2129,7 +2129,16 @@ function renderCompLista(){
   function cardSolic(s){
     const sc=statusCor(s.status);
     const dias=diasAte(s.prazo_necessidade);
-    const diasStr=dias<0?`<span style="color:var(--red);font-weight:600">⚠ ${Math.abs(dias)}d atrasado</span>`:dias===0?`<span style="color:var(--amber);font-weight:600">Hoje!</span>`:dias<=2?`<span style="color:var(--amber)">${dias}d restantes</span>`:`<span style="color:var(--text3)">${dias}d</span>`;
+        // Para concluídos: verificar se foi recebido antes ou depois do prazo
+    const finalizado=['Recebido','Concluído'].includes(s.status);
+    const dataRef=finalizado&&s.data_recebido?s.data_recebido:null;
+    const atrasadoFinal=finalizado&&dataRef?new Date(dataRef+'T00:00:00')>new Date(s.prazo_necessidade+'T00:00:00'):false;
+    const diasStr=finalizado
+      ?(atrasadoFinal?`<span style="color:var(--red);font-weight:600">⚠ Recebido com atraso</span>`:`<span style="color:var(--green)">✓ No prazo</span>`)
+      :dias<0?`<span style="color:var(--red);font-weight:600">⚠ ${Math.abs(dias)}d atrasado</span>`
+      :dias===0?`<span style="color:var(--amber);font-weight:600">Hoje!</span>`
+      :dias<=2?`<span style="color:var(--amber)">${dias}d restantes</span>`
+      :`<span style="color:var(--text3)">${dias}d</span>`;
     const tl=[];
     if(s.data_solicitacao) tl.push({l:'Solicitado',d:fmt(s.data_solicitacao),c:'var(--text3)'});
     if(s.data_em_andamento) tl.push({l:'Andamento',d:fmt(s.data_em_andamento),c:'var(--blue)'});
