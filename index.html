@@ -47,7 +47,7 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
   .bottom-nav{display:none!important}
   .scroll-area{left:var(--sidebar)!important;bottom:0!important}
   .content-inner{max-width:1200px;margin:0 auto;padding:32px 40px}
-  .kpi-val{font-size:36px!important}
+  
   .kpi{padding:20px 24px!important}
   .kpi-label{font-size:12px!important}
   .kpi-sub{font-size:12px!important}
@@ -66,7 +66,7 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 }
 @media(min-width:1400px){
   .content-inner{max-width:1400px;padding:40px 56px}
-  .kpi-val{font-size:42px!important}
+  
   .chart-wrap{min-height:340px}
 }
 
@@ -99,7 +99,7 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 @media(min-width:768px){.kpi-grid{grid-template-columns:repeat(4,1fr)}.charts-2col{gap:20px}}
 .kpi{background:var(--ink3);border-radius:var(--r2);padding:14px 16px;border:1px solid var(--line);transition:background .3s,border-color .3s;min-width:0}
 .kpi-label{font-size:10px;color:var(--text2);margin-bottom:5px;letter-spacing:.04em;font-weight:600;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kpi-val{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;line-height:1.1;color:var(--text);white-space:nowrap}
+.kpi-val{font-family:'Syne',sans-serif;font-weight:800;font-size:32px;line-height:1;color:var(--text);white-space:nowrap;letter-spacing:-0.02em}
 .kpi-sub{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-delta{font-size:10px;margin-top:4px;display:flex;align-items:center;gap:3px;white-space:nowrap;font-weight:600}
 .kpi-accent{border-color:rgba(232,197,71,.3);background:rgba(232,197,71,.04)}.kpi-accent .kpi-val{color:var(--accent)}
@@ -807,9 +807,9 @@ function renderDevHistorico(){
   const pendNota=lista.filter(d=>!d.nota_emitida).length;
 
   document.getElementById('dev-hist-kpis').innerHTML=`
-    <div class="kpi" style="border-color:rgba(224,92,92,.2)"><div class="kpi-label">Total devolvidas</div><div class="kpi-val" style="color:var(--red);font-size:22px">${totalDev}</div><div class="kpi-sub">${lista.length} ocorrências</div></div>
-    <div class="kpi"><div class="kpi-label">Taxa devolução</div><div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div><div class="kpi-sub">vs ${embBase.toLocaleString('pt-BR')} embaladas</div></div>
-    <div class="kpi" style="${pendNota>0?'border-color:rgba(232,156,71,.3)':''}"><div class="kpi-label">Notas pendentes</div><div class="kpi-val" style="color:${pendNota>0?'var(--amber)':'var(--green)'};font-size:22px">${pendNota}</div><div class="kpi-sub">sem nota ERP</div></div>`;
+    <div class="kpi" style="border-color:rgba(224,92,92,.2)"><div class="kpi-label">Total devolvidas</div><div class="kpi-val">${totalDev}</div><div class="kpi-sub">${lista.length} ocorrências</div></div>
+    <div class="kpi"><div class="kpi-label">Taxa devolução</div><div class="kpi-val">${taxa}%</div><div class="kpi-sub">vs ${embBase.toLocaleString('pt-BR')} embaladas</div></div>
+    <div class="kpi" style="${pendNota>0?'border-color:rgba(232,156,71,.3)':''}"><div class="kpi-label">Notas pendentes</div><div class="kpi-val">${pendNota}</div><div class="kpi-sub">sem nota ERP</div></div>`;
 
   // Gráfico evolução mensal
   renderChartDevEvolucao();
@@ -1333,8 +1333,8 @@ function renderDevDash(){
   const pendNota=mes.filter(d=>!d.nota_emitida).length;
   document.getElementById('dev-kpi-row').innerHTML=`
     <div class="kpi" style="border-color:rgba(224,92,92,.25)"><div class="kpi-label">Devoluções no mês</div><div class="kpi-val" style="color:var(--red)">${totalDev.toLocaleString('pt-BR')}</div><div class="kpi-sub">${mes.length} ocorrências</div></div>
-    <div class="kpi"><div class="kpi-label">Taxa devolução</div><div class="kpi-val" style="color:${corTaxa};font-size:22px">${taxa}%</div><div class="kpi-sub">vs ${embMes.toLocaleString('pt-BR')} embaladas</div></div>
-    <div class="kpi" style="${pendNota>0?'border-color:rgba(232,156,71,.3)':''}"><div class="kpi-label">Notas pendentes</div><div class="kpi-val" style="color:${pendNota>0?'var(--amber)':'var(--green)'};font-size:22px">${pendNota}</div><div class="kpi-sub">devoluções sem nota ERP</div></div>
+    <div class="kpi"><div class="kpi-label">Taxa devolução</div><div class="kpi-val">${taxa}%</div><div class="kpi-sub">vs ${embMes.toLocaleString('pt-BR')} embaladas</div></div>
+    <div class="kpi" style="${pendNota>0?'border-color:rgba(232,156,71,.3)':''}"><div class="kpi-label">Notas pendentes</div><div class="kpi-val">${pendNota}</div><div class="kpi-sub">devoluções sem nota ERP</div></div>
     <div class="kpi"><div class="kpi-label">Notas emitidas</div><div class="kpi-val" style="color:var(--green)">${mes.filter(d=>d.nota_emitida).length}</div><div class="kpi-sub">do mês atual</div></div>`;
 
   // Status físico
@@ -2112,12 +2112,12 @@ function renderCompKPIs(){
     </div>
     <div class="kpi" style="cursor:pointer;transition:opacity .15s" onclick="irParaFiltroComp('Em andamento')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
       <div class="kpi-label">Em andamento / Comprado ↗</div>
-      <div class="kpi-val" style="font-size:22px">${emAndamento} / ${comprado}</div>
+      <div class="kpi-val" >${emAndamento} / ${comprado}</div>
       <div class="kpi-sub">aguardando recebimento</div>
     </div>
     <div class="kpi">
       <div class="kpi-label">Tempo médio recebimento</div>
-      <div class="kpi-val" style="font-size:22px">${mediaRec!==null?mediaRec+'d':'—'}</div>
+      <div class="kpi-val" >${mediaRec!==null?mediaRec+'d':'—'}</div>
       <div class="kpi-sub">solicitação → recebido</div>
     </div>`;
 }
