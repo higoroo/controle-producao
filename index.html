@@ -2069,7 +2069,7 @@ function statusCor(s){
   return{bg:'var(--ink3)',cor:'var(--text3)',borda:'var(--line)'};
 }
 function priorCor(p){return p==='Alta'?'var(--red)':p==='Média'?'var(--amber)':'var(--text3)'}
-function diasAte(data){const d=Math.round((new Date(data+'T12:00')-new Date())/(1000*60*60*24));return d}
+function diasAte(data){if(!data)return 999;const hoje2=new Date();hoje2.setHours(0,0,0,0);const prazo=new Date(data+'T00:00:00');prazo.setHours(0,0,0,0);return Math.round((prazo-hoje2)/(1000*60*60*24))}
 function tempoResp(s){
   if(!s.data_compra||!s.data_solicitacao)return null;
   return Math.round((new Date(s.data_compra)-new Date(s.data_solicitacao))/(1000*60*60*24));
