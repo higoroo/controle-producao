@@ -368,14 +368,16 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
       <div class="chart-wrap" style="height:240px;min-height:300px"><canvas id="chart-dia" role="img" aria-label="Produção diária">Produção diária.</canvas></div>
     </div>
   </div>
-  <div class="sec-title">Metas do mês</div>
-  <div class="card" id="metas-prog"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px">
     <div class="sec-title" style="margin:0">Compras em aberto</div>
     <button onclick="goTo('comp',document.getElementById('sb-comp'))" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--line2);background:none;color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Ver todas →</button>
   </div>
   <div id="dash-compras"><div class="loading"><div class="spinner"></div></div></div>
+
+  <div class="sec-title">Metas do mês</div>
+  <div class="card" id="metas-prog"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+
 
 </div></div>
 
@@ -2748,7 +2750,7 @@ function renderDashCompras(){
   el.innerHTML=`<div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden">
     ${abertas.map((s,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;${i<abertas.length-1?'border-bottom:1px solid var(--line)':''}">
       <div style="flex:1;min-width:0">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.material}</div>
+        <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em">${s.material}</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.setor} · ${s.quantidade} ${s.unidade}</div>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
