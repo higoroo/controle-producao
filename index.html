@@ -192,7 +192,7 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 <body>
 
 <div class="topbar">
-  <div class="logo">IW<em>.</em></div>
+  <div class="logo" onclick="goTo('dash',document.getElementById('sb-dash'))" style="cursor:pointer" title="Dashboard">IW<em>.</em></div>
   <div class="topbar-right">
     <div class="topbar-mes" id="topbar-mes"></div>
     <button id="btn-tema" onclick="toggleTema()" title="Alternar modo claro/escuro"
@@ -370,6 +370,13 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   </div>
   <div class="sec-title">Metas do mês</div>
   <div class="card" id="metas-prog"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px">
+    <div class="sec-title" style="margin:0">Compras em aberto</div>
+    <button onclick="goTo('comp',document.getElementById('sb-comp'))" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--line2);background:none;color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Ver todas →</button>
+  </div>
+  <div id="dash-compras"><div class="loading"><div class="spinner"></div></div></div>
+
 </div></div>
 
 <!-- ── PRODUTOS ── -->
@@ -1033,7 +1040,7 @@ function kpiDelta(atual, ant, inv=false){
 
 
 async function renderDash(){
-  await loadAll();renderKPIs();renderChartSetores();renderChartDia();renderMetasProg();
+  await loadAll();renderKPIs();renderChartSetores();renderChartDia();renderMetasProg();renderDashCompras();
 }
 function embalageMes(lancs){return lancs.filter(l=>l.setor==='Embalagem').reduce((a,l)=>a+l.qtd,0)}
 function periodoAnteriorEquivalente(){
@@ -1099,37 +1106,38 @@ function renderKPIs(){
   const devTot=devPeriodo.reduce((a,d)=>a+(d.quantidade||0),0);
   const taxa=totM>0?((devTot/totM)*100).toFixed(1):0;
   const corTaxa=parseFloat(taxa)<=2?'var(--green)':parseFloat(taxa)<=5?'var(--amber)':'var(--red)';
+
   const lbl=labelPeriodo();
   // Período anterior equivalente
-  const ant=periodoAnteriorEquivalente();
-  const antEmb=embalageMes(ant.lancs);
-  const antDias=[...new Set(ant.lancs.filter(l=>l.setor==='Embalagem').map(l=>l.data))].length||1;
+  const antKpi=periodoAnteriorEquivalente();
+  const antEmb=embalageMes(antKpi.lancs);
+  const antDias=[...new Set(antKpi.lancs.filter(l=>l.setor==='Embalagem').map(l=>l.data))].length||1;
   const antMedia=Math.round(antEmb/antDias);
-  const antDev=ant.devs.reduce((a,d)=>a+(d.quantidade||0),0);
+  const antDev=antKpi.devs.reduce((a,d)=>a+(d.quantidade||0),0);
   const antTaxa=antEmb>0?parseFloat((antDev/antEmb*100).toFixed(1)):0;
   document.getElementById('kpi-area').innerHTML=`
     <div class="kpi kpi-accent">
       <div class="kpi-label">Embaladas</div>
       <div class="kpi-val">${totM.toLocaleString('pt-BR')}</div>
       <div class="kpi-sub">peças · ${lbl}</div>
-      ${antEmb>0?`<div class="kpi-delta" style="color:${totM>=antEmb?'var(--green)':'var(--red)'}">${totM>=antEmb?'▲':'▼'} ${Math.abs(Math.round((totM-antEmb)/antEmb*100))}% vs período ant.</div>`:''}
+      ${antEmb>0?`<div class="kpi-delta" style="color:${totM>=antEmb?'var(--green)':'var(--red)'}">${totM>=antEmb?'▲':'▼'} ${Math.abs(Math.round((totM-antEmb)/antEmb*100))}% vs período antKpi.</div>`:''}
     </div>
     <div class="kpi">
       <div class="kpi-label">Média / dia</div>
       <div class="kpi-val">${media.toLocaleString('pt-BR')}</div>
       <div class="kpi-sub">peças por dia</div>
-      ${antMedia>0?`<div class="kpi-delta" style="color:${media>=antMedia?'var(--green)':'var(--red)'}">${media>=antMedia?'▲':'▼'} ${Math.abs(Math.round((media-antMedia)/antMedia*100))}% vs período ant.</div>`:''}
+      ${antMedia>0?`<div class="kpi-delta" style="color:${media>=antMedia?'var(--green)':'var(--red)'}">${media>=antMedia?'▲':'▼'} ${Math.abs(Math.round((media-antMedia)/antMedia*100))}% vs período antKpi.</div>`:''}
     </div>
     <div class="kpi">
       <div class="kpi-label">Meta mensal</div>
       <div class="kpi-val">${pctMeta!==null?pctMeta+'%':'—'}</div>
       <div class="kpi-sub">${pctMeta!==null?totM.toLocaleString('pt-BR')+' / '+meta.toLocaleString('pt-BR')+' pç':'sem meta definida'}</div>
     </div>
-    <div class="kpi">
-      <div class="kpi-label">Taxa devolução</div>
+    <div class="kpi" style="cursor:pointer" onclick="goTo('dev',document.getElementById('sb-dev'))" title="Ver devoluções">
+      <div class="kpi-label">Taxa devolução ↗</div>
       <div class="kpi-val" style="color:${corTaxa}">${taxa}%</div>
       <div class="kpi-sub">${devTot} devolvidas · ${lbl}</div>
-      ${antTaxa>0?`<div class="kpi-delta" style="color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'}">${parseFloat(taxa)<=antTaxa?'▼ Melhorou':'▲ Piorou'} vs período ant.</div>`:''}
+      ${antTaxa>0?`<div class="kpi-delta" style="color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'}">${parseFloat(taxa)<=antTaxa?'▼ Melhorou':'▲ Piorou'} vs período antKpi.</div>`:''}
     </div>`;
 }
 function renderChartSetores(){
@@ -2713,6 +2721,47 @@ function limparBuscaDevPend(){
   const inp = document.getElementById('dev-busca-pend');
   if(inp) inp.value = '';
   filtrarDevPendentes();
+}
+
+function renderDashCompras(){
+  const el=document.getElementById('dash-compras');
+  if(!el)return;
+  const abertas=cachedSolic
+    .filter(s=>['Pendente','Em andamento','Comprado'].includes(s.status))
+    .sort((a,b)=>diasAte(a.prazo_necessidade)-diasAte(b.prazo_necessidade))
+    .slice(0,5); // top 5 mais urgentes
+
+  if(!abertas.length){
+    el.innerHTML='<div style="padding:14px 16px;font-size:12px;color:var(--green)">✓ Nenhuma compra pendente</div>';
+    return;
+  }
+
+  const corSt=s=>s==='Pendente'?{bg:'rgba(232,156,71,.12)',cor:'var(--amber)'}:s==='Em andamento'?{bg:'var(--blue-d)',cor:'var(--blue)'}:{bg:'rgba(232,197,71,.1)',cor:'var(--accent)'};
+  const dias=s=>{
+    const d=diasAte(s.prazo_necessidade);
+    if(d<0)return`<span style="color:var(--red);font-weight:600;font-size:10px">⚠ ${Math.abs(d)}d atrasado</span>`;
+    if(d===0)return`<span style="color:var(--amber);font-size:10px">Hoje!</span>`;
+    if(d<=2)return`<span style="color:var(--amber);font-size:10px">${d}d</span>`;
+    return`<span style="color:var(--text3);font-size:10px">${d}d</span>`;
+  };
+
+  el.innerHTML=`<div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden">
+    ${abertas.map((s,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;${i<abertas.length-1?'border-bottom:1px solid var(--line)':''}">
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.material}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.setor} · ${s.quantidade} ${s.unidade}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        ${dias(s)}
+        <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;background:${corSt(s.status).bg};color:${corSt(s.status).cor}">${s.status}</span>
+      </div>
+    </div>`).join('')}
+    ${cachedSolic.filter(s=>['Pendente','Em andamento','Comprado'].includes(s.status)).length>5
+      ?`<div style="padding:10px 16px;font-size:11px;color:var(--text3);border-top:1px solid var(--line);text-align:center">
+          +${cachedSolic.filter(s=>['Pendente','Em andamento','Comprado'].includes(s.status)).length-5} solicitações · 
+          <span onclick="goTo('comp',document.getElementById('sb-comp'))" style="color:var(--accent);cursor:pointer;font-weight:600">ver todas →</span>
+        </div>`:''}
+  </div>`;
 }
 
 init();
