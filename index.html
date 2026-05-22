@@ -2075,7 +2075,7 @@ function setFiltroComp(f,btn){
 function statusCor(s){
   if(s==='Pendente')return{bg:'rgba(232,156,71,.12)',cor:'var(--amber)',borda:'rgba(232,156,71,.25)'};
   if(s==='Em andamento')return{bg:'var(--blue-d)',cor:'var(--blue)',borda:'rgba(91,156,246,.25)'};
-  if(s==='Comprado')return{bg:'rgba(232,197,71,.1)',cor:'var(--accent)',borda:'rgba(232,197,71,.25)'};
+  if(s==='Comprado')return{bg:'var(--green-d)',cor:'var(--green)',borda:'rgba(76,175,125,.3)'};
   if(s==='Recebido'||s==='Concluído')return{bg:'var(--green-d)',cor:'var(--green)',borda:'rgba(76,175,125,.25)'};
   if(s==='Cancelado')return{bg:'var(--red-d)',cor:'var(--red)',borda:'rgba(224,92,92,.25)'};
   return{bg:'var(--ink3)',cor:'var(--text3)',borda:'var(--line)'};
@@ -2740,7 +2740,7 @@ function renderDashCompras(){
     return;
   }
 
-  const corSt=s=>s==='Pendente'?{bg:'rgba(232,156,71,.12)',cor:'var(--amber)'}:s==='Em andamento'?{bg:'var(--blue-d)',cor:'var(--blue)'}:{bg:'rgba(232,197,71,.1)',cor:'var(--accent)'};
+  const corSt=s=>s==='Pendente'?{bg:'rgba(232,156,71,.12)',cor:'var(--amber)'}:s==='Em andamento'?{bg:'var(--blue-d)',cor:'var(--blue)'}:s==='Comprado'?{bg:'var(--green-d)',cor:'var(--green)'}:{bg:'var(--ink3)',cor:'var(--text3)'};
   const dias=s=>{
     const d=diasAte(s.prazo_necessidade);
     if(d<0)return`<span style="color:var(--red);font-weight:600;font-size:10px">⚠ ${Math.abs(d)}d atrasado</span>`;
