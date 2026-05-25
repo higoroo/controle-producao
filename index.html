@@ -698,6 +698,10 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     </div>
   </div>
 
+  <!-- INSIGHTS DE COMPRAS -->
+  <div class="sec-title">Insights de economia</div>
+  <div id="comp-insights"><div class="loading"><div class="spinner"></div></div></div>
+
   <!-- MODAL CONFIRMAR COMPRA -->
   <div id="modal-compra" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
     <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
@@ -2206,6 +2210,7 @@ function renderCompLista(){
     el.innerHTML+=`<button onclick="toggleHistComp(this)" style="width:100%;padding:10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text2);font-size:12px;cursor:pointer;text-align:left;font-family:'DM Mono',monospace;margin-top:4px">▼ Ver concluídas e canceladas (${concluidas.length+canceladas.length})</button><div id="hist-comp-extra" style="display:none;margin-top:8px">${[...concluidas,...canceladas].sort((a,b)=>new Date(b.data_solicitacao)-new Date(a.data_solicitacao)).map(s=>cardSolic(s)).join('')}</div>`;
   }
   renderCompCharts();
+  renderInsightsCompras();
 }
 
 function toggleHistComp(btn){
@@ -2766,6 +2771,153 @@ function renderDashCompras(){
           <span onclick="goTo('comp',document.getElementById('sb-comp'))" style="color:var(--accent);cursor:pointer;font-weight:600">ver todas →</span>
         </div>`:''}
   </div>`;
+}
+
+/* ── INSIGHTS DE COMPRAS ── */
+function renderInsightsCompras(){
+  const el=document.getElementById('comp-insights');
+  if(!el||!cachedSolic.length){
+    if(el)el.innerHTML='<div class="empty-msg">Registre mais solicitações para gerar insights.</div>';
+    return;
+  }
+
+  const concluidas=cachedSolic.filter(s=>['Recebido','Concluído'].includes(s.status));
+  const abertas=cachedSolic.filter(s=>['Pendente','Em andamento','Comprado'].includes(s.status));
+  const urgentes=cachedSolic.filter(s=>s.prioridade==='Alta');
+  const atrasadas=cachedSolic.filter(s=>{
+    if(['Cancelado'].includes(s.status))return false;
+    if(['Recebido','Concluído'].includes(s.status)){
+      const dr=s.data_recebido||s.data_compra;
+      if(!dr||!s.prazo_necessidade)return false;
+      return new Date(dr+'T00:00:00')>new Date(s.prazo_necessidade+'T00:00:00');
+    }
+    return diasAte(s.prazo_necessidade)<0;
+  });
+
+  // ── Tempo médio por categoria ──
+  const tempoCat={};
+  concluidas.forEach(s=>{
+    if(!s.categoria||!s.data_solicitacao)return;
+    const dr=s.data_recebido||s.data_compra;
+    if(!dr)return;
+    const dias=Math.round((new Date(dr)-new Date(s.data_solicitacao))/(1000*60*60*24));
+    if(!tempoCat[s.categoria])tempoCat[s.categoria]=[];
+    tempoCat[s.categoria].push(dias);
+  });
+  const mediaCat=Object.entries(tempoCat).map(([cat,vals])=>({
+    cat,med:Math.round(vals.reduce((a,v)=>a+v,0)/vals.length),n:vals.length
+  })).sort((a,b)=>b.med-a.med);
+
+  // ── Materiais mais frequentes ──
+  const freqMat={};
+  cachedSolic.forEach(s=>{if(s.material)freqMat[s.material]=(freqMat[s.material]||0)+1});
+  const topMat=Object.entries(freqMat).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // ── Taxa de urgência ──
+  const taxaUrg=cachedSolic.length?Math.round(urgentes.length/cachedSolic.length*100):0;
+
+  // ── Dia da semana com mais pedidos ──
+  const porDiaSem=[0,0,0,0,0,0,0];
+  cachedSolic.forEach(s=>{if(s.data_solicitacao)porDiaSem[new Date(s.data_solicitacao+'T12:00').getDay()]++});
+  const nomesDias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const diaPico=porDiaSem.indexOf(Math.max(...porDiaSem));
+
+  // ── Taxa de atraso por comprador ──
+  const compradorStats={};
+  concluidas.forEach(s=>{
+    const comp=s.comprador||'Não informado';
+    if(!compradorStats[comp])compradorStats[comp]={total:0,atrasado:0};
+    compradorStats[comp].total++;
+    const dr=s.data_recebido||s.data_compra;
+    if(dr&&s.prazo_necessidade&&new Date(dr+'T00:00:00')>new Date(s.prazo_necessidade+'T00:00:00'))
+      compradorStats[comp].atrasado++;
+  });
+
+  // ── Materiais que sempre atrasam ──
+  const atrasoMat={};
+  atrasadas.forEach(s=>{if(s.material)atrasoMat[s.material]=(atrasoMat[s.material]||0)+1});
+  const topAtraso=Object.entries(atrasoMat).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  // ── Renderizar cards ──
+  function card(tipo,icone,titulo,corpo,rodape=''){
+    const cores={economia:{bg:'rgba(76,175,125,.1)',borda:'rgba(76,175,125,.25)',cor:'var(--green)',lbl:'Economia'},
+      atencao:{bg:'rgba(224,92,92,.1)',borda:'rgba(224,92,92,.25)',cor:'var(--red)',lbl:'Atenção'},
+      info:{bg:'rgba(91,156,246,.1)',borda:'rgba(91,156,246,.2)',cor:'var(--blue)',lbl:'Informação'},
+      dica:{bg:'rgba(232,197,71,.1)',borda:'rgba(232,197,71,.2)',cor:'var(--accent)',lbl:'Dica'}};
+    const t=cores[tipo]||cores.info;
+    return`<div style="background:${t.bg};border:1px solid ${t.borda};border-radius:var(--r2);padding:16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-size:20px">${icone}</span>
+        <div>
+          <div style="font-size:9px;color:${t.cor};font-weight:700;letter-spacing:.08em;text-transform:uppercase">${t.lbl}</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text)">${titulo}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;padding-left:30px">${corpo}</div>
+      ${rodape?`<div style="font-size:11px;color:var(--text3);margin-top:8px;padding-left:30px;font-style:italic">${rodape}</div>`:''}
+    </div>`;
+  }
+
+  let html='';
+
+  // 1. Materiais recorrentes → estoque mínimo
+  if(topMat.length&&topMat[0][1]>=2){
+    const lista=topMat.filter(([,n])=>n>=2).map(([m,n])=>`<b>${m}</b> (${n}x)`).join(', ');
+    html+=card('economia','💰','Oportunidade de estoque mínimo',
+      `Os materiais mais solicitados foram: ${lista}.<br>Manter um estoque fixo desses itens elimina compras de urgência e reduz custo de frete.`,
+      `Cada compra avulsa tem custo de deslocamento ou frete. Consolidar em compras programadas pode gerar economia significativa.`);
+  }
+
+  // 2. Taxa de urgência alta
+  if(taxaUrg>=30){
+    html+=card('atencao','⚡',`${taxaUrg}% dos pedidos chegam como Alta prioridade`,
+      `De ${cachedSolic.length} solicitações, ${urgentes.length} foram urgentes. Isso indica falta de planejamento antecipado ou estoque mínimo inadequado.`,
+      `Pedidos urgentes costumam custar mais — fornecedores cobram premium e o frete expresso é até 3x mais caro.`);
+  } else if(taxaUrg>0&&taxaUrg<30){
+    html+=card('economia','✓',`Boa taxa de planejamento — só ${taxaUrg}% de urgências`,
+      `A maioria dos pedidos chega com prazo adequado. Continue assim para manter o poder de negociação com fornecedores.`);
+  }
+
+  // 3. Categoria mais lenta
+  if(mediaCat.length){
+    const lenta=mediaCat[0];
+    html+=card('dica','⏱',`${lenta.cat} leva em média ${lenta.med} dias para chegar`,
+      `Baseado em ${lenta.n} pedido${lenta.n>1?'s':''} concluído${lenta.n>1?'s':''}. Solicite com pelo menos <b>${lenta.med+2} dias de antecedência</b> para evitar paradas na produção.`,
+      mediaCat.length>1?`Tempo médio das outras categorias: ${mediaCat.slice(1).map(x=>`${x.cat}: ${x.med}d`).join(' · ')}`:'');
+  }
+
+  // 4. Dia pico de solicitações
+  if(porDiaSem[diaPico]>=2){
+    html+=card('dica','📅',`${nomesDias[diaPico]} é o dia com mais solicitações`,
+      `${porDiaSem[diaPico]} pedidos foram feitos nas ${nomesDias[diaPico]}s. Considere consolidar as compras dessa semana em um único pedido — economiza tempo e pode reduzir frete.`);
+  }
+
+  // 5. Materiais que atrasam sempre
+  if(topAtraso.length){
+    const lista=topAtraso.map(([m,n])=>`<b>${m}</b> (${n}x atrasou)`).join(', ');
+    html+=card('atencao','⚠',`Materiais com histórico de atraso`,
+      `${lista}.<br>Para esses itens, peça com <b>mais antecedência</b> ou busque fornecedores alternativos.`);
+  }
+
+  // 6. Atraso por comprador
+  const compEntries=Object.entries(compradorStats).filter(([,v])=>v.total>=2);
+  if(compEntries.length){
+    const lista=compEntries.map(([comp,v])=>{
+      const pct=Math.round(v.atrasado/v.total*100);
+      return`<b>${comp}</b>: ${v.total} pedidos, ${pct}% no prazo`;
+    }).join('<br>');
+    html+=card('info','👤','Desempenho por comprador',lista);
+  }
+
+  // 7. Pedidos sem comprador registrado
+  const semComp=concluidas.filter(s=>!s.comprador).length;
+  if(semComp>0){
+    html+=card('dica','📝',`${semComp} pedido${semComp>1?'s':''} sem comprador registrado`,
+      `Registrar o comprador em todos os pedidos ajuda a identificar padrões e distribuir melhor as responsabilidades.`);
+  }
+
+  if(!html) html='<div class="empty-msg" style="padding:16px">Registre mais pedidos concluídos para gerar insights de economia.</div>';
+  el.innerHTML=html;
 }
 
 init();
