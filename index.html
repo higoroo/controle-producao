@@ -760,6 +760,8 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 <div id="toast"></div>
 
 <script>
+let toggleDia = 'emb';
+let compSetoresAtivo = false;
 const SB_URL='https://xsnnqqeugywkzrptllom.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzbm5xcWV1Z3l3a3pycHRsbG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODI5OTMsImV4cCI6MjA5MTI1ODk5M30.kk2gQ43Py3Ghb8sBjgWDwGiFKjnL1WVDxUrs3ugPxnM';
 const SETORES=['Usinagem','Marcenaria','Fundo','Lixa de Fundo','Pintura','Montagem','Elétrica','Embalagem','Expedição'];
@@ -1162,8 +1164,6 @@ function renderKPIs(){
       ${antTaxa>0?`<div class="kpi-delta" style="color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'}">${parseFloat(taxa)<=antTaxa?'▼':'▲'} ${antTaxa}% ant.</div>`:''}
     </div>`;
 }
-let compSetoresAtivo=false;
-
 function toggleCompSetores(btn){
   compSetoresAtivo=!compSetoresAtivo;
   btn.style.background=compSetoresAtivo?'var(--accent)':' none';
