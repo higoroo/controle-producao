@@ -329,6 +329,7 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     <div class="sec-title" style="margin:0">Resumo</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="chip active" id="p-dia" onclick="setPeriodo('dia',this)">Hoje</button>
+      <button class="chip" id="p-ont" onclick="setPeriodo('ontem',this)">Ontem</button>
       <button class="chip" id="p-sem" onclick="setPeriodo('semana',this)">Semana</button>
       <button class="chip" id="p-mes" onclick="setPeriodo('mes',this)">Mês atual</button>
       <button class="chip" id="p-mesant" onclick="setPeriodo('mesant',this)">Mês anterior</button>
@@ -352,7 +353,13 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   <div class="kpi-grid" id="kpi-area"><div class="kpi"><div class="loading"><div class="spinner"></div></div></div><div class="kpi"><div class="loading"><div class="spinner"></div></div></div><div class="kpi"><div class="loading"><div class="spinner"></div></div></div><div class="kpi"><div class="loading"><div class="spinner"></div></div></div></div>
   <div class="charts-2col">
     <div class="card">
-      <div class="sec-title" style="margin-top:0">Por setor — semana</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div class="sec-title" style="margin:0" id="titulo-setores">Por setor</div>
+        <button id="btn-comp-setores" onclick="toggleCompSetores(this)"
+          style="font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--line2);background:none;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">
+          Comparar ▾
+        </button>
+      </div>
       <div class="legend" id="legend-setores"></div>
       <div class="chart-wrap" style="height:240px;min-height:300px"><canvas id="chart-setores" role="img" aria-label="Produção por setor">Produção por setor.</canvas></div>
     </div>
@@ -866,6 +873,7 @@ function renderChartDevEvolucao(){
 }
 function devNoPeriodo(){
   if(periodoAtivo==='dia'){const h=hoje();return cachedDevs.filter(d=>d.data===h)}
+  if(periodoAtivo==='ontem'){const o=ontem();return cachedDevs.filter(d=>d.data===o)}
   if(periodoAtivo==='semana'){const[s,e]=semana();return cachedDevs.filter(d=>d.data>=s&&d.data<=e)}
   if(periodoAtivo==='mesant'){const m=mesAnterior();return cachedDevs.filter(d=>d.data&&d.data.startsWith(m))}
   if(periodoAtivo==='range'&&periodoRange)return cachedDevs.filter(d=>d.data>=periodoRange.de&&d.data<=periodoRange.ate);
@@ -895,26 +903,27 @@ async function loadAll(){
 }
 
 function atualizarDropdownProdutos(){
-  const sel=document.getElementById('f-produto');
-  if(!sel)return;
-  // Manter opção vazia
-  sel.innerHTML='<option value="">— selecione —</option>';
-  // Produtos padrão
-  PRODUTOS.forEach(p=>{
-    const o=document.createElement('option');
-    o.value=p;o.textContent=p;sel.appendChild(o);
-  });
-  // Produtos extras do banco
-  produtosExtra.forEach(p=>{
-    if(!PRODUTOS.includes(p)){
+  // Atualiza tanto o dropdown de lançamento quanto o de devolução
+  ['f-produto','dv-produto'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel)return;
+    sel.innerHTML='<option value="">— selecione —</option>';
+    PRODUTOS.forEach(p=>{
       const o=document.createElement('option');
-      o.value=p;o.textContent=p+' ✦';sel.appendChild(o);
+      o.value=p;o.textContent=p;sel.appendChild(o);
+    });
+    produtosExtra.forEach(p=>{
+      if(!PRODUTOS.includes(p)){
+        const o=document.createElement('option');
+        o.value=p;o.textContent=p+' ✦';sel.appendChild(o);
+      }
+    });
+    if(id==='f-produto'){
+      const oNovo=document.createElement('option');
+      oNovo.value='— Novo produto';oNovo.textContent='— Novo produto';
+      sel.appendChild(oNovo);
     }
   });
-  // Opção novo produto
-  const oNovo=document.createElement('option');
-  oNovo.value='— Novo produto';oNovo.textContent='— Novo produto';
-  sel.appendChild(oNovo);
 }
 async function loadDevs(){
   try{const devs=await sb('devolucoes?select=*&order=data.desc,created_at.desc');cachedDevs=devs;}
@@ -1058,6 +1067,11 @@ function periodoAnteriorEquivalente(){
     const ant=d.toISOString().slice(0,10);
     return{lancs:cachedLancs.filter(l=>l.data===ant),devs:cachedDevs.filter(d=>d.data===ant),label:'ontem'};
   }
+  if(periodoAtivo==='ontem'){
+    const d=new Date();d.setDate(d.getDate()-2);
+    const ant=d.toISOString().slice(0,10);
+    return{lancs:cachedLancs.filter(l=>l.data===ant),devs:cachedDevs.filter(d=>d.data===ant),label:'anteontem'};
+  }
   if(periodoAtivo==='semana'){
     const[s,e]=semana();
     const ds=new Date(s+'T12:00'),de=new Date(e+'T12:00');
@@ -1148,19 +1162,48 @@ function renderKPIs(){
       ${antTaxa>0?`<div class="kpi-delta" style="color:${parseFloat(taxa)<=antTaxa?'var(--green)':'var(--red)'}">${parseFloat(taxa)<=antTaxa?'▼':'▲'} ${antTaxa}% ant.</div>`:''}
     </div>`;
 }
+let compSetoresAtivo=false;
+
+function toggleCompSetores(btn){
+  compSetoresAtivo=!compSetoresAtivo;
+  btn.style.background=compSetoresAtivo?'var(--accent)':' none';
+  btn.style.color=compSetoresAtivo?'var(--ink)':' var(--text3)';
+  btn.style.borderColor=compSetoresAtivo?'var(--accent)':' var(--line2)';
+  btn.textContent=compSetoresAtivo?'Comparando ✓':'Comparar ▾';
+  renderChartSetores();
+}
+
 function renderChartSetores(){
-  const sem=lancsNoPeriodo(),vals=SETORES.map(s=>sem.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
-  document.getElementById('legend-setores').innerHTML=SETORES.map((s,i)=>`<div class="legend-item"><span class="legend-sq" style="background:${CORS[i]}"></span>${s}</div>`).join('');
+  // Título dinâmico
+  const tituloEl=document.getElementById('titulo-setores');
+  if(tituloEl) tituloEl.textContent='Por setor — '+labelPeriodo();
+
+  const base=lancsNoPeriodo();
+  const vals=SETORES.map(s=>base.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
+  document.getElementById('legend-setores').innerHTML=SETORES.map((s,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text2);margin-right:8px"><span style="width:8px;height:8px;border-radius:50%;background:${CORS[i]};display:inline-block"></span>${s}</span>`).join('');
   const ctx=document.getElementById('chart-setores').getContext('2d');
   if(charts.set)charts.set.destroy();
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
   const tickClr=isDark?'#5a5855':'#9a9994';
   const gridClr=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
-  charts.set=new Chart(ctx,{type:'bar',data:{labels:SETORES,datasets:[{data:vals,backgroundColor:CORS,borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw.toLocaleString('pt-BR')+' pç'}}},scales:{x:{grid:{display:false},ticks:{color:tickClr,font:{size:9},maxRotation:40,autoSkip:false}},y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}}}}}});
-}
-let chartDiaMode = 'emb';
 
-let toggleDia='emb';
+  const datasets=[{
+    label:labelPeriodo(),data:vals,
+    backgroundColor:CORS,borderRadius:5,borderSkipped:false
+  }];
+
+  if(compSetoresAtivo){
+    const antD=periodoAnteriorEquivalente();
+    const valsAnt=SETORES.map(s=>antD.lancs.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
+    datasets.push({
+      label:antD.label,data:valsAnt,
+      backgroundColor:CORS.map(()=>'rgba(140,140,140,0.25)'),
+      borderRadius:5,borderSkipped:false
+    });
+  }
+
+  charts.set=new Chart(ctx,{type:'bar',data:{labels:SETORES,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:compSetoresAtivo,labels:{color:tickClr,font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw.toLocaleString('pt-BR')} pç`}}},scales:{x:{grid:{display:false},ticks:{color:tickClr,font:{size:9},maxRotation:40,autoSkip:false}},y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}}}}}});
+}
 function setToggleDia(modo,btn){
   toggleDia=modo;
   ['toggle-emb','toggle-exp','toggle-ambos'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active')});
@@ -2439,7 +2482,7 @@ function mesAnterior() {
 
 function setPeriodo(p, btn) {
   periodoAtivo = p; periodoCustom = null; periodoRange = null;
-  document.querySelectorAll('#p-dia,#p-sem,#p-mes,#p-mesant,#p-custom').forEach(b => b && b.classList.remove('active'));
+  document.querySelectorAll('#p-dia,#p-ont,#p-sem,#p-mes,#p-mesant,#p-custom').forEach(b => b && b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('painel-periodo').style.display = 'none';
   renderDash();
@@ -2448,7 +2491,7 @@ function setPeriodo(p, btn) {
 function abrirSeletorPeriodo(btn) {
   const painel = document.getElementById('painel-periodo');
   const visivel = painel.style.display !== 'none';
-  document.querySelectorAll('#p-dia,#p-sem,#p-mes,#p-mesant,#p-custom').forEach(b => b && b.classList.remove('active'));
+  document.querySelectorAll('#p-dia,#p-ont,#p-sem,#p-mes,#p-mesant,#p-custom').forEach(b => b && b.classList.remove('active'));
   if (visivel) { painel.style.display = 'none'; } 
   else { btn.classList.add('active'); painel.style.display = 'block'; }
 }
@@ -2464,8 +2507,10 @@ function aplicarPeriodoRange() {
   renderDash();
 }
 
+function ontem(){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().slice(0,10)}
 function lancsNoPeriodo() {
   if (periodoAtivo === 'dia') { const h = hoje(); return cachedLancs.filter(l => l.data === h); }
+  if (periodoAtivo === 'ontem') { const o = ontem(); return cachedLancs.filter(l => l.data === o); }
   if (periodoAtivo === 'semana') { const [s, e] = semana(); return cachedLancs.filter(l => l.data >= s && l.data <= e); }
   if (periodoAtivo === 'mesant') { const m = mesAnterior(); return cachedLancs.filter(l => l.data.startsWith(m)); }
   if (periodoAtivo === 'range' && periodoRange) return cachedLancs.filter(l => l.data >= periodoRange.de && l.data <= periodoRange.ate);
@@ -2474,6 +2519,7 @@ function lancsNoPeriodo() {
 
 function labelPeriodo() {
   if (periodoAtivo === 'dia') return 'Hoje';
+  if (periodoAtivo === 'ontem') return 'Ontem';
   if (periodoAtivo === 'semana') return 'Semana atual';
   if (periodoAtivo === 'mesant') { const [a, m] = mesAnterior().split('-'); return new Date(a, m-1, 1).toLocaleDateString('pt-BR', {month:'long', year:'numeric'}); }
   if (periodoAtivo === 'range' && periodoRange) return fmt(periodoRange.de) + ' a ' + fmt(periodoRange.ate);
