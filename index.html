@@ -696,12 +696,12 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   <div class="sec-title">Análise de compras</div>
   <div class="charts-2col">
     <div class="card">
-      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">TEMPO MÉDIO POR CATEGORIA (dias)</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="chart-comp-tempo" role="img" aria-label="Tempo médio por categoria">Tempo por categoria.</canvas></div>
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">EVOLUÇÃO MENSAL — SOLICITAÇÕES</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-comp-evolucao" role="img" aria-label="Evolução mensal">Evolução mensal.</canvas></div>
     </div>
     <div class="card">
-      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">SOLICITAÇÕES POR SETOR</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="chart-comp-setor" role="img" aria-label="Solicitações por setor">Por setor.</canvas></div>
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:12px">MATERIAIS MAIS SOLICITADOS</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-comp-materiais" role="img" aria-label="Materiais mais solicitados">Top materiais.</canvas></div>
     </div>
   </div>
 
@@ -2361,24 +2361,71 @@ async function confirmarCompra(){
 }
 
 function renderCompCharts(){
-  // Gráfico 1: tempo médio por categoria
-  const cats=CATEGORIAS_COMP;
-  const temposCat=cats.map(cat=>{
-    const concCat=cachedSolic.filter(s=>s.categoria===cat&&s.status==='Concluído');
-    const ts=concCat.map(s=>tempoResp(s)).filter(t=>t!==null);
-    return ts.length?Math.round(ts.reduce((a,t)=>a+t,0)/ts.length):0;
-  });
-  const ctx1=document.getElementById('chart-comp-tempo').getContext('2d');
-  if(charts.compTempo)charts.compTempo.destroy();
-  charts.compTempo=new Chart(ctx1,{type:'bar',data:{labels:cats,datasets:[{data:temposCat,backgroundColor:'#5b9cf6',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} dias`}}},scales:{x:{grid:{display:false},ticks:{color:'#5a5855',font:{size:9},maxRotation:35}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5855',font:{size:10}}}}}});
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const tickClr=isDark?'#5a5855':'#9a9994';
+  const gridClr=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
 
-  // Gráfico 2: solicitações por setor
-  const setorCount={};cachedSolic.forEach(s=>{setorCount[s.setor]=(setorCount[s.setor]||0)+1});
-  const setEntries=Object.entries(setorCount).sort((a,b)=>b[1]-a[1]);
-  const pal=['#e8c547','#4caf7d','#5b9cf6','#e89c47','#e05c5c','#a78bf6','#64c896','#8a8880','#3dd6ac'];
-  const ctx2=document.getElementById('chart-comp-setor').getContext('2d');
-  if(charts.compSetor)charts.compSetor.destroy();
-  charts.compSetor=new Chart(ctx2,{type:'doughnut',data:{labels:setEntries.map(e=>e[0]),datasets:[{data:setEntries.map(e=>e[1]),backgroundColor:pal,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#8a8880',font:{size:10},boxWidth:10,padding:8}}}}});
+  // ── Gráfico 1: Evolução mensal ──
+  const meses=[];
+  const d=new Date();
+  for(let i=5;i>=0;i--){
+    const dt=new Date(d.getFullYear(),d.getMonth()-i,1);
+    const key=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+    const label=dt.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'});
+    const total=cachedSolic.filter(s=>s.data_solicitacao&&s.data_solicitacao.startsWith(key)).length;
+    const concluidas=cachedSolic.filter(s=>s.data_solicitacao&&s.data_solicitacao.startsWith(key)&&['Recebido','Concluído'].includes(s.status)).length;
+    const atrasadas=cachedSolic.filter(s=>s.data_solicitacao&&s.data_solicitacao.startsWith(key)&&['Recebido','Concluído'].includes(s.status)&&s.data_recebido&&s.prazo_necessidade&&new Date(s.data_recebido+'T00:00:00')>new Date(s.prazo_necessidade+'T00:00:00')).length;
+    meses.push({label,total,concluidas,atrasadas});
+  }
+  const ctx1=document.getElementById('chart-comp-evolucao').getContext('2d');
+  if(charts.compEv)charts.compEv.destroy();
+  charts.compEv=new Chart(ctx1,{
+    type:'bar',
+    data:{
+      labels:meses.map(m=>m.label),
+      datasets:[
+        {label:'Total',data:meses.map(m=>m.total),backgroundColor:'rgba(91,156,246,0.6)',borderRadius:4},
+        {label:'Concluídas',data:meses.map(m=>m.concluidas),backgroundColor:'rgba(76,175,125,0.7)',borderRadius:4},
+        {label:'Atrasadas',data:meses.map(m=>m.atrasadas),backgroundColor:'rgba(224,92,92,0.7)',borderRadius:4}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:tickClr,font:{size:10},boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:tickClr,font:{size:10}}},
+        y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10},stepSize:1},min:0}
+      }
+    }
+  });
+
+  // ── Gráfico 2: Top materiais mais solicitados ──
+  const matCount={};
+  cachedSolic.forEach(s=>{if(s.material)matCount[s.material]=(matCount[s.material]||0)+1});
+  const topMats=Object.entries(matCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const ctx2=document.getElementById('chart-comp-materiais').getContext('2d');
+  if(charts.compMat)charts.compMat.destroy();
+  charts.compMat=new Chart(ctx2,{
+    type:'bar',
+    data:{
+      labels:topMats.map(([m])=>m.length>18?m.slice(0,16)+'…':m),
+      datasets:[{
+        data:topMats.map(([,n])=>n),
+        backgroundColor:['#e8c547','#4caf7d','#5b9cf6','#e89c47','#e05c5c','#a78bf6','#64c896','#3dd6ac'],
+        borderRadius:5
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} solicitação${c.raw>1?'ões':''}`}}},
+      scales:{
+        x:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10},stepSize:1},min:0},
+        y:{grid:{display:false},ticks:{color:tickClr,font:{size:10}}}
+      }
+    }
+  });
 }
 
 /* ── MATERIAIS ── */
