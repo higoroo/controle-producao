@@ -2240,6 +2240,12 @@ function renderCompLista(){
         ${s.status==='Comprado'?`<button onclick="avancarStatusData('${s.id}','Recebido','data_recebido')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">✓ Marcar como recebido</button>`:''}
         ${s.status!=='Recebido'&&s.status!=='Cancelado'?`<button onclick="avancarStatus('${s.id}','Cancelado')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:none;background:none;color:var(--text3);cursor:pointer">Cancelar</button>`:''}
         ${modoGestorAtivo?`<button onclick="apagarSolicitacao('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Apagar</button>`:''}
+        ${!['Recebido','Concluído','Cancelado'].includes(s.status)?`
+          <button onclick="enviarLembrete('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:none;color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">
+            🔔 ${s.ultimo_lembrete?'Lembrar novamente':'Lembrar comprador'}
+          </button>
+          ${s.ultimo_lembrete?`<span style="font-size:10px;color:var(--text3)">Último lembrete: ${fmtDtHr(s.ultimo_lembrete)}</span>`:''}
+        `:''}
       </div>
     </div>`;
   }
@@ -3039,6 +3045,63 @@ function renderInsightsCompras(){
 
   if(!html) html='<div class="empty-msg" style="padding:16px">Registre mais pedidos concluídos para gerar insights de economia.</div>';
   el.innerHTML=html;
+}
+
+/* ── LEMBRETE DE COMPRA ── */
+function fmtDtHr(iso){
+  if(!iso) return '';
+  const d=new Date(iso);
+  const hoje2=new Date();
+  const diff=Math.floor((hoje2-d)/(1000*60*60*24));
+  if(diff===0) return 'hoje às '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(diff===1) return 'ontem';
+  return diff+'d atrás';
+}
+
+async function enviarLembrete(id){
+  const s=cachedSolic.find(x=>x.id===id);
+  if(!s)return;
+
+  // Verificar se não foi enviado há menos de 1 hora
+  if(s.ultimo_lembrete){
+    const diff=(new Date()-new Date(s.ultimo_lembrete))/(1000*60);
+    if(diff<60){
+      toast('Aguarde pelo menos 1 hora entre lembretes.');
+      return;
+    }
+  }
+
+  const btn=event.target;
+  btn.disabled=true;
+  btn.textContent='Enviando...';
+
+  try{
+    // Atualizar timestamp no banco
+    const agora=new Date().toISOString();
+    await sb(`solicitacoes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({ultimo_lembrete:agora}),prefer:'return=minimal'});
+
+    // Chamar edge function de lembrete
+    const res=await fetch(`${SB_URL}/functions/v1/lembrete-compra`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
+      body:JSON.stringify({record:s})
+    });
+
+    if(res.ok){
+      const idx=cachedSolic.findIndex(x=>x.id===id);
+      if(idx>=0)cachedSolic[idx].ultimo_lembrete=agora;
+      toast('🔔 Lembrete enviado para o email!');
+      renderCompLista();
+    } else {
+      toast('Erro ao enviar lembrete.');
+      btn.disabled=false;
+      btn.textContent='🔔 Lembrar comprador';
+    }
+  }catch(e){
+    toast('Erro ao enviar lembrete.');
+    btn.disabled=false;
+    btn.textContent='🔔 Lembrar comprador';
+  }
 }
 
 init();
