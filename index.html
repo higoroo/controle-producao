@@ -2214,38 +2214,56 @@ function renderCompLista(){
     if(s.data_comprado) tl.push({l:'Comprado',d:fmt(s.data_comprado),c:'var(--amber)'});
     if(s.data_recebido) tl.push({l:'Recebido',d:fmt(s.data_recebido),c:'var(--green)'});
     const tempoTotal=s.data_solicitacao&&s.data_recebido?Math.round((new Date(s.data_recebido)-new Date(s.data_solicitacao))/(1000*60*60*24)):null;
-    return`<div style="background:var(--ink2);border:1px solid ${sc.borda};border-radius:var(--r2);padding:14px 16px;margin-bottom:10px">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+    return`<div style="background:var(--ink2);border:1px solid ${sc.borda};border-radius:var(--r2);padding:16px 18px;margin-bottom:10px">
+
+      <!-- Linha 1: Material + badges -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px">
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text)">${s.material}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.categoria} · ${s.setor}</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:16px;color:var(--text);letter-spacing:-0.02em;line-height:1.2">${s.material}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px;font-weight:500">${s.categoria} · ${s.setor}</div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0">
-          <span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;background:${sc.bg};color:${sc.cor}">${s.status}</span>
-          <span style="font-size:10px;font-weight:600;color:${priorCor(s.prioridade)}">${s.prioridade==='Alta'?'⚡ Alta':s.prioridade==='Baixa'?'▽ Baixa':'● Média'}</span>
+          <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:${sc.bg};color:${sc.cor}">${s.status}</span>
+          <span style="font-size:11px;font-weight:700;color:${priorCor(s.prioridade)}">${s.prioridade==='Alta'?'⚡ Alta':s.prioridade==='Baixa'?'▽ Baixa':'● Média'}</span>
         </div>
       </div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;margin-bottom:8px">
-        <span><span style="color:var(--text3)">Qtd: </span><b>${s.quantidade} ${s.unidade}</b></span>
-        <span><span style="color:var(--text3)">Prazo: </span><b>${fmt(s.prazo_necessidade)}</b> ${diasStr}</span>
-        ${s.comprador?`<span><span style="color:var(--text3)">Comprador: </span><b>${s.comprador}</b></span>`:''}
-        ${tempoTotal!==null?`<span style="color:var(--green)">✓ Concluído em <b>${tempoTotal}d</b></span>`:''}
+
+      <!-- Linha 2: Qtd, Prazo, Comprador -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:${tl.length>1||s.obs||s.obs_compra?'12px':'0'}">
+        <div style="background:var(--ink3);border-radius:var(--r);padding:8px 12px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Quantidade</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--text)">${s.quantidade} <span style="font-size:11px;font-weight:500;color:var(--text2)">${s.unidade}</span></div>
+        </div>
+        <div style="background:var(--ink3);border-radius:var(--r);padding:8px 12px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Prazo</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--text)">${fmt(s.prazo_necessidade)}</div>
+          <div style="margin-top:2px">${diasStr}</div>
+        </div>
+        ${s.comprador?`<div style="background:var(--ink3);border-radius:var(--r);padding:8px 12px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Comprador</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--text)">${s.comprador}</div>
+        </div>`:''}
+        ${tempoTotal!==null?`<div style="background:var(--green-d);border-radius:var(--r);padding:8px 12px">
+          <div style="font-size:10px;color:var(--green);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Concluído em</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--green)">${tempoTotal}d</div>
+        </div>`:''}
       </div>
-      ${tl.length>1?`<div style="display:flex;align-items:flex-start;gap:0;margin-bottom:10px">${tl.map((t,i)=>`${i>0?`<div style="flex:1;height:2px;background:${t.c};margin-top:7px"></div>`:''}<div style="text-align:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:${t.c};margin:2px auto 3px"></div><div style="font-size:9px;color:${t.c};white-space:nowrap">${t.l}</div><div style="font-size:9px;color:var(--text3)">${t.d}</div></div>`).join('')}</div>`:''}
-      ${s.obs?`<div style="font-size:11px;color:var(--text3);margin-bottom:8px;padding:6px 10px;background:var(--ink3);border-radius:var(--r)">${s.obs}</div>`:''}
-      ${s.obs_compra?`<div style="font-size:11px;color:var(--blue);margin-bottom:8px">📦 ${s.obs_compra}</div>`:''}
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${s.status==='Pendente'?`<button onclick="avancarStatusData('${s.id}','Em andamento','data_em_andamento')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:var(--blue-d);color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">▶ Em andamento</button>`:''}
-        ${s.status==='Pendente'||s.status==='Em andamento'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(232,156,71,.3);background:var(--amber-d);color:var(--amber);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">🛒 Registrar compra</button>`:''}
-        ${s.status==='Comprado'?`<button onclick="avancarStatusData('${s.id}','Recebido','data_recebido')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">✓ Marcar como recebido</button>`:''}
-        ${s.status!=='Recebido'&&s.status!=='Cancelado'?`<button onclick="avancarStatus('${s.id}','Cancelado')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:none;background:none;color:var(--text3);cursor:pointer">Cancelar</button>`:''}
-        ${modoGestorAtivo?`<button onclick="apagarSolicitacao('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Apagar</button>`:''}
-        ${!['Recebido','Concluído','Cancelado'].includes(s.status)?`
-          <button onclick="enviarLembrete('${s.id}')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:none;color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">
-            🔔 ${s.ultimo_lembrete?'Lembrar novamente':'Lembrar comprador'}
-          </button>
-          ${s.ultimo_lembrete?`<span style="font-size:10px;color:var(--text3)">Último lembrete: ${fmtDtHr(s.ultimo_lembrete)}</span>`:''}
-        `:''}
+
+      <!-- Timeline -->
+      ${tl.length>1?`<div style="display:flex;align-items:flex-start;gap:0;margin-bottom:12px">${tl.map((t,i)=>`${i>0?`<div style="flex:1;height:2px;background:${t.c};margin-top:7px"></div>`:''}<div style="text-align:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:${t.c};margin:2px auto 3px"></div><div style="font-size:9px;color:${t.c};white-space:nowrap;font-weight:600">${t.l}</div><div style="font-size:9px;color:var(--text3)">${t.d}</div></div>`).join('')}</div>`:''}
+
+      <!-- Obs -->
+      ${s.obs?`<div style="font-size:12px;color:var(--text2);margin-bottom:10px;padding:8px 12px;background:var(--ink3);border-radius:var(--r);border-left:3px solid var(--line2)"><b style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.04em">Obs</b><br>${s.obs}</div>`:''}
+      ${s.obs_compra?`<div style="font-size:12px;color:var(--blue);margin-bottom:10px;padding:8px 12px;background:var(--blue-d);border-radius:var(--r)">📦 ${s.obs_compra}</div>`:''}
+
+      <!-- Botões -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+        ${s.status==='Pendente'?`<button onclick="avancarStatusData('${s.id}','Em andamento','data_em_andamento')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:var(--blue-d);color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">▶ Em andamento</button>`:''}
+        ${s.status==='Pendente'||s.status==='Em andamento'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(232,156,71,.3);background:var(--amber-d);color:var(--amber);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">🛒 Registrar compra</button>`:''}
+        ${s.status==='Comprado'?`<button onclick="avancarStatusData('${s.id}','Recebido','data_recebido')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">✓ Marcar como recebido</button>`:''}
+        ${!['Recebido','Concluído','Cancelado'].includes(s.status)?`<button onclick="enviarLembrete('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:none;color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">🔔 ${s.ultimo_lembrete?'Lembrar novamente':'Lembrar comprador'}</button>${s.ultimo_lembrete?`<span style="font-size:10px;color:var(--text3);align-self:center">Último: ${fmtDtHr(s.ultimo_lembrete)}</span>`:''}`:''}
+        ${s.status!=='Recebido'&&s.status!=='Cancelado'?`<button onclick="avancarStatus('${s.id}','Cancelado')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:none;background:none;color:var(--text3);cursor:pointer">Cancelar</button>`:''}
+        ${modoGestorAtivo?`<button onclick="apagarSolicitacao('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Apagar</button>`:''}
       </div>
     </div>`;
   }
