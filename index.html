@@ -188,6 +188,14 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 .status-chip.selected-quebrado .sc-label{color:var(--red)}
 .status-chip.selected-incompleto .sc-label{color:var(--blue)}
 </style>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f0f0e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IW Produção">
+  <link rel="apple-touch-icon" href="/icon-180.svg">
+  <link rel="icon" type="image/svg+xml" href="/icon-32.svg">
 </head>
 <body>
 
@@ -3120,6 +3128,15 @@ async function enviarLembrete(id){
     btn.disabled=false;
     btn.textContent='🔔 Lembrar comprador';
   }
+}
+
+// Registrar Service Worker (PWA)
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW registrado:', r.scope))
+      .catch(e => console.log('SW erro:', e));
+  });
 }
 
 init();
