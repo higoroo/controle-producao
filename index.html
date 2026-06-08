@@ -644,18 +644,34 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 <div id="page-comp" class="page"><div class="content-inner">
 
   <!-- FILTRO STATUS -->
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
     <div style="display:flex;align-items:center;gap:10px">
       <div class="sec-title" style="margin:0">Solicitações</div>
-      <div id="comp-gestor-badge" style="display:none;font-size:10px;color:var(--green);background:var(--green-d);padding:3px 8px;border-radius:20px;font-weight:600">Modo gestor ativo</div>
+      <div id="comp-gestor-badge" style="display:none;font-size:10px;color:var(--green);background:var(--green-d);padding:3px 8px;border-radius:20px;font-weight:600">Gestor</div>
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="chip active" onclick="setFiltroComp('Todos',this)">Em aberto</button>
-      <button class="chip" onclick="setFiltroComp('Pendente',this)">Pendentes</button>
-      <button class="chip" onclick="setFiltroComp('Em andamento',this)">Andamento</button>
-      <button class="chip" onclick="setFiltroComp('Comprado',this)">Comprado</button>
-      <button class="chip" onclick="setFiltroComp('Recebido',this)">Recebidos</button>
-    </div>
+  </div>
+
+  <!-- Linha de filtros -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+    <button class="chip active" id="fc-todos" onclick="setFiltroComp('Todos',this)">Todos</button>
+    <button class="chip" id="fc-pend" onclick="setFiltroComp('Pendente',this)" style="border-color:rgba(232,156,71,.4);color:var(--amber)">Pendentes</button>
+    <button class="chip" id="fc-and" onclick="setFiltroComp('Em andamento',this)" style="border-color:rgba(91,156,246,.4);color:var(--blue)">Andamento</button>
+    <button class="chip" id="fc-comp" onclick="setFiltroComp('Comprado',this)" style="border-color:rgba(76,175,125,.4);color:var(--green)">Comprado</button>
+    <button class="chip" id="fc-rec" onclick="setFiltroComp('Recebido',this)">Recebidos</button>
+  </div>
+
+  <!-- Linha de ordenação e filtro por setor -->
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <select id="comp-filtro-setor" onchange="renderCompLista()" style="flex:1;min-width:120px;padding:7px 10px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px">
+      <option value="">Todos os setores</option>
+    </select>
+    <select id="comp-ordem" onchange="renderCompLista()" style="flex:1;min-width:140px;padding:7px 10px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px">
+      <option value="urgencia">Mais atrasados</option>
+      <option value="prazo_asc">Prazo mais próximo</option>
+      <option value="prazo_desc">Prazo mais distante</option>
+      <option value="recente">Mais recentes</option>
+      <option value="setor">Por setor</option>
+    </select>
   </div>
 
   <!-- KPIs -->
@@ -2025,9 +2041,12 @@ async function seedMateriais(){
 }
 
 function initCompras(){
-  // Popula selects de setor
+  // Popula select de setor do formulário
   const ss=document.getElementById('sc-setor');
   if(ss&&ss.options.length<=1){SETORES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o)})}
+  // Popula select de filtro por setor
+  const sf=document.getElementById('comp-filtro-setor');
+  if(sf&&sf.options.length<=1){SETORES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sf.appendChild(o)})}
   // Popula selects de categoria
   ['sc-cat','nm-cat'].forEach(id=>{
     const sel=document.getElementById(id);
@@ -2201,7 +2220,26 @@ function renderCompLista(){
   else if(filtroComp==='Recebido'||filtroComp==='Concluído') lista=concluidas;
   else if(filtroComp==='Cancelado') lista=canceladas;
   else lista=cachedSolic.filter(s=>s.status===filtroComp);
-  lista=[...lista].sort((a,b)=>diasAte(a.prazo_necessidade)-diasAte(b.prazo_necessidade));
+
+  // Filtro por setor
+  const setorFiltro=(document.getElementById('comp-filtro-setor')||{}).value||'';
+  if(setorFiltro) lista=lista.filter(s=>s.setor===setorFiltro);
+
+  // Ordenação
+  const ordem=(document.getElementById('comp-ordem')||{}).value||'urgencia';
+  lista=[...lista].sort((a,b)=>{
+    if(ordem==='prazo_asc') return diasAte(a.prazo_necessidade)-diasAte(b.prazo_necessidade);
+    if(ordem==='prazo_desc') return diasAte(b.prazo_necessidade)-diasAte(a.prazo_necessidade);
+    if(ordem==='recente') return new Date(b.data_solicitacao||0)-new Date(a.data_solicitacao||0);
+    if(ordem==='setor') return (a.setor||'').localeCompare(b.setor||'');
+    // urgencia: atrasados primeiro, depois por prazo
+    const dA=diasAte(a.prazo_necessidade), dB=diasAte(b.prazo_necessidade);
+    const atA=!['Recebido','Concluído','Cancelado'].includes(a.status)&&dA<0;
+    const atB=!['Recebido','Concluído','Cancelado'].includes(b.status)&&dB<0;
+    if(atA&&!atB) return -1;
+    if(!atA&&atB) return 1;
+    return dA-dB;
+  });
 
   function cardSolic(s){
     const sc=statusCor(s.status);
@@ -2211,8 +2249,8 @@ function renderCompLista(){
     const dataRef=finalizado&&s.data_recebido?s.data_recebido:null;
     const atrasadoFinal=finalizado&&dataRef?new Date(dataRef+'T00:00:00')>new Date(s.prazo_necessidade+'T00:00:00'):false;
     const diasStr=finalizado
-      ?(atrasadoFinal?`<span style="color:var(--red);font-weight:600">⚠ Recebido com atraso</span>`:`<span style="color:var(--green)">✓ No prazo</span>`)
-      :dias<0?`<span style="color:var(--red);font-weight:600">⚠ ${Math.abs(dias)}d atrasado</span>`
+      ?(atrasadoFinal?`<span style="color:var(--red);font-weight:600">Recebido com atraso</span>`:`<span style="color:var(--green)">No prazo</span>`)
+      :dias<0?`<span style="color:var(--red);font-weight:600">${Math.abs(dias)}d atrasado</span>`
       :dias===0?`<span style="color:var(--amber);font-weight:600">Hoje!</span>`
       :dias<=2?`<span style="color:var(--amber)">${dias}d restantes</span>`
       :`<span style="color:var(--text3)">${dias}d</span>`;
@@ -2222,39 +2260,33 @@ function renderCompLista(){
     if(s.data_comprado) tl.push({l:'Comprado',d:fmt(s.data_comprado),c:'var(--amber)'});
     if(s.data_recebido) tl.push({l:'Recebido',d:fmt(s.data_recebido),c:'var(--green)'});
     const tempoTotal=s.data_solicitacao&&s.data_recebido?Math.round((new Date(s.data_recebido)-new Date(s.data_solicitacao))/(1000*60*60*24)):null;
-    return`<div style="background:var(--ink2);border:1px solid ${sc.borda};border-radius:var(--r2);padding:16px 18px;margin-bottom:10px">
+    // Cor semafórica baseada no status + atraso
+    const corCard=finalizado?(atrasadoFinal?{borda:'rgba(224,92,92,.35)',bg:'rgba(224,92,92,.04)'}:{borda:'rgba(76,175,125,.3)',bg:'rgba(76,175,125,.03)'})
+      :!emAberto?sc
+      :dias<0?{borda:'rgba(224,92,92,.4)',bg:'rgba(224,92,92,.05)'}
+      :dias<=2?{borda:'rgba(232,156,71,.4)',bg:'rgba(232,156,71,.04)'}
+      :sc;
+
+    return`<div style="background:var(--ink2);border:1px solid ${corCard.borda};border-left:3px solid ${corCard.borda};border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;background:${corCard.bg||'var(--ink2)'}">
 
       <!-- Linha 1: Material + badges -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:16px;color:var(--text);letter-spacing:-0.02em;line-height:1.2">${s.material}</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:4px;font-weight:500">${s.categoria} · ${s.setor}</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:15px;color:var(--text);letter-spacing:-0.02em;line-height:1.2">${s.material}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">${s.setor} · ${s.categoria}</div>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0">
-          <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:${sc.bg};color:${sc.cor}">${s.status}</span>
-          <span style="font-size:11px;font-weight:700;color:${priorCor(s.prioridade)}">${s.prioridade==='Alta'?'⚡ Alta':s.prioridade==='Baixa'?'▽ Baixa':'● Média'}</span>
+        <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+          <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:${sc.bg};color:${sc.cor}">${s.status}</span>
+          ${s.prioridade==='Alta'?`<span style="font-size:10px;font-weight:700;color:var(--red)">Alta</span>`:''}
         </div>
       </div>
 
-      <!-- Linha 2: Qtd, Prazo, Comprador -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:${tl.length>1||s.obs||s.obs_compra?'12px':'0'}">
-        <div style="background:var(--ink3);border-radius:var(--r);padding:8px 12px">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Quantidade</div>
-          <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--text)">${s.quantidade} <span style="font-size:11px;font-weight:500;color:var(--text2)">${s.unidade}</span></div>
-        </div>
-        <div style="background:var(--ink3);border-radius:var(--r);padding:8px 12px">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Prazo</div>
-          <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--text)">${fmt(s.prazo_necessidade)}</div>
-          <div style="margin-top:2px">${diasStr}</div>
-        </div>
-        ${s.comprador?`<div style="background:var(--ink3);border-radius:var(--r);padding:8px 12px">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Comprador</div>
-          <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--text)">${s.comprador}</div>
-        </div>`:''}
-        ${tempoTotal!==null?`<div style="background:var(--green-d);border-radius:var(--r);padding:8px 12px">
-          <div style="font-size:10px;color:var(--green);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Concluído em</div>
-          <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--green)">${tempoTotal}d</div>
-        </div>`:''}
+      <!-- Linha 2: info compacta -->
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:${tl.length>1||s.obs||s.obs_compra?'10px':'4px'}">
+        <span><span style="color:var(--text3)">Qtd </span><b style="color:var(--text)">${s.quantidade} ${s.unidade}</b></span>
+        <span><span style="color:var(--text3)">Prazo </span><b style="color:var(--text)">${fmt(s.prazo_necessidade)}</b> ${diasStr}</span>
+        ${s.comprador?`<span><span style="color:var(--text3)">Comprador </span><b style="color:var(--text)">${s.comprador}</b></span>`:''}
+        ${tempoTotal!==null?`<span style="color:var(--green)">Concluído em <b>${tempoTotal}d</b></span>`:''}
       </div>
 
       <!-- Timeline -->
@@ -2262,14 +2294,14 @@ function renderCompLista(){
 
       <!-- Obs -->
       ${s.obs?`<div style="font-size:12px;color:var(--text2);margin-bottom:10px;padding:8px 12px;background:var(--ink3);border-radius:var(--r);border-left:3px solid var(--line2)"><b style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.04em">Obs</b><br>${s.obs}</div>`:''}
-      ${s.obs_compra?`<div style="font-size:12px;color:var(--blue);margin-bottom:10px;padding:8px 12px;background:var(--blue-d);border-radius:var(--r)">📦 ${s.obs_compra}</div>`:''}
+      ${s.obs_compra?`<div style="font-size:12px;color:var(--blue);margin-bottom:10px;padding:8px 12px;background:var(--blue-d);border-radius:var(--r)">${s.obs_compra}</div>`:''}
 
       <!-- Botões -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
-        ${s.status==='Pendente'?`<button onclick="avancarStatusData('${s.id}','Em andamento','data_em_andamento')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:var(--blue-d);color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">▶ Em andamento</button>`:''}
-        ${s.status==='Pendente'||s.status==='Em andamento'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(232,156,71,.3);background:var(--amber-d);color:var(--amber);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">🛒 Registrar compra</button>`:''}
-        ${s.status==='Comprado'?`<button onclick="avancarStatusData('${s.id}','Recebido','data_recebido')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">✓ Marcar como recebido</button>`:''}
-        ${!['Recebido','Concluído','Cancelado'].includes(s.status)?`<button onclick="enviarLembrete('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:none;color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">🔔 ${s.ultimo_lembrete?'Lembrar novamente':'Lembrar comprador'}</button>${s.ultimo_lembrete?`<span style="font-size:10px;color:var(--text3);align-self:center">Último: ${fmtDtHr(s.ultimo_lembrete)}</span>`:''}`:''}
+        ${s.status==='Pendente'?`<button onclick="avancarStatusData('${s.id}','Em andamento','data_em_andamento')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:var(--blue-d);color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Em andamento</button>`:''}
+        ${s.status==='Pendente'||s.status==='Em andamento'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(232,156,71,.3);background:var(--amber-d);color:var(--amber);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Registrar compra</button>`:''}
+        ${s.status==='Comprado'?`<button onclick="avancarStatusData('${s.id}','Recebido','data_recebido')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Recebido</button>`:''}
+        ${!['Recebido','Concluído','Cancelado'].includes(s.status)?`<button onclick="enviarLembrete('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:none;color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">${s.ultimo_lembrete?'Lembrar novamente':'Lembrar comprador'}</button>${s.ultimo_lembrete?`<span style="font-size:10px;color:var(--text3);align-self:center">Último: ${fmtDtHr(s.ultimo_lembrete)}</span>`:''}`:''}
         ${s.status!=='Recebido'&&s.status!=='Cancelado'?`<button onclick="avancarStatus('${s.id}','Cancelado')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:none;background:none;color:var(--text3);cursor:pointer">Cancelar</button>`:''}
         ${modoGestorAtivo?`<button onclick="apagarSolicitacao('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Apagar</button>`:''}
       </div>
@@ -2301,7 +2333,7 @@ function renderCompLista(){
           <div style="flex:1;height:1px;background:var(--line)"></div>
           <div style="display:flex;gap:4px">
             <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--ink3);color:var(--text3)">${items.length} item${items.length>1?'s':''}</span>
-            ${atrasados>0?`<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--red-d);color:var(--red);font-weight:600">⚠ ${atrasados} atrasado${atrasados>1?'s':''}</span>`:''}
+            ${atrasados>0?`<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--red-d);color:var(--red);font-weight:600">${atrasados} atrasado${atrasados>1?'s':''}</span>`:''}
             ${pendentes>0?`<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(232,156,71,.12);color:var(--amber)">${pendentes} pendente${pendentes>1?'s':''}</span>`:''}
           </div>
         </div>
