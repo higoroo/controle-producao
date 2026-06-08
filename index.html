@@ -657,7 +657,8 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     <button class="chip" id="fc-pend" data-cor="amber" onclick="setFiltroComp('Pendente',this)" style="border-color:rgba(232,156,71,.4);color:var(--amber)">Pendentes</button>
     <button class="chip" id="fc-and" data-cor="blue" onclick="setFiltroComp('Em andamento',this)" style="border-color:rgba(91,156,246,.4);color:var(--blue)">Andamento</button>
     <button class="chip" id="fc-comp" data-cor="green" onclick="setFiltroComp('Comprado',this)" style="border-color:rgba(76,175,125,.4);color:var(--green)">Comprado</button>
-    <button class="chip" id="fc-rec" onclick="setFiltroComp('Recebido',this)">Recebidos</button>
+    <button class="chip" id="fc-rec48" data-cor="green" onclick="setFiltroComp('Entregues',this)" style="border-color:rgba(76,175,125,.4);color:var(--green)">Entregues</button>
+    <button class="chip" id="fc-rec" onclick="setFiltroComp('Recebido',this)"
   </div>
 
 
@@ -2121,11 +2122,12 @@ function irParaFiltroComp(filtro){
   // Mapear para o chip correto e ativar
   const mapa={
     'Pendente':'Pendentes',
-    'Atrasadas':'Pendentes', // atrasadas ficam nos pendentes/em aberto
+    'Atrasadas':'Pendentes',
     'Em andamento':'Andamento',
     'Comprado':'Comprado',
-    'Recebido':'Recebidos',
-    'Todos':'Em aberto'
+    'Entregues':'Entregues',
+    'Recebido':'Todos recebidos',
+    'Todos':'Todos'
   };
   // Encontrar o chip pelo texto
   const chips=document.querySelectorAll('#page-comp .chip');
@@ -2176,47 +2178,45 @@ function tempoResp(s){
 function renderCompKPIs(){
   const total=cachedSolic.length;
   const pend=cachedSolic.filter(s=>s.status==='Pendente').length;
-  const conc=cachedSolic.filter(s=>s.status==='Concluído');
-  const tempos=conc.map(s=>tempoResp(s)).filter(t=>t!==null);
-  const mediaResp=tempos.length?Math.round(tempos.reduce((a,t)=>a+t,0)/tempos.length):null;
-  const atrasados=cachedSolic.filter(s=>{
-    if(['Cancelado'].includes(s.status)) return false;
-    if(['Recebido','Concluído'].includes(s.status)){
-      // Só conta se foi recebido depois do prazo
-      const dataRec=s.data_recebido||s.data_compra||null;
-      if(!dataRec||!s.prazo_necessidade) return false;
-      return new Date(dataRec+'T00:00:00')>new Date(s.prazo_necessidade+'T00:00:00');
-    }
-    // Em aberto: conta se prazo vencido
-    return diasAte(s.prazo_necessidade)<0;
-  }).length;
-  const valTotal=conc.reduce((a,s)=>a+(s.valor_total||0),0);
   const emAndamento=cachedSolic.filter(s=>s.status==='Em andamento').length;
   const comprado=cachedSolic.filter(s=>s.status==='Comprado').length;
+  const emAbertoCont=pend+emAndamento+comprado;
+  // Atrasadas: só em aberto com prazo vencido
+  const atrasadasReais=cachedSolic.filter(s=>{
+    if(!['Pendente','Em andamento','Comprado'].includes(s.status))return false;
+    return diasAte(s.prazo_necessidade)<0;
+  }).length;
+  // Entregues últimas 48h
+  const cutoff48=new Date();cutoff48.setHours(cutoff48.getHours()-48);
+  const entregues48=cachedSolic.filter(s=>{
+    if(!['Recebido','Concluído'].includes(s.status))return false;
+    const dr=s.data_recebido||s.data_compra;
+    return dr&&new Date(dr)>=cutoff48;
+  }).length;
   // Tempo médio solicitação → recebimento
-  const concluidas=cachedSolic.filter(s=>(s.status==='Recebido'||s.status==='Concluído')&&s.data_solicitacao);
-  const temposRec=concluidas.map(s=>Math.round((new Date(s.data_recebido)-new Date(s.data_solicitacao))/(1000*60*60*24)));
+  const concluidas=cachedSolic.filter(s=>['Recebido','Concluído'].includes(s.status)&&s.data_solicitacao&&(s.data_recebido||s.data_compra));
+  const temposRec=concluidas.map(s=>Math.round((new Date(s.data_recebido||s.data_compra)-new Date(s.data_solicitacao))/(1000*60*60*24))).filter(t=>t>=0&&t<365);
   const mediaRec=temposRec.length?Math.round(temposRec.reduce((a,t)=>a+t,0)/temposRec.length):null;
   document.getElementById('comp-kpis').innerHTML=`
-    <div class="kpi" style="cursor:pointer;transition:opacity .15s" onclick="irParaFiltroComp('Pendente')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-      <div class="kpi-label">Pendentes ↗</div>
-      <div class="kpi-val" style="color:${pend>0?'var(--amber)':'var(--green)'}">${pend}</div>
-      <div class="kpi-sub">${total} solicitações no total</div>
+    <div class="kpi" style="cursor:pointer" onclick="irParaFiltroComp('Todos')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+      <div class="kpi-label">Em aberto ↗</div>
+      <div class="kpi-val">${emAbertoCont}</div>
+      <div class="kpi-sub">${pend} pendente${pend!==1?'s':''} · ${emAndamento} andamento · ${comprado} comprado${comprado!==1?'s':''}</div>
     </div>
-    <div class="kpi" style="cursor:pointer;transition:opacity .15s" onclick="irParaFiltroComp('Atrasadas')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+    <div class="kpi" style="cursor:pointer" onclick="irParaFiltroComp('Atrasadas')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
       <div class="kpi-label">Atrasadas ↗</div>
-      <div class="kpi-val" style="color:${atrasados>0?'var(--red)':'var(--green)'}">${atrasados}</div>
-      <div class="kpi-sub">prazo vencido</div>
+      <div class="kpi-val" style="color:${atrasadasReais>0?'var(--red)':'var(--green)'}">${atrasadasReais}</div>
+      <div class="kpi-sub">${atrasadasReais>0?'prazo vencido em aberto':'tudo no prazo'}</div>
     </div>
-    <div class="kpi" style="cursor:pointer;transition:opacity .15s" onclick="irParaFiltroComp('Em andamento')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-      <div class="kpi-label">Em andamento / Comprado ↗</div>
-      <div class="kpi-val" >${emAndamento} / ${comprado}</div>
-      <div class="kpi-sub">aguardando recebimento</div>
+    <div class="kpi" style="cursor:pointer" onclick="irParaFiltroComp('Entregues')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+      <div class="kpi-label">Entregues ↗</div>
+      <div class="kpi-val" style="color:${entregues48>0?'var(--green)':'var(--text3)'}">${entregues48}</div>
+      <div class="kpi-sub">últimas 48 horas</div>
     </div>
     <div class="kpi">
-      <div class="kpi-label">Tempo médio recebimento</div>
-      <div class="kpi-val" >${mediaRec!==null?mediaRec+'d':'—'}</div>
-      <div class="kpi-sub">solicitação → recebido</div>
+      <div class="kpi-label">Tempo médio</div>
+      <div class="kpi-val">${mediaRec!==null?mediaRec+'d':'—'}</div>
+      <div class="kpi-sub">solicitação → entrega</div>
     </div>`;
 }
 
@@ -2229,6 +2229,13 @@ function renderCompLista(){
   const canceladas=cachedSolic.filter(s=>s.status==='Cancelado');
   let lista;
   if(filtroComp==='Todos') lista=ativas;
+  else if(filtroComp==='Entregues'){
+    const cutoff=new Date();cutoff.setHours(cutoff.getHours()-48);
+    lista=concluidas.filter(s=>{
+      const dr=s.data_recebido||s.data_compra||s.updated_at;
+      return dr&&new Date(dr)>=cutoff;
+    }).sort((a,b)=>new Date(b.data_recebido||b.data_compra||0)-new Date(a.data_recebido||a.data_compra||0));
+  }
   else if(filtroComp==='Recebido'||filtroComp==='Concluído') lista=concluidas;
   else if(filtroComp==='Cancelado') lista=canceladas;
   else lista=cachedSolic.filter(s=>s.status===filtroComp);
@@ -2335,7 +2342,7 @@ function renderCompLista(){
   }
 
   if(!lista.length){
-    el.innerHTML=`<div class="empty-msg">Nenhuma solicitação ${filtroComp==='Todos'?'em aberto':filtroComp==='Recebido'?'concluída':'encontrada'}.</div>`;
+    el.innerHTML=`<div class="empty-msg">Nenhuma solicitação ${filtroComp==='Todos'?'em aberto':filtroComp==='Recebido'?'concluída':filtroComp==='Entregues'?'recebida nas últimas 48h':'encontrada'}.</div>`;
   } else {
     // Agrupar por setor
     const porSetor={};
