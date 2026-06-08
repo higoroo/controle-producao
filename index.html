@@ -2273,19 +2273,25 @@ function renderCompLista(){
     if(s.data_recebido) tl.push({l:'Recebido',d:fmt(s.data_recebido),c:'var(--green)'});
     const tempoTotal=s.data_solicitacao&&s.data_recebido?Math.round((new Date(s.data_recebido)-new Date(s.data_solicitacao))/(1000*60*60*24)):null;
     const emAberto=!['Recebido','Concluído','Cancelado'].includes(s.status);
-    const corCard=finalizado
-      ?(atrasadoFinal
-        ?{bg:'rgba(224,92,92,.07)',borda:'rgba(224,92,92,.35)'}
-        :{bg:'rgba(76,175,125,.06)',borda:'rgba(76,175,125,.3)'})
+    // Padrão: vermelho=atrasado, amarelo=pendente, verde=comprado/no prazo
+    const corCard=
+      // Atrasado (qualquer status em aberto com prazo vencido)
+      (emAberto&&dias<0)
+        ?{bg:'rgba(224,92,92,.07)',borda:'rgba(224,92,92,.4)'}
+      // Concluído com atraso
+      :(finalizado&&atrasadoFinal)
+        ?{bg:'rgba(224,92,92,.07)',borda:'rgba(224,92,92,.4)'}
+      // Pendente (aguardando ação)
       :s.status==='Pendente'
-        ?{bg:'rgba(232,156,71,.07)',borda:'rgba(232,156,71,.35)'}
-        :s.status==='Em andamento'
-          ?{bg:'rgba(91,156,246,.07)',borda:'rgba(91,156,246,.35)'}
-          :s.status==='Comprado'
-            ?{bg:'rgba(76,175,125,.07)',borda:'rgba(76,175,125,.35)'}
-            :dias<0
-              ?{bg:'rgba(224,92,92,.07)',borda:'rgba(224,92,92,.35)'}
-              :{bg:'var(--ink2)',borda:'var(--line)'};
+        ?{bg:'rgba(232,156,71,.07)',borda:'rgba(232,156,71,.4)'}
+      // Em andamento (no prazo)
+      :s.status==='Em andamento'
+        ?{bg:'rgba(232,156,71,.05)',borda:'rgba(232,156,71,.3)'}
+      // Comprado ou Recebido no prazo = verde
+      :(s.status==='Comprado'||finalizado)
+        ?{bg:'rgba(76,175,125,.07)',borda:'rgba(76,175,125,.4)'}
+      // Default
+      :{bg:'var(--ink2)',borda:'var(--line)'};
 
     return`<div style="background:${corCard.bg};border:1px solid ${corCard.borda};border-radius:var(--r2);padding:14px 16px;margin-bottom:8px">
 
