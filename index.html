@@ -654,25 +654,13 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   <!-- Linha de filtros -->
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
     <button class="chip active" id="fc-todos" onclick="setFiltroComp('Todos',this)">Todos</button>
-    <button class="chip" id="fc-pend" onclick="setFiltroComp('Pendente',this)" style="border-color:rgba(232,156,71,.4);color:var(--amber)">Pendentes</button>
-    <button class="chip" id="fc-and" onclick="setFiltroComp('Em andamento',this)" style="border-color:rgba(91,156,246,.4);color:var(--blue)">Andamento</button>
-    <button class="chip" id="fc-comp" onclick="setFiltroComp('Comprado',this)" style="border-color:rgba(76,175,125,.4);color:var(--green)">Comprado</button>
+    <button class="chip" id="fc-pend" data-cor="amber" onclick="setFiltroComp('Pendente',this)" style="border-color:rgba(232,156,71,.4);color:var(--amber)">Pendentes</button>
+    <button class="chip" id="fc-and" data-cor="blue" onclick="setFiltroComp('Em andamento',this)" style="border-color:rgba(91,156,246,.4);color:var(--blue)">Andamento</button>
+    <button class="chip" id="fc-comp" data-cor="green" onclick="setFiltroComp('Comprado',this)" style="border-color:rgba(76,175,125,.4);color:var(--green)">Comprado</button>
     <button class="chip" id="fc-rec" onclick="setFiltroComp('Recebido',this)">Recebidos</button>
   </div>
 
-  <!-- Linha de ordenação e filtro por setor -->
-  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-    <select id="comp-filtro-setor" onchange="renderCompLista()" style="flex:1;min-width:120px;padding:7px 10px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px">
-      <option value="">Todos os setores</option>
-    </select>
-    <select id="comp-ordem" onchange="renderCompLista()" style="flex:1;min-width:140px;padding:7px 10px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px">
-      <option value="urgencia">Mais atrasados</option>
-      <option value="prazo_asc">Prazo mais próximo</option>
-      <option value="prazo_desc">Prazo mais distante</option>
-      <option value="recente">Mais recentes</option>
-      <option value="setor">Por setor</option>
-    </select>
-  </div>
+
 
   <!-- KPIs -->
   <div class="kpi-grid" id="comp-kpis"></div>
@@ -714,6 +702,19 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   </div>
 
   <!-- LISTA SOLICITAÇÕES -->
+  <!-- Filtros antes da lista -->
+  <div id="comp-filtros-lista" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <select id="comp-filtro-setor" onchange="renderCompLista()" style="flex:1;min-width:120px;padding:8px 12px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px">
+      <option value="">Todos os setores</option>
+    </select>
+    <select id="comp-ordem" onchange="renderCompLista()" style="flex:1;min-width:150px;padding:8px 12px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px">
+      <option value="urgencia">Mais atrasados primeiro</option>
+      <option value="prazo_asc">Prazo mais próximo</option>
+      <option value="prazo_desc">Prazo mais distante</option>
+      <option value="recente">Mais recentes</option>
+      <option value="setor">Ordenar por setor</option>
+    </select>
+  </div>
   <div id="comp-lista"><div class="loading"><div class="spinner"></div>Carregando...</div></div>
 
   <!-- GRÁFICOS -->
@@ -2141,18 +2142,29 @@ function irParaFiltroComp(filtro){
 
 function setFiltroComp(f,btn){
   filtroComp=f;
-  document.querySelectorAll('#page-comp .chip').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#page-comp .chip').forEach(b=>{
+    b.classList.remove('active');
+    const cor=b.dataset.cor;
+    if(cor==='amber'){b.style.background='';b.style.borderColor='rgba(232,156,71,.4)';b.style.color='var(--amber)';}
+    else if(cor==='blue'){b.style.background='';b.style.borderColor='rgba(91,156,246,.4)';b.style.color='var(--blue)';}
+    else if(cor==='green'){b.style.background='';b.style.borderColor='rgba(76,175,125,.4)';b.style.color='var(--green)';}
+    else{b.style.background='';b.style.borderColor='';b.style.color='';}
+  });
   btn.classList.add('active');
+  const cor=btn.dataset.cor;
+  if(cor==='amber'){btn.style.background='var(--amber)';btn.style.borderColor='var(--amber)';btn.style.color='#fff';}
+  else if(cor==='blue'){btn.style.background='var(--blue)';btn.style.borderColor='var(--blue)';btn.style.color='#fff';}
+  else if(cor==='green'){btn.style.background='var(--green)';btn.style.borderColor='var(--green)';btn.style.color='#fff';}
   renderCompLista();
 }
 
 function statusCor(s){
-  if(s==='Pendente')return{bg:'rgba(232,156,71,.12)',cor:'var(--amber)',borda:'rgba(232,156,71,.25)'};
-  if(s==='Em andamento')return{bg:'var(--blue-d)',cor:'var(--blue)',borda:'rgba(91,156,246,.25)'};
-  if(s==='Comprado')return{bg:'var(--green-d)',cor:'var(--green)',borda:'rgba(76,175,125,.3)'};
-  if(s==='Recebido'||s==='Concluído')return{bg:'var(--green-d)',cor:'var(--green)',borda:'rgba(76,175,125,.25)'};
-  if(s==='Cancelado')return{bg:'var(--red-d)',cor:'var(--red)',borda:'rgba(224,92,92,.25)'};
-  return{bg:'var(--ink3)',cor:'var(--text3)',borda:'var(--line)'};
+  if(s==='Pendente')return{bg:'var(--amber)',cor:'#fff',borda:'var(--amber)',badge:'var(--amber)'};
+  if(s==='Em andamento')return{bg:'var(--blue)',cor:'#fff',borda:'rgba(91,156,246,.4)',badge:'var(--blue)'};
+  if(s==='Comprado')return{bg:'var(--green)',cor:'#fff',borda:'rgba(76,175,125,.4)',badge:'var(--green)'};
+  if(s==='Recebido'||s==='Concluído')return{bg:'rgba(76,175,125,.15)',cor:'var(--green)',borda:'rgba(76,175,125,.25)',badge:'rgba(76,175,125,.15)'};
+  if(s==='Cancelado')return{bg:'rgba(224,92,92,.15)',cor:'var(--red)',borda:'rgba(224,92,92,.25)',badge:'rgba(224,92,92,.15)'};
+  return{bg:'var(--ink3)',cor:'var(--text3)',borda:'var(--line)',badge:'var(--ink3)'};
 }
 function priorCor(p){return p==='Alta'?'var(--red)':p==='Média'?'var(--amber)':'var(--text3)'}
 function diasAte(data){if(!data)return 999;const hoje2=new Date();hoje2.setHours(0,0,0,0);const prazo=new Date(data+'T00:00:00');prazo.setHours(0,0,0,0);return Math.round((prazo-hoje2)/(1000*60*60*24))}
