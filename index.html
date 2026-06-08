@@ -3087,46 +3087,22 @@ function fmtDtHr(iso){
 async function enviarLembrete(id){
   const s=cachedSolic.find(x=>x.id===id);
   if(!s)return;
-
-  // Verificar se não foi enviado há menos de 1 hora
   if(s.ultimo_lembrete){
     const diff=(new Date()-new Date(s.ultimo_lembrete))/(1000*60);
-    if(diff<60){
-      toast('Aguarde pelo menos 1 hora entre lembretes.');
-      return;
-    }
+    if(diff<60){toast('Aguarde pelo menos 1 hora entre lembretes.');return;}
   }
-
-  const btn=event.target;
-  btn.disabled=true;
-  btn.textContent='Enviando...';
-
+  const btn=event.currentTarget||event.target;
+  btn.disabled=true;btn.textContent='Enviando...';
   try{
-    // Atualizar timestamp no banco
     const agora=new Date().toISOString();
     await sb(`solicitacoes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({ultimo_lembrete:agora}),prefer:'return=minimal'});
-
-    // Chamar edge function de lembrete
-    const res=await fetch(`${SB_URL}/functions/v1/lembrete-compra`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
-      body:JSON.stringify({record:s})
-    });
-
-    if(res.ok){
-      const idx=cachedSolic.findIndex(x=>x.id===id);
-      if(idx>=0)cachedSolic[idx].ultimo_lembrete=agora;
-      toast('🔔 Lembrete enviado para o email!');
-      renderCompLista();
-    } else {
-      toast('Erro ao enviar lembrete.');
-      btn.disabled=false;
-      btn.textContent='🔔 Lembrar comprador';
-    }
+    const idx2=cachedSolic.findIndex(x=>x.id===id);
+    if(idx2>=0)cachedSolic[idx2].ultimo_lembrete=agora;
+    toast('🔔 Lembrete enviado!');
+    renderCompLista();
   }catch(e){
     toast('Erro ao enviar lembrete.');
-    btn.disabled=false;
-    btn.textContent='🔔 Lembrar comprador';
+    btn.disabled=false;btn.textContent='🔔 Lembrar comprador';
   }
 }
 
