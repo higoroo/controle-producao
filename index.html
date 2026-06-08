@@ -2273,13 +2273,21 @@ function renderCompLista(){
     if(s.data_recebido) tl.push({l:'Recebido',d:fmt(s.data_recebido),c:'var(--green)'});
     const tempoTotal=s.data_solicitacao&&s.data_recebido?Math.round((new Date(s.data_recebido)-new Date(s.data_solicitacao))/(1000*60*60*24)):null;
     const emAberto=!['Recebido','Concluído','Cancelado'].includes(s.status);
-    const corCard=finalizado?(atrasadoFinal?{borda:'rgba(224,92,92,.35)',bg:'rgba(224,92,92,.04)'}:{borda:'rgba(76,175,125,.3)',bg:'rgba(76,175,125,.03)'})
-      :!emAberto?sc
-      :dias<0?{borda:'rgba(224,92,92,.4)',bg:'rgba(224,92,92,.05)'}
-      :dias<=2?{borda:'rgba(232,156,71,.4)',bg:'rgba(232,156,71,.04)'}
-      :sc;
+    const corCard=finalizado
+      ?(atrasadoFinal
+        ?{bg:'rgba(224,92,92,.07)',borda:'rgba(224,92,92,.35)'}
+        :{bg:'rgba(76,175,125,.06)',borda:'rgba(76,175,125,.3)'})
+      :s.status==='Pendente'
+        ?{bg:'rgba(232,156,71,.07)',borda:'rgba(232,156,71,.35)'}
+        :s.status==='Em andamento'
+          ?{bg:'rgba(91,156,246,.07)',borda:'rgba(91,156,246,.35)'}
+          :s.status==='Comprado'
+            ?{bg:'rgba(76,175,125,.07)',borda:'rgba(76,175,125,.35)'}
+            :dias<0
+              ?{bg:'rgba(224,92,92,.07)',borda:'rgba(224,92,92,.35)'}
+              :{bg:'var(--ink2)',borda:'var(--line)'};
 
-    return`<div style="background:var(--ink2);border:1px solid ${corCard.borda};border-left:3px solid ${corCard.borda};border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;background:${corCard.bg||'var(--ink2)'}">
+    return`<div style="background:${corCard.bg};border:1px solid ${corCard.borda};border-radius:var(--r2);padding:14px 16px;margin-bottom:8px">
 
       <!-- Linha 1: Material + badges -->
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
@@ -2288,7 +2296,7 @@ function renderCompLista(){
           <div style="font-size:11px;color:var(--text2);margin-top:3px">${s.setor} · ${s.categoria}</div>
         </div>
         <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
-          <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:${sc.bg};color:${sc.cor}">${s.status}</span>
+          <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:${sc.bg};color:${sc.cor};letter-spacing:.03em">${s.status}</span>
           ${s.prioridade==='Alta'?`<span style="font-size:10px;font-weight:700;color:var(--red)">Alta</span>`:''}
         </div>
       </div>
