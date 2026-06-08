@@ -2251,23 +2251,16 @@ function renderCompLista(){
   if(filtroComp==='Todos') lista=ativas;
   else if(filtroComp==='Entregues'){
     const agora=new Date();
-    let cutoffDe, cutoffAte;
-    if(filtroEntreguesPeriodo==='hoje'){
-      cutoffDe=new Date(agora);cutoffDe.setHours(0,0,0,0);
-      cutoffAte=new Date(agora);cutoffAte.setHours(23,59,59,999);
-    } else if(filtroEntreguesPeriodo==='ontem'){
-      cutoffDe=new Date(agora);cutoffDe.setDate(cutoffDe.getDate()-1);cutoffDe.setHours(0,0,0,0);
-      cutoffAte=new Date(agora);cutoffAte.setDate(cutoffAte.getDate()-1);cutoffAte.setHours(23,59,59,999);
-    } else {
-      // 48h
-      cutoffDe=new Date(agora);cutoffDe.setHours(cutoffDe.getHours()-48);
-      cutoffAte=new Date(agora);
-    }
+    const hojeStr=agora.toISOString().slice(0,10);
+    const ontemDate=new Date(agora);ontemDate.setDate(ontemDate.getDate()-1);
+    const ontemStr=ontemDate.toISOString().slice(0,10);
     lista=concluidas.filter(s=>{
-      const dr=s.data_recebido||s.data_compra;
+      const dr=(s.data_recebido||s.data_compra||'').slice(0,10);
       if(!dr)return false;
-      const d=new Date(dr);
-      return d>=cutoffDe&&d<=cutoffAte;
+      if(filtroEntreguesPeriodo==='hoje') return dr===hojeStr;
+      if(filtroEntreguesPeriodo==='ontem') return dr===ontemStr;
+      // Todos: últimas 48h
+      return dr===hojeStr||dr===ontemStr;
     }).sort((a,b)=>new Date(b.data_recebido||b.data_compra||0)-new Date(a.data_recebido||a.data_compra||0));
   }
   else if(filtroComp==='Recebido'||filtroComp==='Concluído') lista=concluidas;
