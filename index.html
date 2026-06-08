@@ -2260,7 +2260,7 @@ function renderCompLista(){
     if(s.data_comprado) tl.push({l:'Comprado',d:fmt(s.data_comprado),c:'var(--amber)'});
     if(s.data_recebido) tl.push({l:'Recebido',d:fmt(s.data_recebido),c:'var(--green)'});
     const tempoTotal=s.data_solicitacao&&s.data_recebido?Math.round((new Date(s.data_recebido)-new Date(s.data_solicitacao))/(1000*60*60*24)):null;
-    // Cor semafórica baseada no status + atraso
+    const emAberto=!['Recebido','Concluído','Cancelado'].includes(s.status);
     const corCard=finalizado?(atrasadoFinal?{borda:'rgba(224,92,92,.35)',bg:'rgba(224,92,92,.04)'}:{borda:'rgba(76,175,125,.3)',bg:'rgba(76,175,125,.03)'})
       :!emAberto?sc
       :dias<0?{borda:'rgba(224,92,92,.4)',bg:'rgba(224,92,92,.05)'}
