@@ -658,7 +658,14 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     <button class="chip" id="fc-and" data-cor="blue" onclick="setFiltroComp('Em andamento',this)" style="border-color:rgba(91,156,246,.4);color:var(--blue)">Andamento</button>
     <button class="chip" id="fc-comp" data-cor="green" onclick="setFiltroComp('Comprado',this)" style="border-color:rgba(76,175,125,.4);color:var(--green)">Comprado</button>
     <button class="chip" id="fc-rec48" data-cor="green" onclick="setFiltroComp('Entregues',this)" style="border-color:rgba(76,175,125,.4);color:var(--green)">Entregues</button>
-    <button class="chip" id="fc-rec" onclick="setFiltroComp('Recebido',this)"
+  </div>
+
+  <!-- Sub-filtro período Entregues -->
+  <div id="comp-sub-entregues" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center">
+    <span style="font-size:11px;color:var(--text3)">Ver:</span>
+    <button class="chip active" id="fe-hoje" onclick="setSubFiltroEntregues('hoje',this)">Hoje</button>
+    <button class="chip" id="fe-ontem" onclick="setSubFiltroEntregues('ontem',this)">Ontem</button>
+    <button class="chip" id="fe-48h" onclick="setSubFiltroEntregues('48h',this)">Todos</button>
   </div>
 
 
@@ -2126,7 +2133,7 @@ function irParaFiltroComp(filtro){
     'Em andamento':'Andamento',
     'Comprado':'Comprado',
     'Entregues':'Entregues',
-    'Recebido':'Todos recebidos',
+    'Recebido':'Entregues',
     'Todos':'Todos'
   };
   // Encontrar o chip pelo texto
@@ -2142,6 +2149,16 @@ function irParaFiltroComp(filtro){
   if(lista) lista.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
+function setSubFiltroEntregues(periodo,btn){
+  filtroEntreguesPeriodo=periodo;
+  document.querySelectorAll('#comp-sub-entregues .chip').forEach(b=>{
+    b.classList.remove('active');
+    b.style.background='';b.style.borderColor='';b.style.color='';
+  });
+  btn.classList.add('active');
+  renderCompLista();
+}
+
 function setFiltroComp(f,btn){
   filtroComp=f;
   document.querySelectorAll('#page-comp .chip').forEach(b=>{
@@ -2153,6 +2170,9 @@ function setFiltroComp(f,btn){
     else{b.style.background='';b.style.borderColor='';b.style.color='';}
   });
   btn.classList.add('active');
+  // Mostrar sub-filtro só quando Entregues está ativo
+  const subEl=document.getElementById('comp-sub-entregues');
+  if(subEl) subEl.style.display=f==='Entregues'?'flex':'none';
   const cor=btn.dataset.cor;
   if(cor==='amber'){btn.style.background='var(--amber)';btn.style.borderColor='var(--amber)';btn.style.color='#fff';}
   else if(cor==='blue'){btn.style.background='var(--blue)';btn.style.borderColor='var(--blue)';btn.style.color='#fff';}
@@ -2230,10 +2250,24 @@ function renderCompLista(){
   let lista;
   if(filtroComp==='Todos') lista=ativas;
   else if(filtroComp==='Entregues'){
-    const cutoff=new Date();cutoff.setHours(cutoff.getHours()-48);
+    const agora=new Date();
+    let cutoffDe, cutoffAte;
+    if(filtroEntreguesPeriodo==='hoje'){
+      cutoffDe=new Date(agora);cutoffDe.setHours(0,0,0,0);
+      cutoffAte=new Date(agora);cutoffAte.setHours(23,59,59,999);
+    } else if(filtroEntreguesPeriodo==='ontem'){
+      cutoffDe=new Date(agora);cutoffDe.setDate(cutoffDe.getDate()-1);cutoffDe.setHours(0,0,0,0);
+      cutoffAte=new Date(agora);cutoffAte.setDate(cutoffAte.getDate()-1);cutoffAte.setHours(23,59,59,999);
+    } else {
+      // 48h
+      cutoffDe=new Date(agora);cutoffDe.setHours(cutoffDe.getHours()-48);
+      cutoffAte=new Date(agora);
+    }
     lista=concluidas.filter(s=>{
-      const dr=s.data_recebido||s.data_compra||s.updated_at;
-      return dr&&new Date(dr)>=cutoff;
+      const dr=s.data_recebido||s.data_compra;
+      if(!dr)return false;
+      const d=new Date(dr);
+      return d>=cutoffDe&&d<=cutoffAte;
     }).sort((a,b)=>new Date(b.data_recebido||b.data_compra||0)-new Date(a.data_recebido||a.data_compra||0));
   }
   else if(filtroComp==='Recebido'||filtroComp==='Concluído') lista=concluidas;
