@@ -717,7 +717,7 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     </select>
     <select id="comp-ordem" onchange="renderCompLista()" style="flex:1;min-width:150px;padding:8px 12px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px">
       <option value="recente">Novas solicitações</option>
-      <option value="urgencia">Mais atrasados primeiro</option>
+      <option value="urgencia" selected>Mais atrasados primeiro</option>
       <option value="prazo_asc">Prazo mais próximo</option>
       <option value="prazo_desc">Prazo mais distante</option>
       <option value="setor">Ordenar por setor</option>
@@ -2371,35 +2371,39 @@ function renderCompLista(){
   if(!lista.length){
     el.innerHTML=`<div class="empty-msg">Nenhuma solicitação ${filtroComp==='Todos'?'em aberto':filtroComp==='Recebido'?'concluída':filtroComp==='Entregues'?'recebida nas últimas 48h':'encontrada'}.</div>`;
   } else {
-    // Agrupar por setor
-    const porSetor={};
-    lista.forEach(s=>{
-      const setor=s.setor||'Sem setor';
-      if(!porSetor[setor])porSetor[setor]=[];
-      porSetor[setor].push(s);
-    });
-    // Ordenar setores pela urgência (setor com mais atrasados primeiro)
-    const setoresOrdenados=Object.entries(porSetor).sort((a,b)=>{
-      const urgA=a[1].filter(s=>diasAte(s.prazo_necessidade)<0).length;
-      const urgB=b[1].filter(s=>diasAte(s.prazo_necessidade)<0).length;
-      return urgB-urgA||a[0].localeCompare(b[0]);
-    });
-    el.innerHTML=setoresOrdenados.map(([setor,items])=>{
-      const atrasados=items.filter(s=>!['Recebido','Concluído'].includes(s.status)&&diasAte(s.prazo_necessidade)<0).length;
-      const pendentes=items.filter(s=>s.status==='Pendente').length;
-      return`<div style="margin-bottom:16px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:0 2px">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em">${setor}</div>
-          <div style="flex:1;height:1px;background:var(--line)"></div>
-          <div style="display:flex;gap:4px">
-            <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--ink3);color:var(--text3)">${items.length} item${items.length>1?'s':''}</span>
-            ${atrasados>0?`<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--red-d);color:var(--red);font-weight:600">${atrasados} atrasado${atrasados>1?'s':''}</span>`:''}
-            ${pendentes>0?`<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(232,156,71,.12);color:var(--amber)">${pendentes} pendente${pendentes>1?'s':''}</span>`:''}
+    // Se ordenação for por setor, agrupa; senão, lista plana respeitando a ordenação
+    if(ordem==='setor'){
+      const porSetor={};
+      lista.forEach(s=>{
+        const setor=s.setor||'Sem setor';
+        if(!porSetor[setor])porSetor[setor]=[];
+        porSetor[setor].push(s);
+      });
+      const setoresOrdenados=Object.entries(porSetor).sort((a,b)=>{
+        const urgA=a[1].filter(s=>diasAte(s.prazo_necessidade)<0).length;
+        const urgB=b[1].filter(s=>diasAte(s.prazo_necessidade)<0).length;
+        return urgB-urgA||a[0].localeCompare(b[0]);
+      });
+      el.innerHTML=setoresOrdenados.map(([setor,items])=>{
+        const atrasados=items.filter(s=>!['Recebido','Concluído'].includes(s.status)&&diasAte(s.prazo_necessidade)<0).length;
+        const pendentes=items.filter(s=>s.status==='Pendente').length;
+        return`<div style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:0 2px">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em">${setor}</div>
+            <div style="flex:1;height:1px;background:var(--line)"></div>
+            <div style="display:flex;gap:4px">
+              <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--ink3);color:var(--text3)">${items.length} item${items.length>1?'s':''}</span>
+              ${atrasados>0?`<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--red-d);color:var(--red);font-weight:600">${atrasados} atrasado${atrasados>1?'s':''}</span>`:''}
+              ${pendentes>0?`<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(232,156,71,.12);color:var(--amber)">${pendentes} pendente${pendentes>1?'s':''}</span>`:''}
+            </div>
           </div>
-        </div>
-        ${items.map(s=>cardSolic(s)).join('')}
-      </div>`;
-    }).join('');
+          ${items.map(s=>cardSolic(s)).join('')}
+        </div>`;
+      }).join('');
+    } else {
+      // Lista plana — ordenação global preservada
+      el.innerHTML=lista.map(s=>cardSolic(s)).join('');
+    }
   }
   if(filtroComp==='Todos'&&(concluidas.length||canceladas.length)){
     el.innerHTML+=`<button onclick="toggleHistComp(this)" style="width:100%;padding:10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text2);font-size:12px;cursor:pointer;text-align:left;font-family:'DM Mono',monospace;margin-top:4px">▼ Ver concluídas e canceladas (${concluidas.length+canceladas.length})</button><div id="hist-comp-extra" style="display:none;margin-top:8px">${[...concluidas,...canceladas].sort((a,b)=>new Date(b.data_solicitacao)-new Date(a.data_solicitacao)).map(s=>cardSolic(s)).join('')}</div>`;
