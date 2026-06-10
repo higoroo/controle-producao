@@ -62,7 +62,7 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 }
 @media(max-width:767px){
   .sidebar{display:none!important}
-  .content-inner{padding:16px 16px 28px}
+  .content-inner{padding:16px 16px 96px}
 }
 @media(min-width:1400px){
   .content-inner{max-width:1400px;padding:40px 56px}
@@ -79,13 +79,32 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 .sb-divider{height:1px;background:var(--line);margin:10px 4px}
 
 /* ── BOTTOM NAV (mobile) ── */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;height:var(--nav-h);background:var(--ink2);border-top:1px solid var(--line2);display:flex}
+.bottom-nav{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  z-index:200;height:56px;
+  background:rgba(20,20,18,0.75);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:28px;
+  display:flex;
+  padding:0 8px;
+  width:calc(100% - 32px);
+  max-width:420px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4),0 2px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.08);
+}
+[data-theme="light"] .bottom-nav{
+  background:rgba(245,244,240,0.8);
+  border:1px solid rgba(0,0,0,0.1);
+  box-shadow:0 8px 32px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.6);
+}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;transition:color .15s;padding-bottom:env(safe-area-inset-bottom,0)}
-.nav-item.active{color:var(--accent)}
+.nav-item.active{color:var(--accent);background:rgba(232,197,71,0.12)}
+[data-theme="light"] .nav-item.active{background:rgba(184,150,10,0.1)}
 .nav-icon{width:20px;height:20px}
 
 /* ── SCROLL ── */
-.scroll-area{position:fixed;top:var(--top-h);bottom:var(--nav-h);left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll-area{position:fixed;top:var(--top-h);bottom:0;left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .page{display:none;min-height:100%}
 .page.active{display:block}
 
