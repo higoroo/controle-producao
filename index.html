@@ -382,10 +382,16 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
         <div class="sec-title" style="margin:0" id="titulo-setores">Por setor</div>
-        <button id="btn-comp-setores" onclick="toggleCompSetores(this)"
-          style="font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--line2);background:none;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">
-          Comparar ▾
-        </button>
+        <div style="display:flex;gap:6px">
+          <button id="btn-setores-ano" onclick="toggleSetoresAno(this)"
+            style="font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--line2);background:none;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">
+            Ano ▾
+          </button>
+          <button id="btn-comp-setores" onclick="toggleCompSetores(this)"
+            style="font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--line2);background:none;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">
+            Comparar ▾
+          </button>
+        </div>
       </div>
       <div class="legend" id="legend-setores"></div>
       <div class="chart-wrap" style="height:240px;min-height:300px"><canvas id="chart-setores" role="img" aria-label="Produção por setor">Produção por setor.</canvas></div>
@@ -1232,18 +1238,37 @@ function toggleCompSetores(btn){
 }
 
 function renderChartSetores(){
-  // Título dinâmico
-  const tituloEl=document.getElementById('titulo-setores');
-  if(tituloEl) tituloEl.textContent='Por setor — '+labelPeriodo();
-
-  const base=lancsNoPeriodo();
-  const vals=SETORES.map(s=>base.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
-  document.getElementById('legend-setores').innerHTML=SETORES.map((s,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text2);margin-right:8px"><span style="width:8px;height:8px;border-radius:50%;background:${CORS[i]};display:inline-block"></span>${s}</span>`).join('');
-  const ctx=document.getElementById('chart-setores').getContext('2d');
-  if(charts.set)charts.set.destroy();
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
   const tickClr=isDark?'#5a5855':'#9a9994';
   const gridClr=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
+  const ctx=document.getElementById('chart-setores').getContext('2d');
+  if(charts.set)charts.set.destroy();
+  const tituloEl=document.getElementById('titulo-setores');
+
+  if(setoresAnoAtivo){
+    // Visão anual — total do ano por setor, comparando com ano anterior
+    if(tituloEl) tituloEl.textContent='Por setor — ano atual';
+    const anoAtual=String(new Date().getFullYear());
+    const anoAnt=String(new Date().getFullYear()-1);
+    const lancsAno=cachedLancs.filter(l=>l.data.startsWith(anoAtual));
+    const lancsAnoAnt=cachedLancs.filter(l=>l.data.startsWith(anoAnt));
+    const vals=SETORES.map(s=>lancsAno.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
+    const valsAnt=SETORES.map(s=>lancsAnoAnt.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
+    document.getElementById('legend-setores').innerHTML=SETORES.map((s,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text2);margin-right:8px"><span style="width:8px;height:8px;border-radius:50%;background:${CORS[i]};display:inline-block"></span>${s}</span>`).join('');
+    const temAnoAnt=valsAnt.some(v=>v>0);
+    const datasets=[{label:anoAtual,data:vals,backgroundColor:CORS,borderRadius:5,borderSkipped:false}];
+    if(temAnoAnt){
+      datasets.push({label:anoAnt,data:valsAnt,backgroundColor:CORS.map(()=>'rgba(140,140,140,0.25)'),borderRadius:5,borderSkipped:false});
+    }
+    charts.set=new Chart(ctx,{type:'bar',data:{labels:SETORES,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:temAnoAnt,labels:{color:tickClr,font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw.toLocaleString('pt-BR')} pç`}}},scales:{x:{grid:{display:false},ticks:{color:tickClr,font:{size:9},maxRotation:40,autoSkip:false}},y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}}}}}});
+    return;
+  }
+
+  // Visão padrão — segue o período selecionado no dashboard
+  if(tituloEl) tituloEl.textContent='Por setor — '+labelPeriodo();
+  const base=lancsNoPeriodo();
+  const vals=SETORES.map(s=>base.filter(l=>l.setor===s).reduce((a,l)=>a+l.qtd,0));
+  document.getElementById('legend-setores').innerHTML=SETORES.map((s,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text2);margin-right:8px"><span style="width:8px;height:8px;border-radius:50%;background:${CORS[i]};display:inline-block"></span>${s}</span>`).join('');
 
   const datasets=[{
     label:labelPeriodo(),data:vals,
@@ -1261,6 +1286,22 @@ function renderChartSetores(){
   }
 
   charts.set=new Chart(ctx,{type:'bar',data:{labels:SETORES,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:compSetoresAtivo,labels:{color:tickClr,font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw.toLocaleString('pt-BR')} pç`}}},scales:{x:{grid:{display:false},ticks:{color:tickClr,font:{size:9},maxRotation:40,autoSkip:false}},y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}}}}}});
+}
+
+let setoresAnoAtivo=false;
+function toggleSetoresAno(btn){
+  setoresAnoAtivo=!setoresAnoAtivo;
+  btn.style.background=setoresAnoAtivo?'var(--accent)':'none';
+  btn.style.color=setoresAnoAtivo?'var(--ink)':'var(--text3)';
+  btn.style.borderColor=setoresAnoAtivo?'var(--accent)':'var(--line2)';
+  btn.textContent=setoresAnoAtivo?'Ano ✓':'Ano ▾';
+  // Desativar comparação de período ao entrar no modo ano (não fazem sentido juntos)
+  if(setoresAnoAtivo){
+    compSetoresAtivo=false;
+    const btnComp=document.getElementById('btn-comp-setores');
+    if(btnComp){btnComp.style.background='';btnComp.style.color='var(--text3)';btnComp.style.borderColor='var(--line2)';btnComp.textContent='Comparar ▾';}
+  }
+  renderChartSetores();
 }
 function setToggleDia(modo,btn){
   toggleDia=modo;
