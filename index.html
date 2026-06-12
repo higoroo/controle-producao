@@ -63,6 +63,7 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
 @media(max-width:767px){
   .sidebar{display:none!important}
   .content-inner{padding:16px 16px 96px}
+  .chip{padding:6px 10px;font-size:11px}
 }
 @media(min-width:1400px){
   .content-inner{max-width:1400px;padding:40px 56px}
@@ -368,11 +369,11 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
         <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">De</label>
-        <input type="date" id="p-range-de" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+        <input type="date" id="p-range-de" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;box-sizing:border-box">
       </div>
       <div>
         <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Até</label>
-        <input type="date" id="p-range-ate" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+        <input type="date" id="p-range-ate" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;box-sizing:border-box">
       </div>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="aplicarPeriodoRange()">Aplicar</button>
@@ -589,17 +590,17 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
   <div id="insights-area"><div class="loading"><div class="spinner"></div>Calculando...</div></div>
   <div class="sec-title" style="margin-top:8px">Comparativo mensal inteligente</div>
   <div class="card" id="comp-mensal-card">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div style="flex:1;min-width:120px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
         <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Mês A</label>
-        <input type="month" id="cmp-mes-a" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+        <input type="month" id="cmp-mes-a" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;box-sizing:border-box">
       </div>
-      <div style="flex:1;min-width:120px">
+      <div>
         <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Mês B</label>
-        <input type="month" id="cmp-mes-b" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px">
+        <input type="month" id="cmp-mes-b" style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;box-sizing:border-box">
       </div>
-      <button class="btn btn-ghost btn-sm" style="align-self:flex-end;white-space:nowrap" onclick="renderCompMensal()">Comparar</button>
     </div>
+    <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:14px" onclick="renderCompMensal()">Comparar</button>
     <div id="comp-mensal-resultado"><div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0">Selecione dois meses e clique em Comparar.</div></div>
   </div>
 
