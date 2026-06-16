@@ -178,6 +178,98 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 .chip{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12px;font-family:'Syne',sans-serif;font-weight:600;border:1px solid var(--line2);background:var(--ink3);color:var(--text3);cursor:pointer;transition:all .15s}
 .insights-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px}
 @media(min-width:768px){.insights-grid{grid-template-columns:1fr 1fr}}
+
+/* ── SKELETON LOADING ── */
+@keyframes shimmer{
+  0%{background-position:-400px 0}
+  100%{background-position:400px 0}
+}
+.skeleton{
+  background:linear-gradient(90deg,var(--ink3) 25%,var(--ink2) 50%,var(--ink3) 75%);
+  background-size:800px 100%;
+  animation:shimmer 1.4s infinite linear;
+  border-radius:6px;
+}
+.skeleton-kpi{height:80px;border-radius:var(--r2)}
+.skeleton-card{height:100px;border-radius:var(--r2);margin-bottom:10px}
+.skeleton-bar{height:12px;border-radius:4px;margin-bottom:6px}
+.skeleton-bar.w60{width:60%}
+.skeleton-bar.w40{width:40%}
+.skeleton-bar.w80{width:80%}
+
+/* ── TOAST MELHORADO ── */
+@keyframes toastIn{
+  from{opacity:0;transform:translateX(-50%) translateY(10px)}
+  to{opacity:1;transform:translateX(-50%) translateY(0)}
+}
+@keyframes toastOut{
+  from{opacity:1;transform:translateX(-50%) translateY(0)}
+  to{opacity:0;transform:translateX(-50%) translateY(6px)}
+}
+#toast{
+  display:none;position:fixed;bottom:88px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:var(--text);
+  padding:0;border-radius:16px;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:13px;
+  z-index:999;white-space:nowrap;max-width:90vw;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+  border:1px solid var(--line2);
+  overflow:hidden;
+}
+#toast.show{animation:toastIn .2s ease-out forwards}
+#toast.hide{animation:toastOut .2s ease-in forwards}
+#toast-inner{display:flex;align-items:center;gap:8px;padding:10px 16px}
+#toast-bar{height:3px;background:var(--accent);transform-origin:left;transition:transform 2.5s linear}
+
+/* ── RIPPLE ── */
+.btn-ripple{position:relative;overflow:hidden}
+@keyframes rippleAnim{
+  from{transform:scale(0);opacity:.4}
+  to{transform:scale(4);opacity:0}
+}
+.ripple-circle{
+  position:absolute;border-radius:50%;
+  width:40px;height:40px;margin-top:-20px;margin-left:-20px;
+  background:rgba(255,255,255,0.3);
+  animation:rippleAnim .5s ease-out forwards;
+  pointer-events:none;
+}
+
+/* ── KPI FLIP ── */
+@keyframes kpiFlipOut{
+  from{transform:rotateX(0deg);opacity:1}
+  to{transform:rotateX(90deg);opacity:0}
+}
+@keyframes kpiFlipIn{
+  from{transform:rotateX(-90deg);opacity:0}
+  to{transform:rotateX(0deg);opacity:1}
+}
+.kpi-val.flip-out{animation:kpiFlipOut .15s ease-in forwards}
+.kpi-val.flip-in{animation:kpiFlipIn .15s ease-out forwards;animation-delay:.15s}
+.kpi-grid{perspective:400px}
+
+/* ── PULSE NO PRAZO HOJE ── */
+@keyframes pulseHoje{
+  0%,100%{opacity:1}
+  50%{opacity:.5}
+}
+.prazo-hoje{animation:pulseHoje 1.2s ease-in-out infinite}
+
+/* ── SWIPE TO ACTION ── */
+.swipe-wrap{position:relative;overflow:hidden;border-radius:var(--r2);margin-bottom:8px}
+.swipe-action{
+  position:absolute;right:0;top:0;bottom:0;width:80px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--green);color:#fff;font-size:11px;font-weight:700;
+  font-family:'Syne',sans-serif;letter-spacing:.04em;
+  border-radius:0 var(--r2) var(--r2) 0;
+  transition:width .2s ease;
+}
+.swipe-card{
+  transition:transform .2s ease;
+  will-change:transform;
+}
+
 .insight-card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:14px}
 
 /* ── ANIMAÇÕES ── */
@@ -900,7 +992,13 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 </div></div>
 
 </div><!-- /scroll-area -->
-<div id="toast"></div>
+<div id="toast">
+  <div id="toast-inner">
+    <span id="toast-icon" style="font-size:14px;flex-shrink:0"></span>
+    <span id="toast-msg"></span>
+  </div>
+  <div id="toast-bar"></div>
+</div>
 <div id="ptr-indicator">↻</div>
 
 <script>
@@ -919,7 +1017,26 @@ async function sb(path,opts={}){
   const t=await res.text();return t?JSON.parse(t):[];
 }
 function setSync(s){document.getElementById('sync-dot').className='sync-dot '+s}
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2500)}
+function toast(msg, tipo='ok'){
+  const el=document.getElementById('toast');
+  const iconEl=document.getElementById('toast-icon');
+  const msgEl=document.getElementById('toast-msg');
+  const bar=document.getElementById('toast-bar');
+  const icones={ok:'✓',erro:'✕',aviso:'!'};
+  const cores={ok:'var(--green)',erro:'var(--red)',aviso:'var(--amber)'};
+  if(iconEl){iconEl.textContent=icones[tipo]||'✓';iconEl.style.color=cores[tipo]||'var(--green)';}
+  if(msgEl) msgEl.textContent=msg;
+  if(bar){bar.style.background=cores[tipo]||'var(--accent)';bar.style.transform='scaleX(1)';setTimeout(()=>{bar.style.transform='scaleX(0)'},50);}
+  el.style.display='block';
+  el.classList.remove('hide');
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>{
+    el.classList.remove('show');
+    el.classList.add('hide');
+    setTimeout(()=>{el.style.display='none';el.classList.remove('hide');},200);
+  },2500);
+}
 function fmt(d){return new Date(d+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
 function hoje(){return new Date().toISOString().slice(0,10)}
 function mesAtual(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
@@ -1084,7 +1201,7 @@ async function loadDevs(soMes=true){
       cachedDevs=devs;
     }
   }
-  catch(e){toast('Erro ao carregar devoluções.')}
+  catch(e){toast('Erro ao carregar devoluções.','erro')}
 }
 
 async function carregarDevsAnteriores(btn){
@@ -1098,6 +1215,7 @@ async function carregarDevsAnteriores(btn){
 
 function init(){
   document.getElementById('f-data').value=hoje();
+  setTimeout(initRipples,500);
   document.getElementById('dv-data').value=hoje();
   const pop=(id,lista)=>{const sel=document.getElementById(id);lista.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)})};
   pop('f-setor',SETORES);pop('f-produto',[...PRODUTOS,'— Novo produto']);pop('h-setor',SETORES);pop('dv-produto',PRODUTOS);
@@ -1160,10 +1278,13 @@ function goTo(id,btn){
   const sbId='sb-'+id;
   if(document.getElementById(sbId))document.getElementById(sbId).classList.add('active');
   document.querySelector('.scroll-area').scrollTop=0;
-  if(id==='dash')renderDash();
+  if(id==='dash'){
+    skeletonKPIs('kpi-area');
+    renderDash();
+  }
   if(id==='prod')renderProd();
   if(id==='dev'){Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
-  if(id==='comp'){loadCompras().then(()=>{initCompras();filtrarMateriais();renderCompLista();const b=document.getElementById('comp-gestor-badge');if(b)b.style.display=modoGestorAtivo?'block':'none';})}
+  if(id==='comp'){skeletonKPIs('comp-kpis');skeletonLista('comp-lista');loadCompras().then(()=>{initCompras();filtrarMateriais();renderCompLista();const b=document.getElementById('comp-gestor-badge');if(b)b.style.display=modoGestorAtivo?'block':'none';})}
   if(id==='materiais'){loadCompras().then(()=>{initCompras();renderMatLista()})}
   if(id==='anal'){loadAll().then(()=>{renderInsights();preencherDatasCompar();preencherMesesCompar()})}
   if(id==='hist')loadAll().then(renderHist);
@@ -1189,7 +1310,7 @@ async function addPendente(){
       toast('Novo produto "'+produto+'" salvo!');
     }catch(e){ /* ignora se já existe */ }
   }
-  if(!data||!setor||!produto||qtd<=0){toast('Preencha todos os campos.');return}
+  if(!data||!setor||!produto||qtd<=0){toast('Preencha todos os campos.','aviso');return}
   pendentes.push({data,setor,produto,qtd,obs,_id:Date.now()+Math.random()});
   document.getElementById('f-qtd').value='';document.getElementById('f-obs').value='';renderPend();
 }
@@ -1207,7 +1328,7 @@ async function salvarDia(){
     const rows=pendentes.map(({_id,...r})=>r);
     await sb('lancamentos',{method:'POST',body:JSON.stringify(rows),prefer:'return=minimal'});
     cachedLancs=[...rows,...cachedLancs];pendentes=[];renderPend();setSync('ok');toast('Lançamento salvo!');
-  }catch(e){setSync('err');toast('Erro ao salvar.')}
+  }catch(e){setSync('err');toast('Erro ao salvar.','erro')}
   btn.disabled=false;btn.textContent='Salvar lançamento';
 }
 
@@ -1399,7 +1520,7 @@ function renderChartSetores(){
     if(temAnoAnt){
       datasets.push({label:anoAnt,data:valsAnt,backgroundColor:CORS.map(()=>'rgba(140,140,140,0.25)'),borderRadius:5,borderSkipped:false});
     }
-    charts.set=new Chart(ctx,{type:'bar',data:{labels:SETORES,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:temAnoAnt,labels:{color:tickClr,font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw.toLocaleString('pt-BR')} pç`}}},scales:{x:{grid:{display:false},ticks:{color:tickClr,font:{size:9},maxRotation:40,autoSkip:false}},y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}}}}}});
+    charts.set=new Chart(ctx,{type:'bar',data:{labels:SETORES,datasets},options:{animation:{duration:500,easing:'easeOutQuart'},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:temAnoAnt,labels:{color:tickClr,font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw.toLocaleString('pt-BR')} pç`}}},scales:{x:{grid:{display:false},ticks:{color:tickClr,font:{size:9},maxRotation:40,autoSkip:false}},y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}}}}}});
     return;
   }
 
@@ -1672,7 +1793,7 @@ async function salvarDevolucao(){
     dvStatusSelecionado='';document.getElementById('dv-status').value='';
     document.querySelectorAll('.status-chip').forEach(ch=>ch.className='status-chip');
     renderDevDash();
-  }catch(e){setSync('err');toast('Erro ao salvar.')}
+  }catch(e){setSync('err');toast('Erro ao salvar.','erro')}
   btn.disabled=false;btn.textContent='Registrar devolução';
 }
 
@@ -1751,7 +1872,9 @@ function renderDevDash(){
 
   // Tabela geral
   renderDevHistorico();
-  renderDevCards(cachedDevs);
+  // Exibir só o mês atual nos cards (fotos pesam)
+  const devsMesCards=cachedDevs.filter(d=>d.data&&d.data.startsWith(mesAtual()));
+  renderDevCards(devsMesCards, true);
 }
 
 /* ── HISTÓRICO ── */
@@ -1861,7 +1984,7 @@ async function salvarCfg(){
     const nome=document.getElementById('cfg-nome').value,resp=document.getElementById('cfg-resp').value;
     await sb('config',{method:'POST',body:JSON.stringify([{chave:'nome',valor:nome},{chave:'resp',valor:resp}]),prefer:'resolution=merge-duplicates',headers:{'Prefer':'resolution=merge-duplicates'}});
     setSync('ok');toast('Configurações salvas!');
-  }catch(e){setSync('err');toast('Erro ao salvar.')}
+  }catch(e){setSync('err');toast('Erro ao salvar.','erro')}
 }
 
 /* ── ANÁLISE ── */
@@ -2429,7 +2552,7 @@ async function loadCompras(){
     // Se banco vazio, carrega os fixos
     if(mats.length===0) await seedMateriais();
     else cachedMateriais=mats;
-  }catch(e){toast('Erro ao carregar compras.')}
+  }catch(e){toast('Erro ao carregar compras.','erro')}
 }
 
 async function seedMateriais(){
@@ -3079,6 +3202,7 @@ function mesAnterior() {
 }
 
 function setPeriodo(p, btn) {
+  flipKPIs();
   periodoAtivo = p; periodoCustom = null; periodoRange = null;
   document.querySelectorAll('#p-dia,#p-ont,#p-sem,#p-mes,#p-mesant,#p-ano,#p-custom').forEach(b => b && b.classList.remove('active'));
   btn.classList.add('active');
@@ -3253,10 +3377,10 @@ function fecharGaleria(){
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharGaleria()});
 
 /* ── CARDS DE DEVOLUÇÃO ── */
-function renderDevCards(lista){
+function renderDevCards(lista, soMes=false){
   const el=document.getElementById('dev-cards-lista');
   if(!lista||!lista.length){
-    el.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text3)">Nenhuma devolução registrada.</div>';
+    el.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text3)">Nenhuma devolução registrada no mês atual.</div>';
     return;
   }
   const corStatus=s=>s==='Inteiro'?{bg:'var(--green-d)',cor:'var(--green)'}:s==='Quebrado'?{bg:'var(--red-d)',cor:'var(--red)'}:s==='Com avaria'?{bg:'var(--amber-d)',cor:'var(--amber)'}:{bg:'var(--blue-d)',cor:'var(--blue)'};
@@ -3305,6 +3429,20 @@ function renderDevCards(lista){
       </div>
     </div>`;
   }).join('');
+
+  // Botão para carregar histórico completo
+  if(soMes){
+    const total=cachedDevs.length;
+    const mesCount=lista.length;
+    const antigos=total-mesCount;
+    if(antigos>0){
+      el.innerHTML+=`<div style="padding:14px 16px;text-align:center;border-top:1px solid var(--line)">
+        <button onclick="renderDevCards(cachedDevs,false)" style="font-size:11px;padding:6px 16px;border-radius:20px;border:1px solid var(--line2);background:none;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">
+          Carregar ${antigos} registro${antigos>1?'s':''} anterior${antigos>1?'es':''}
+        </button>
+      </div>`;
+    }
+  }
 }
 
 /* ── BUSCA DEVOLUÇÕES ── */
@@ -3312,7 +3450,8 @@ function filtrarDevCards(){
   const q = (document.getElementById('dev-busca').value||'').toLowerCase().trim();
   const clr = document.getElementById('dev-busca-clear');
   if(clr) clr.style.display = q ? 'block' : 'none';
-  const lista = q ? cachedDevs.filter(d =>
+  const base = q ? cachedDevs : cachedDevs.filter(d=>d.data&&d.data.startsWith(mesAtual()));
+  const lista = q ? base.filter(d =>
     (d.cliente||'').toLowerCase().includes(q) ||
     (d.produto||'').toLowerCase().includes(q) ||
     (d.nf||'').toLowerCase().includes(q) ||
@@ -3320,8 +3459,8 @@ function filtrarDevCards(){
     (d.status_fisico||'').toLowerCase().includes(q) ||
     (d.destino||'').toLowerCase().includes(q) ||
     (d.obs||'').toLowerCase().includes(q)
-  ) : cachedDevs;
-  renderDevCards(lista);
+  ) : base;
+  renderDevCards(lista, !q);
   // Atualizar contagem
   const el = document.getElementById('dev-cards-lista');
   if(q && lista.length === 0){
@@ -3599,7 +3738,7 @@ async function enviarLembrete(id){
 }
 
 // Registrar Service Worker (PWA) — só no domínio de produção
-if('serviceWorker' in navigator && location.hostname !== 'localhost' && !location.hostname.includes('claudeusercontent')){
+if('serviceWorker' in navigator && location.hostname !== 'localhost' && !location.hostname.includes('claudeusercontent') && !location.hostname.includes('claude.ai')){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(r => console.log('SW registrado:', r.scope))
@@ -3608,8 +3747,60 @@ if('serviceWorker' in navigator && location.hostname !== 'localhost' && !locatio
 }
 
 /* ══════════════ ANIMAÇÕES ══════════════ */
+/* Ripple nos botões */
+function addRipple(e){
+  const btn=e.currentTarget;
+  const circle=document.createElement('span');
+  circle.className='ripple-circle';
+  const rect=btn.getBoundingClientRect();
+  circle.style.top=(e.clientY-rect.top)+'px';
+  circle.style.left=(e.clientX-rect.left)+'px';
+  btn.appendChild(circle);
+  circle.addEventListener('animationend',()=>circle.remove());
+}
+function initRipples(){
+  document.querySelectorAll('.btn,.btn-ghost,.btn-primary,.btn-sm').forEach(btn=>{
+    if(!btn.dataset.ripple){
+      btn.classList.add('btn-ripple');
+      btn.addEventListener('click',addRipple);
+      btn.dataset.ripple='1';
+    }
+  });
+}
+
+
+/* Skeleton loading */
+function skeletonKPIs(containerId){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=`
+    <div class="kpi skeleton-kpi skeleton"></div>
+    <div class="kpi skeleton-kpi skeleton"></div>
+    <div class="kpi skeleton-kpi skeleton"></div>
+    <div class="kpi skeleton-kpi skeleton"></div>`;
+}
+function skeletonLista(containerId,rows=3){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=Array.from({length:rows},()=>`
+    <div style="padding:16px;border-bottom:1px solid var(--line)">
+      <div class="skeleton skeleton-bar w60" style="margin-bottom:8px"></div>
+      <div class="skeleton skeleton-bar w40"></div>
+    </div>`).join('');
+}
+
 
 /* Count-up: anima números dos KPIs subindo de 0 até o valor final */
+
+/* KPI Flip ao trocar período */
+function flipKPIs(){
+  document.querySelectorAll('#kpi-area .kpi-val').forEach(el=>{
+    el.classList.add('flip-out');
+    setTimeout(()=>{el.classList.remove('flip-out');el.classList.add('flip-in');
+      setTimeout(()=>el.classList.remove('flip-in'),300);
+    },150);
+  });
+}
 function animarContadores(containerId){
   const container=document.getElementById(containerId);
   if(!container)return;
@@ -3727,6 +3918,41 @@ function feedbackSucesso(btn){
 })();
 
 /* Recarrega a página ativa */
+
+/* Swipe to action — cartões de Comprado */
+function initSwipeCards(){
+  // Envolver cards "Comprado" com swipe-wrap dinamicamente
+  document.querySelectorAll('#comp-lista .solic-card').forEach(card=>{
+    if(card.dataset.swipe||card.parentElement.classList.contains('swipe-wrap'))return;
+    // Verificar se é Comprado pelo badge de status
+    if(!card.innerHTML.includes('>Comprado<'))return;
+    card.dataset.swipe='1';
+    let startX=null,dx=0;
+    card.addEventListener('touchstart',e=>{
+      if(e.touches.length>1)return;
+      startX=e.touches[0].clientX;
+    },{passive:true});
+    card.addEventListener('touchmove',e=>{
+      if(startX===null)return;
+      dx=e.touches[0].clientX-startX;
+      if(dx<0){card.style.transform=`translateX(${Math.max(dx,-76)}px)`;card.style.transition='none';}
+    },{passive:true});
+    card.addEventListener('touchend',()=>{
+      card.style.transition='transform .2s ease';
+      if(dx<-60){
+        card.style.transform='translateX(-76px)';
+        // Pegar o id do card — botão Recebido tem onclick com o id
+        const m=card.innerHTML.match(/avancarStatusData\('([^']+)','Recebido'\)/);
+        if(m) setTimeout(()=>{avancarStatusData(m[1],'Recebido');},300);
+      } else {
+        card.style.transform='';
+      }
+      startX=null;dx=0;
+    },{passive:true});
+    // Mostrar dica visual: sombra verde à direita
+    card.style.boxShadow='4px 0 0 var(--green) inset';
+  });
+}
 function refreshPaginaAtual(){
   const ativo=document.querySelector('.page.active');
   if(!ativo)return Promise.resolve();
