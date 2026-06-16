@@ -1038,7 +1038,10 @@ function toast(msg, tipo='ok'){
   },2500);
 }
 function fmt(d){return new Date(d+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
-function hoje(){return new Date().toISOString().slice(0,10)}
+function hoje(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 function mesAtual(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function semana(){const d=new Date(),dia=d.getDay()||7,seg=new Date(d);seg.setDate(d.getDate()-dia+1);const sab=new Date(seg);sab.setDate(seg.getDate()+6);return[seg.toISOString().slice(0,10),sab.toISOString().slice(0,10)]}
 function lancsMes(){const m=mesAtual();return cachedLancs.filter(l=>l.data.startsWith(m))}
@@ -3229,7 +3232,10 @@ function aplicarPeriodoRange() {
   renderDash();
 }
 
-function ontem(){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().slice(0,10)}
+function ontem(){
+  const d=new Date();d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 function lancsNoPeriodo() {
   if (periodoAtivo === 'dia') { const h = hoje(); return cachedLancs.filter(l => l.data === h); }
   if (periodoAtivo === 'ontem') { const o = ontem(); return cachedLancs.filter(l => l.data === o); }
