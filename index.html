@@ -2915,6 +2915,13 @@ function renderCompLista(){
     const finalizado=['Recebido','Concluído'].includes(s.status);
     const dataRef=finalizado&&s.data_recebido?s.data_recebido:null;
     const atrasadoFinal=finalizado&&dataRef?new Date(dataRef+'T00:00:00')>new Date(s.prazo_necessidade+'T00:00:00'):false;
+    const qtdRecStr=s.qtd_recebida!=null&&s.quantidade
+      ?(s.qtd_recebida>=s.quantidade
+        ?`<span style="color:var(--green);font-size:11px;font-weight:600">✓ ${s.qtd_recebida} recebidos</span>`
+        :s.qtd_recebida<s.quantidade
+          ?`<span style="color:var(--red);font-size:11px;font-weight:600">↓ ${s.qtd_recebida}/${s.quantidade} recebidos</span>`
+          :`<span style="color:var(--blue);font-size:11px;font-weight:600">↑ ${s.qtd_recebida}/${s.quantidade} recebidos</span>`)
+      :'';
     const diasStr=finalizado
       ?(atrasadoFinal?`<span style="color:var(--red);font-weight:600">Recebido com atraso</span>`:`<span style="color:var(--green)">No prazo</span>`)
       :dias<0?`<span style="color:var(--red);font-weight:600">${Math.abs(dias)}d atrasado</span>`
