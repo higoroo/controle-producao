@@ -945,7 +945,38 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <div id="comp-insights"><div class="loading"><div class="spinner"></div></div></div>
 
   <!-- MODAL CONFIRMAR COMPRA -->
-  <div id="modal-compra" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
+  <!-- Modal recebimento -->
+<div id="modal-recebimento" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:400px">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Confirmar recebimento</div>
+    <div id="mr-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
+    <input type="hidden" id="mr-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Qtd solicitada</label>
+        <input type="number" id="mr-qtd-sol" disabled
+          style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text3);font-family:'DM Mono',monospace;font-size:14px;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Qtd recebida</label>
+        <input type="number" id="mr-qtd-rec" min="0"
+          style="width:100%;padding:8px 10px;background:var(--ink2);border:1px solid var(--accent);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;font-weight:700;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Obs do recebimento (opcional)</label>
+      <input type="text" id="mr-obs" placeholder="Ex: chegou incompleto, produto diferente..."
+        style="width:100%;padding:8px 10px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box">
+    </div>
+    <div id="mr-alerta" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--r);margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="fecharModalRecebimento()" class="btn btn-ghost btn-sm" style="flex:1">Cancelar</button>
+      <button onclick="confirmarRecebimento()" class="btn btn-primary btn-sm" style="flex:2">Confirmar recebimento</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-compra" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
     <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
       <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Registrar compra</div>
       <div id="modal-compra-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
@@ -1215,6 +1246,70 @@ async function carregarDevsAnteriores(btn){
   btn.style.display='none';
   renderDevDash();
 }
+
+/* ── MODAL RECEBIMENTO ── */
+function abrirModalRecebimento(id){
+  const s=cachedSolic.find(x=>x.id===id);
+  if(!s)return;
+  document.getElementById('mr-id').value=id;
+  document.getElementById('mr-info').textContent=`${s.material} · ${s.quantidade} ${s.unidade||'UN'}`;
+  document.getElementById('mr-qtd-sol').value=s.quantidade||'';
+  document.getElementById('mr-qtd-rec').value=s.quantidade||'';
+  document.getElementById('mr-obs').value='';
+  document.getElementById('mr-alerta').style.display='none';
+  const modal=document.getElementById('modal-recebimento');
+  modal.style.display='flex';
+  setTimeout(()=>document.getElementById('mr-qtd-rec').focus(),100);
+}
+
+function fecharModalRecebimento(){
+  document.getElementById('modal-recebimento').style.display='none';
+}
+
+async function confirmarRecebimento(){
+  const id=document.getElementById('mr-id').value;
+  const qtdRec=parseInt(document.getElementById('mr-qtd-rec').value)||0;
+  const qtdSol=parseInt(document.getElementById('mr-qtd-sol').value)||0;
+  const obs=document.getElementById('mr-obs').value.trim();
+  if(!qtdRec||qtdRec<0){
+    toast('Informe a quantidade recebida.','aviso');return;
+  }
+  // Mostrar alerta de diferença
+  const alertEl=document.getElementById('mr-alerta');
+  if(qtdRec!==qtdSol){
+    const diff=qtdRec-qtdSol;
+    const pct=Math.round(Math.abs(diff)/qtdSol*100);
+    alertEl.textContent=diff>0
+      ?`Chegou ${diff} unidade${diff>1?'s':''} a mais (${pct}% acima do pedido)`
+      :`Chegou ${Math.abs(diff)} unidade${Math.abs(diff)>1?'s':''} a menos (${pct}% abaixo do pedido)`;
+    alertEl.style.display='block';
+    alertEl.style.background=diff>0?'rgba(91,156,246,.12)':'rgba(224,92,92,.12)';
+    alertEl.style.color=diff>0?'var(--blue)':'var(--red)';
+    alertEl.style.border=diff>0?'1px solid rgba(91,156,246,.3)':'1px solid rgba(224,92,92,.3)';
+    // Confirmar mesmo assim após mostrar o alerta — botão já foi clicado
+  }
+  setSync('syncing');
+  try{
+    const patch={
+      status:'Recebido',
+      data_recebido:hoje(),
+      qtd_recebida:qtdRec,
+      obs_recebimento:obs||null
+    };
+    await sb(`solicitacoes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch),prefer:'return=minimal'});
+    const idx=cachedSolic.findIndex(s=>s.id===id);
+    if(idx>=0)Object.assign(cachedSolic[idx],patch);
+    setSync('ok');
+    fecharModalRecebimento();
+    toast('Recebimento registrado!');
+    renderCompLista();
+    renderCompKPIs();
+  }catch(e){setSync('err');toast('Erro ao registrar recebimento.','erro');}
+}
+
+document.getElementById('modal-recebimento').addEventListener('click',function(e){
+  if(e.target===this)fecharModalRecebimento();
+});
 
 function init(){
   document.getElementById('f-data').value=hoje();
@@ -2738,6 +2833,11 @@ function renderCompKPIs(){
   const concluidas=cachedSolic.filter(s=>['Recebido','Concluído'].includes(s.status)&&s.data_solicitacao&&(s.data_recebido||s.data_compra));
   const temposRec=concluidas.map(s=>Math.round((new Date(s.data_recebido||s.data_compra)-new Date(s.data_solicitacao))/(1000*60*60*24))).filter(t=>t>=0&&t<365);
   const mediaRec=temposRec.length?Math.round(temposRec.reduce((a,t)=>a+t,0)/temposRec.length):null;
+  // Assertividade: pedidos com qtd_recebida
+  const comQtdRec=cachedSolic.filter(s=>s.qtd_recebida!=null&&s.quantidade>0);
+  const completos=comQtdRec.filter(s=>s.qtd_recebida>=s.quantidade).length;
+  const assertividade=comQtdRec.length?Math.round(completos/comQtdRec.length*100):null;
+
   document.getElementById('comp-kpis').innerHTML=`
     <div class="kpi" style="cursor:pointer" onclick="irParaFiltroComp('Todos')" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
       <div class="kpi-label">Em aberto ↗</div>
@@ -2864,7 +2964,7 @@ function renderCompLista(){
 
       <!-- Linha 2: info compacta -->
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:${tl.length>1||s.obs||s.obs_compra?'10px':'4px'}">
-        <span><span style="color:var(--text3)">Qtd </span><b style="color:var(--text)">${s.quantidade} ${s.unidade}</b></span>
+        ${qtdRecStr||`<span><span style="color:var(--text3)">Qtd </span><b style="color:var(--text)">${s.quantidade} ${s.unidade}</b></span>`}
         <span><span style="color:var(--text3)">Prazo </span><b style="color:var(--text)">${fmt(s.prazo_necessidade)}</b> ${diasStr}</span>
         ${s.comprador?`<span><span style="color:var(--text3)">Comprador </span><b style="color:var(--text)">${s.comprador}</b></span>`:''}
         ${tempoTotal!==null?`<span style="color:var(--green)">Concluído em <b>${tempoTotal}d</b></span>`:''}
@@ -2881,7 +2981,7 @@ function renderCompLista(){
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
         ${s.status==='Pendente'?`<button onclick="avancarStatusData('${s.id}','Em andamento','data_em_andamento')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:var(--blue-d);color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Em andamento</button>`:''}
         ${s.status==='Pendente'||s.status==='Em andamento'?`<button onclick="abrirModalCompra('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(232,156,71,.3);background:var(--amber-d);color:var(--amber);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Registrar compra</button>`:''}
-        ${s.status==='Comprado'?`<button onclick="avancarStatusData('${s.id}','Recebido','data_recebido')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Recebido</button>`:''}
+        ${s.status==='Comprado'?`<button onclick="abrirModalRecebimento('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(76,175,125,.3);background:var(--green-d);color:var(--green);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Recebido</button>`:''}
         ${!['Recebido','Concluído','Cancelado'].includes(s.status)?`<button onclick="enviarLembrete('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(91,156,246,.3);background:none;color:var(--blue);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">${s.ultimo_lembrete?'Lembrar novamente':'Lembrar comprador'}</button>${s.ultimo_lembrete?`<span style="font-size:10px;color:var(--text3);align-self:center">Último: ${fmtDtHr(s.ultimo_lembrete)}</span>`:''}`:''}
         ${s.status!=='Recebido'&&s.status!=='Cancelado'?`<button onclick="avancarStatus('${s.id}','Cancelado')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:none;background:none;color:var(--text3);cursor:pointer">Cancelar</button>`:''}
         ${modoGestorAtivo?`<button onclick="apagarSolicitacao('${s.id}')" style="font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Apagar</button>`:''}
@@ -3949,7 +4049,7 @@ function initSwipeCards(){
         card.style.transform='translateX(-76px)';
         // Pegar o id do card — botão Recebido tem onclick com o id
         const m=card.innerHTML.match(/avancarStatusData\('([^']+)','Recebido'\)/);
-        if(m) setTimeout(()=>{avancarStatusData(m[1],'Recebido');},300);
+        if(m) setTimeout(()=>{abrirModalRecebimento(m[1]);},300);
       } else {
         card.style.transform='';
       }
