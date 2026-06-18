@@ -709,9 +709,20 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
     <!-- KPIs do período selecionado -->
     <div id="dev-hist-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px"></div>
 
-    <!-- Gráfico evolução mensal devoluções -->
-    <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:10px">EVOLUÇÃO MENSAL — TAXA DE DEVOLUÇÃO</div>
-    <div class="chart-wrap" style="height:180px"><canvas id="chart-dev-evolucao" role="img" aria-label="Evolução da taxa de devolução">Evolução da taxa.</canvas></div>
+    <!-- Gráficos devoluções -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em">DEVOLUÇÕES POR MÊS</div>
+      <button id="btn-dev-comparar" onclick="toggleDevComparar(this)"
+        style="font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--line2);background:none;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">
+        Comparar embalados ▾
+      </button>
+    </div>
+    <div class="chart-wrap" style="height:180px;margin-bottom:16px"><canvas id="chart-dev-qtd" role="img" aria-label="Devoluções por mês"></canvas></div>
+    <div id="chart-dev-emb-wrap" style="display:none">
+      <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:10px">EMBALADOS POR MÊS</div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chart-dev-emb" role="img" aria-label="Embalados por mês"></canvas></div>
+    </div>
+    <div class="chart-wrap" style="display:none;height:180px"><canvas id="chart-dev-evolucao" role="img" aria-label="Evolução da taxa de devolução">Evolução da taxa.</canvas></div>
   </div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:20px 0 12px">
@@ -1133,41 +1144,83 @@ function renderDevHistorico(){
 }
 
 function renderChartDevEvolucao(){
-  // Pega os últimos 6 meses
+  // Últimos 6 meses
   const meses=[];
   const d=new Date();
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const tickClr=isDark?'#5a5855':'#9a9994';
+  const gridClr=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
+
   for(let i=5;i>=0;i--){
     const dt=new Date(d.getFullYear(),d.getMonth()-i,1);
     const key=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
     const label=dt.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'});
-    const devs=cachedDevs.filter(x=>x.data&&x.data.startsWith(key)).reduce((a,x)=>a+(x.quantidade||0),0);
+    const devsTot=cachedDevs.filter(x=>x.data&&x.data.startsWith(key)).reduce((a,x)=>a+(x.quantidade||0),0);
     const emb=cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data.startsWith(key)).reduce((a,l)=>a+l.qtd,0);
-    const taxa=emb>0?parseFloat((devs/emb*100).toFixed(1)):0;
-    meses.push({label,taxa,devs,emb});
+    meses.push({label,devs:devsTot,emb});
   }
-  const ctx=document.getElementById('chart-dev-evolucao').getContext('2d');
-  if(charts.devEv)charts.devEv.destroy();
-  charts.devEv=new Chart(ctx,{
-    type:'line',
+
+  // ── Gráfico 1: barras de devoluções por mês ──
+  const ctx1=document.getElementById('chart-dev-qtd').getContext('2d');
+  if(charts.devQtd)charts.devQtd.destroy();
+  charts.devQtd=new Chart(ctx1,{
+    type:'bar',
     data:{
       labels:meses.map(m=>m.label),
       datasets:[{
-        label:'Taxa %',data:meses.map(m=>m.taxa),
-        borderColor:'#e05c5c',backgroundColor:'rgba(224,92,92,0.08)',
-        borderWidth:2,pointRadius:5,pointBackgroundColor:meses.map(m=>m.taxa<=2?'#4caf7d':m.taxa<=5?'#e89c47':'#e05c5c'),
-        fill:true,tension:0.3
+        label:'Devoluções',
+        data:meses.map(m=>m.devs),
+        backgroundColor:meses.map(m=>m.devs===0?'rgba(140,140,140,0.2)':m.devs<=5?'rgba(76,175,125,0.7)':m.devs<=15?'rgba(232,156,71,0.7)':'rgba(224,92,92,0.75)'),
+        borderRadius:5,borderSkipped:false
       }]
     },
     options:{
+      animation:{duration:600,easing:'easeOutQuart'},
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}% (${meses[c.dataIndex].devs} dev / ${meses[c.dataIndex].emb} emb)`}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} peças devolvidas`}}},
       scales:{
-        x:{grid:{display:false},ticks:{color:'#5a5855',font:{size:10}}},
-        y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5855',font:{size:10},callback:v=>v+'%'},min:0}
+        x:{grid:{display:false},ticks:{color:tickClr,font:{size:10}}},
+        y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10},precision:0},beginAtZero:true}
+      }
+    }
+  });
+
+  // ── Gráfico 2: embalados por mês (separado, só aparece se ativo) ──
+  const ctx2=document.getElementById('chart-dev-emb').getContext('2d');
+  if(charts.devEmb)charts.devEmb.destroy();
+  charts.devEmb=new Chart(ctx2,{
+    type:'bar',
+    data:{
+      labels:meses.map(m=>m.label),
+      datasets:[{
+        label:'Embalados',
+        data:meses.map(m=>m.emb),
+        backgroundColor:'rgba(232,197,71,0.65)',
+        borderRadius:5,borderSkipped:false
+      }]
+    },
+    options:{
+      animation:{duration:600,easing:'easeOutQuart'},
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.toLocaleString('pt-BR')} peças embaladas`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:tickClr,font:{size:10}}},
+        y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}},beginAtZero:true}
       }
     }
   });
 }
+
+let devCompararAtivo=false;
+function toggleDevComparar(btn){
+  devCompararAtivo=!devCompararAtivo;
+  btn.style.background=devCompararAtivo?'var(--accent)':'none';
+  btn.style.color=devCompararAtivo?'var(--ink)':'var(--text3)';
+  btn.style.borderColor=devCompararAtivo?'var(--accent)':'var(--line2)';
+  btn.textContent=devCompararAtivo?'Embalados ✓':'Comparar embalados ▾';
+  document.getElementById('chart-dev-emb-wrap').style.display=devCompararAtivo?'block':'none';
+}
+
 function devNoPeriodo(){
   if(periodoAtivo==='dia'){const h=hoje();return cachedDevs.filter(d=>d.data===h)}
   if(periodoAtivo==='ontem'){const o=ontem();return cachedDevs.filter(d=>d.data===o)}
@@ -1380,8 +1433,8 @@ function goTo(id,btn){
     skeletonKPIs('kpi-area');
     renderDash();
   }
-  if(id==='prod')renderProd();
-  if(id==='dev'){Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
+  if(id==='prod'){document.getElementById('f-data').value=hoje();renderProd();}
+  if(id==='dev'){document.getElementById('dv-data').value=hoje();Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
   if(id==='comp'){skeletonKPIs('comp-kpis');skeletonLista('comp-lista');loadCompras().then(()=>{initCompras();filtrarMateriais();renderCompLista();const b=document.getElementById('comp-gestor-badge');if(b)b.style.display=modoGestorAtivo?'block':'none';})}
   if(id==='materiais'){loadCompras().then(()=>{initCompras();renderMatLista()})}
   if(id==='anal'){loadAll().then(()=>{renderInsights();preencherDatasCompar();preencherMesesCompar()})}
