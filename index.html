@@ -3795,89 +3795,175 @@ function renderInsightsCompras(){
   atrasadas.forEach(s=>{if(s.material)atrasoMat[s.material]=(atrasoMat[s.material]||0)+1});
   const topAtraso=Object.entries(atrasoMat).sort((a,b)=>b[1]-a[1]).slice(0,3);
 
-  // ── Renderizar cards ──
-  function card(tipo,icone,titulo,corpo,rodape=''){
-    const cores={economia:{bg:'rgba(76,175,125,.1)',borda:'rgba(76,175,125,.25)',cor:'var(--green)',lbl:'Economia'},
-      atencao:{bg:'rgba(224,92,92,.1)',borda:'rgba(224,92,92,.25)',cor:'var(--red)',lbl:'Atenção'},
-      info:{bg:'rgba(91,156,246,.1)',borda:'rgba(91,156,246,.2)',cor:'var(--blue)',lbl:'Informação'},
-      dica:{bg:'rgba(232,197,71,.1)',borda:'rgba(232,197,71,.2)',cor:'var(--accent)',lbl:'Dica'}};
-    const t=cores[tipo]||cores.info;
-    return`<div style="background:${t.bg};border:1px solid ${t.borda};border-radius:var(--r2);padding:16px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <span style="font-size:20px">${icone}</span>
-        <div>
-          <div style="font-size:9px;color:${t.cor};font-weight:700;letter-spacing:.08em;text-transform:uppercase">${t.lbl}</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text)">${titulo}</div>
-        </div>
-      </div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.7;padding-left:30px">${corpo}</div>
-      ${rodape?`<div style="font-size:11px;color:var(--text3);margin-top:8px;padding-left:30px;font-style:italic">${rodape}</div>`:''}
-    </div>`;
+  // ── NOVO: Assertividade de quantidade por material (qtd_recebida vs quantidade) ──
+  const matQtd={};
+  cachedSolic.forEach(s=>{
+    if(s.qtd_recebida==null||!s.quantidade||!s.material)return;
+    if(!matQtd[s.material])matQtd[s.material]={sol:0,rec:0,n:0};
+    matQtd[s.material].sol+=s.quantidade;
+    matQtd[s.material].rec+=s.qtd_recebida;
+    matQtd[s.material].n++;
+  });
+  const matComDesvio=Object.entries(matQtd)
+    .filter(([,v])=>v.n>=2&&v.sol>0)
+    .map(([m,v])=>({material:m,sol:v.sol,rec:v.rec,n:v.n,desvioPct:Math.round((v.rec-v.sol)/v.sol*100)}))
+    .filter(x=>Math.abs(x.desvioPct)>=15)
+    .sort((a,b)=>a.desvioPct-b.desvioPct);
+
+  // ── NOVO: Tempo médio geral — tendência (1ª metade vs 2ª metade do histórico) ──
+  const concluidasOrdenadas=[...concluidas].filter(s=>s.data_solicitacao&&(s.data_recebido||s.data_compra)).sort((a,b)=>new Date(a.data_solicitacao)-new Date(b.data_solicitacao));
+  let tendenciaTempo=null;
+  if(concluidasOrdenadas.length>=6){
+    const metade=Math.floor(concluidasOrdenadas.length/2);
+    const calcMedia=(arr)=>{
+      const tempos=arr.map(s=>Math.round((new Date(s.data_recebido||s.data_compra)-new Date(s.data_solicitacao))/(1000*60*60*24))).filter(t=>t>=0&&t<365);
+      return tempos.length?tempos.reduce((a,t)=>a+t,0)/tempos.length:null;
+    };
+    const m1=calcMedia(concluidasOrdenadas.slice(0,metade));
+    const m2=calcMedia(concluidasOrdenadas.slice(metade));
+    if(m1!==null&&m2!==null) tendenciaTempo={antes:Math.round(m1),depois:Math.round(m2)};
   }
+
+  // ── Função para card compacto (mesmo padrão da aba Análise) ──
+  let _cardIdx=0;
+  const card=(cfg)=>{
+    const delay=(_cardIdx++)*50;
+    return `
+    <div class="insight-card" style="border-color:${cfg.borda};animation-delay:${delay}ms">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:28px;height:28px;min-width:28px;border-radius:8px;background:${cfg.bg};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${cfg.cor}">${cfg.icone}</div>
+        <div style="font-size:9px;color:${cfg.cor};font-weight:700;letter-spacing:.07em;text-transform:uppercase">${cfg.categoria}</div>
+      </div>
+      ${cfg.badge?`<div style="font-family:'Inter',sans-serif;font-weight:900;font-size:26px;color:${cfg.cor};line-height:1;letter-spacing:-0.02em;margin-bottom:3px">${cfg.badge}</div>`:''}
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text);line-height:1.3;margin-bottom:${cfg.detalhe?'4px':'0'}">${cfg.titulo}</div>
+      ${cfg.detalhe?`<div style="font-size:11px;color:var(--text3);line-height:1.6">${cfg.detalhe}</div>`:''}
+    </div>`;
+  };
 
   let html='';
+  let cards='';
 
-  // 1. Materiais recorrentes → estoque mínimo
+  // 1. Materiais recorrentes → estoque mínimo (economia de tempo/frete)
   if(topMat.length&&topMat[0][1]>=2){
-    const lista=topMat.filter(([,n])=>n>=2).map(([m,n])=>`<b>${m}</b> (${n}x)`).join(', ');
-    html+=card('economia','💰','Oportunidade de estoque mínimo',
-      `Os materiais mais solicitados foram: ${lista}.<br>Manter um estoque fixo desses itens elimina compras de urgência e reduz custo de frete.`,
-      `Cada compra avulsa tem custo de deslocamento ou frete. Consolidar em compras programadas pode gerar economia significativa.`);
+    const lista=topMat.filter(([,n])=>n>=2).map(([m,n])=>`${m} (${n}x)`).join(', ');
+    cards+=card({icone:'◎',bg:'rgba(76,175,125,.12)',cor:'var(--green)',borda:'rgba(76,175,125,.25)',
+      categoria:'Oportunidade — estoque mínimo',
+      titulo:`${topMat.filter(([,n])=>n>=2).length} materiais com pedidos recorrentes`,
+      badge:topMat[0][1]+'x',
+      detalhe:`${lista}. Manter estoque fixo desses itens elimina compras de urgência e reduz custo de frete.`});
   }
 
-  // 2. Taxa de urgência alta
+  // 2. Taxa de urgência
   if(taxaUrg>=30){
-    html+=card('atencao','⚡',`${taxaUrg}% dos pedidos chegam como Alta prioridade`,
-      `De ${cachedSolic.length} solicitações, ${urgentes.length} foram urgentes. Isso indica falta de planejamento antecipado ou estoque mínimo inadequado.`,
-      `Pedidos urgentes costumam custar mais — fornecedores cobram premium e o frete expresso é até 3x mais caro.`);
-  } else if(taxaUrg>0&&taxaUrg<30){
-    html+=card('economia','✓',`Boa taxa de planejamento — só ${taxaUrg}% de urgências`,
-      `A maioria dos pedidos chega com prazo adequado. Continue assim para manter o poder de negociação com fornecedores.`);
+    cards+=card({icone:'!',bg:'rgba(224,92,92,.12)',cor:'var(--red)',borda:'rgba(224,92,92,.25)',
+      categoria:'Custo — pedidos urgentes',
+      titulo:`${taxaUrg}% dos pedidos são Alta prioridade`,
+      badge:taxaUrg+'%',
+      detalhe:`${urgentes.length} de ${cachedSolic.length} solicitações. Urgência costuma custar mais — frete expresso chega a 3x o valor normal.`});
+  } else if(taxaUrg>0){
+    cards+=card({icone:'✓',bg:'rgba(76,175,125,.12)',cor:'var(--green)',borda:'rgba(76,175,125,.25)',
+      categoria:'Planejamento',
+      titulo:'Boa taxa de planejamento',
+      badge:taxaUrg+'%',
+      detalhe:`Só ${taxaUrg}% das solicitações chegam como urgentes. Mantém o poder de negociação com fornecedores.`});
   }
 
-  // 3. Categoria mais lenta
+  // 3. Tendência do tempo de entrega (melhorando/piorando)
+  if(tendenciaTempo){
+    const melhorou=tendenciaTempo.depois<tendenciaTempo.antes;
+    const igual=tendenciaTempo.depois===tendenciaTempo.antes;
+    cards+=card({
+      icone:igual?'→':melhorou?'↓':'↑',
+      bg:igual?'rgba(91,156,246,.12)':melhorou?'rgba(76,175,125,.12)':'rgba(224,92,92,.12)',
+      cor:igual?'var(--blue)':melhorou?'var(--green)':'var(--red)',
+      borda:igual?'rgba(91,156,246,.25)':melhorou?'rgba(76,175,125,.25)':'rgba(224,92,92,.25)',
+      categoria:'Tendência — tempo de entrega',
+      titulo:igual?'Tempo de entrega estável':melhorou?'Entregas ficaram mais rápidas':'Entregas ficaram mais lentas',
+      badge:tendenciaTempo.depois+'d',
+      detalhe:`Histórico recente: ${tendenciaTempo.depois}d vs ${tendenciaTempo.antes}d no início do período analisado.`
+    });
+  }
+
+  // 4. Categoria mais lenta — antecedência sugerida
   if(mediaCat.length){
     const lenta=mediaCat[0];
-    html+=card('dica','⏱',`${lenta.cat} leva em média ${lenta.med} dias para chegar`,
-      `Baseado em ${lenta.n} pedido${lenta.n>1?'s':''} concluído${lenta.n>1?'s':''}. Solicite com pelo menos <b>${lenta.med+2} dias de antecedência</b> para evitar paradas na produção.`,
-      mediaCat.length>1?`Tempo médio das outras categorias: ${mediaCat.slice(1).map(x=>`${x.cat}: ${x.med}d`).join(' · ')}`:'');
+    cards+=card({icone:'◷',bg:'rgba(232,156,71,.12)',cor:'var(--amber)',borda:'rgba(232,156,71,.25)',
+      categoria:'Tempo — categoria mais lenta',
+      titulo:`${lenta.cat} leva ${lenta.med}d em média`,
+      badge:lenta.med+'d',
+      detalhe:`Baseado em ${lenta.n} pedido${lenta.n>1?'s':''}. Solicite com pelo menos <b>${lenta.med+2} dias de antecedência</b> para não parar a produção.`});
   }
 
-  // 4. Dia pico de solicitações
+  // 5. NOVO: Materiais com desvio de quantidade (chegou diferente do pedido)
+  if(matComDesvio.length){
+    const pior=matComDesvio[0];
+    const aMenos=pior.desvioPct<0;
+    cards+=card({
+      icone:aMenos?'↓':'↑',
+      bg:aMenos?'rgba(224,92,92,.12)':'rgba(91,156,246,.12)',
+      cor:aMenos?'var(--red)':'var(--blue)',
+      borda:aMenos?'rgba(224,92,92,.25)':'rgba(91,156,246,.25)',
+      categoria:'Quantidade — desvio no recebimento',
+      titulo:`${pior.material} chega ${Math.abs(pior.desvioPct)}% ${aMenos?'a menos':'a mais'}`,
+      badge:(pior.desvioPct>0?'+':'')+pior.desvioPct+'%',
+      detalhe:`Em ${pior.n} recebimentos: pediu ${pior.sol}, chegou ${pior.rec}. ${aMenos?'Considere pedir mais para compensar o corte recorrente.':'Pode estar pedindo mais do que o necessário.'}`
+    });
+    if(matComDesvio.length>1){
+      cards+=card({icone:'▦',bg:'rgba(232,156,71,.1)',cor:'var(--amber)',borda:'rgba(232,156,71,.2)',
+        categoria:'Outros materiais com desvio',
+        titulo:`${matComDesvio.length} materiais com diferença ≥15%`,
+        detalhe:matComDesvio.slice(1,4).map(x=>`${x.material}: ${x.desvioPct>0?'+':''}${x.desvioPct}%`).join('<br>')});
+    }
+  }
+
+  // 6. Dia pico de solicitações
   if(porDiaSem[diaPico]>=2){
-    html+=card('dica','📅',`${nomesDias[diaPico]} é o dia com mais solicitações`,
-      `${porDiaSem[diaPico]} pedidos foram feitos nas ${nomesDias[diaPico]}s. Considere consolidar as compras dessa semana em um único pedido — economiza tempo e pode reduzir frete.`);
+    cards+=card({icone:'▥',bg:'rgba(91,156,246,.1)',cor:'var(--blue)',borda:'rgba(91,156,246,.2)',
+      categoria:'Processo — pico de pedidos',
+      titulo:`${nomesDias[diaPico]} concentra mais solicitações`,
+      badge:porDiaSem[diaPico],
+      detalhe:`${porDiaSem[diaPico]} pedidos feitos nas ${nomesDias[diaPico]}s. Consolidar num único pedido semanal pode reduzir frete e tempo administrativo.`});
   }
 
-  // 5. Materiais que atrasam sempre
+  // 7. Materiais que atrasam sempre
   if(topAtraso.length){
-    const lista=topAtraso.map(([m,n])=>`<b>${m}</b> (${n}x atrasou)`).join(', ');
-    html+=card('atencao','⚠',`Materiais com histórico de atraso`,
-      `${lista}.<br>Para esses itens, peça com <b>mais antecedência</b> ou busque fornecedores alternativos.`);
+    const lista=topAtraso.map(([m,n])=>`${m} (${n}x)`).join(', ');
+    cards+=card({icone:'◷',bg:'rgba(224,92,92,.1)',cor:'var(--red)',borda:'rgba(224,92,92,.2)',
+      categoria:'Risco — atraso recorrente',
+      titulo:`${topAtraso.length} materiais com histórico de atraso`,
+      detalhe:`${lista}. Para esses itens, peça com mais antecedência ou busque fornecedor alternativo.`});
   }
 
-  // 6. Atraso por comprador
+  // 8. Desempenho por comprador
   const compEntries=Object.entries(compradorStats).filter(([,v])=>v.total>=2);
   if(compEntries.length){
-    const lista=compEntries.map(([comp,v])=>{
-      const pct=Math.round(v.atrasado/v.total*100);
-      return`<b>${comp}</b>: ${v.total} pedidos, ${pct}% no prazo`;
-    }).join('<br>');
-    html+=card('info','👤','Desempenho por comprador',lista);
+    const melhor=compEntries.map(([comp,v])=>({comp,pct:Math.round((v.total-v.atrasado)/v.total*100),total:v.total})).sort((a,b)=>b.pct-a.pct)[0];
+    cards+=card({icone:'◆',bg:'rgba(76,175,125,.1)',cor:'var(--green)',borda:'rgba(76,175,125,.2)',
+      categoria:'Desempenho por comprador',
+      titulo:`${melhor.comp} — ${melhor.pct}% no prazo`,
+      badge:melhor.pct+'%',
+      detalhe:compEntries.map(([comp,v])=>{const pct=Math.round((v.total-v.atrasado)/v.total*100);return`${comp}: ${v.total} pedidos, ${pct}% no prazo`}).join('<br>')});
   }
 
-  // 7. Pedidos sem comprador registrado
+  // 9. Pedidos sem comprador registrado
   const semComp=concluidas.filter(s=>!s.comprador).length;
   if(semComp>0){
-    html+=card('dica','📝',`${semComp} pedido${semComp>1?'s':''} sem comprador registrado`,
-      `Registrar o comprador em todos os pedidos ajuda a identificar padrões e distribuir melhor as responsabilidades.`);
+    cards+=card({icone:'○',bg:'rgba(232,156,71,.1)',cor:'var(--amber)',borda:'rgba(232,156,71,.2)',
+      categoria:'Processo — dado faltando',
+      titulo:`${semComp} pedido${semComp>1?'s':''} sem comprador registrado`,
+      detalhe:`Registrar o comprador em todos os pedidos ajuda a medir desempenho e distribuir responsabilidades.`});
   }
 
-  if(!html) html='<div class="empty-msg" style="padding:16px">Registre mais pedidos concluídos para gerar insights de economia.</div>';
+  if(cards){
+    html=`<div class="insights-grid">${cards}</div>`;
+  } else {
+    html='<div class="empty-msg" style="padding:16px">Registre mais pedidos concluídos para gerar insights.</div>';
+  }
   el.innerHTML=html;
 }
 
 /* ── LEMBRETE DE COMPRA ── */
+
 function fmtDtHr(iso){
   if(!iso) return '';
   const d=new Date(iso);
