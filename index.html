@@ -1218,15 +1218,28 @@ function devNoPeriodo(){
 
 let produtosExtra=[];
 
+// Busca paginada — contorna o limite de 1000 linhas do Supabase
+async function sbAll(path, pageSize=1000){
+  let all=[], offset=0;
+  while(true){
+    const sep=path.includes('?')?'&':'?';
+    const batch=await sb(`${path}${sep}limit=${pageSize}&offset=${offset}`);
+    all=[...all,...batch];
+    if(batch.length<pageSize)break;
+    offset+=pageSize;
+  }
+  return all;
+}
+
 async function loadAll(){
   setSync('syncing');
   try{
     const[lancs,metas,devs,prods,solic]=await Promise.all([
-      sb('lancamentos?select=*&order=data.desc,created_at.desc&limit=5000'),
+      sbAll('lancamentos?select=*&order=data.desc,created_at.desc'),
       sb('metas?select=*'),
       sb('devolucoes?select=*&order=data.desc,created_at.desc'),
       sb('produtos_extra?select=*&order=nome'),
-      sb('solicitacoes?select=*&order=created_at.desc')
+      sbAll('solicitacoes?select=*&order=created_at.desc')
     ]);
     cachedLancs=lancs;
     cachedMetas={};metas.forEach(m=>{cachedMetas[m.setor]=m.quantidade});
