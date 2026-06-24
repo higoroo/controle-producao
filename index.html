@@ -1222,7 +1222,7 @@ async function loadAll(){
   setSync('syncing');
   try{
     const[lancs,metas,devs,prods,solic]=await Promise.all([
-      sb('lancamentos?select=*&order=data.desc,created_at.desc'),
+      sb('lancamentos?select=*&order=data.desc,created_at.desc&limit=5000'),
       sb('metas?select=*'),
       sb('devolucoes?select=*&order=data.desc,created_at.desc'),
       sb('produtos_extra?select=*&order=nome'),
