@@ -177,6 +177,34 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}.chips::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12px;font-family:'Syne',sans-serif;font-weight:600;border:1px solid var(--line2);background:var(--ink3);color:var(--text3);cursor:pointer;transition:all .15s}
 .insights-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px}
+/* ── ESTOQUE EM PROCESSO (WIP) ── */
+.wip-datebar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--ink2);border:1px solid var(--line);border-radius:24px;padding:5px 6px;margin-bottom:12px}
+.wip-datebar button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:17px;padding:4px 12px;border-radius:18px;line-height:1}
+.wip-datebar button:hover{background:var(--ink3)}
+.wip-datebar .cur{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text);text-align:center;flex:1}
+.wip-prod{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:13px 15px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,transform .12s}
+.wip-prod:hover{border-color:var(--line2)}
+.wip-prod:active{transform:scale(.995)}
+.wip-prod-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.wip-prod-nome{font-family:'Inter',sans-serif;font-weight:800;font-size:15px;letter-spacing:-0.02em}
+.wip-prod-total{font-family:'Inter',sans-serif;font-weight:900;font-size:20px;color:var(--accent);letter-spacing:-0.02em}
+.wip-etapas{display:flex;flex-wrap:wrap;gap:5px}
+.wip-etapa{display:inline-flex;align-items:center;gap:5px;background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:12px}
+.wip-etapa .q{font-weight:700;font-family:'Inter',sans-serif;color:var(--text)}
+.wip-etapa .n{color:var(--text2);font-size:11px}
+.wip-etapa.pronto{background:var(--green-d);border-color:rgba(76,175,125,.3)}
+.wip-etapa.pronto .q,.wip-etapa.pronto .n{color:var(--green)}
+.wip-etapa.marc{background:var(--blue-d);border-color:rgba(91,156,246,.3)}
+.wip-etapa.marc .q,.wip-etapa.marc .n{color:var(--blue)}
+.wip-var{font-size:10px;padding:2px 9px;border-radius:12px;background:var(--ink3);color:var(--text2);display:inline-flex;align-items:center;gap:5px}
+.wip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.wip-obs{margin-top:8px;font-size:11px;color:var(--amber);background:var(--amber-d);border-radius:8px;padding:6px 10px;display:inline-block}
+.wip-etapa-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.wip-etapa-row input[type=text]{flex:1;min-width:0;padding:8px 10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box}
+.wip-etapa-row input[type=number]{width:74px;padding:8px 8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'Inter',sans-serif;font-weight:700;font-size:14px;text-align:center;box-sizing:border-box}
+.wip-etapa-row .del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:4px 6px;line-height:1}
+.wip-etapa-row .del:hover{color:var(--red)}
+
 @media(min-width:768px){.insights-grid{grid-template-columns:1fr 1fr}}
 
 /* ── SKELETON LOADING ── */
@@ -411,6 +439,10 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     Produtos
   </button>
+  <button class="sb-item" onclick="goTo('wip',this)" id="sb-wip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="6" y="12" width="3" height="6" rx="1"/><rect x="11" y="8" width="3" height="10" rx="1"/><rect x="16" y="4" width="3" height="14" rx="1"/></svg>
+    Processo
+  </button>
   <button class="sb-item" onclick="goTo('dev',this)" id="sb-dev">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
     Devoluções
@@ -451,6 +483,10 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <button class="nav-item" onclick="goTo('prod',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     Produtos
+  </button>
+  <button class="nav-item" onclick="goTo('wip',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/></svg>
+    Processo
   </button>
   <button class="nav-item" onclick="goTo('dev',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
@@ -606,6 +642,31 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
       <div class="tabela-wrap"><table><thead><tr><th>#</th><th>Produto</th><th class="td-r">Qtd</th><th class="td-r">%</th></tr></thead><tbody id="tbody-prod"></tbody></table></div>
     </div>
   </div>
+</div></div>
+
+<!-- ── ESTOQUE EM PROCESSO ── -->
+<div id="page-wip" class="page"><div class="content-inner">
+
+  <div class="sec-title">Estoque em processo</div>
+
+  <div class="wip-datebar">
+    <button onclick="wipNavDia(-1)" title="Dia anterior">&lsaquo;</button>
+    <span class="cur" id="wip-data-label">—</span>
+    <button onclick="wipNavDia(1)" title="Próximo dia">&rsaquo;</button>
+  </div>
+
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+    <button class="btn btn-ghost btn-sm" onclick="wipCopiarOntem()">Copiar dia anterior</button>
+    <button class="btn btn-ghost btn-sm" onclick="abrirWipProduto(null)">+ Produto</button>
+    <button class="btn btn-ghost btn-sm" onclick="wipGerarTexto()">Gerar texto</button>
+  </div>
+
+  <div class="kpi-grid" id="wip-kpis" style="grid-template-columns:repeat(3,1fr)"></div>
+
+  <div id="wip-gargalos"></div>
+
+  <div id="wip-lista"></div>
+
 </div></div>
 
 <!-- ── DEVOLUÇÕES ── -->
@@ -953,7 +1014,58 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <div id="comp-insights"><div class="loading"><div class="spinner"></div></div></div>
 
   <!-- MODAL CONFIRMAR COMPRA -->
-  <!-- Modal recebimento -->
+  <!-- Modal produto WIP -->
+<div id="modal-wip" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:430px;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px" id="mw-titulo">Produto</div>
+      <div style="text-align:right">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase">Total</div>
+        <div id="mw-total" style="font-family:'Inter',sans-serif;font-weight:900;font-size:22px;color:var(--accent);line-height:1">0</div>
+      </div>
+    </div>
+
+    <input type="hidden" id="mw-id">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div>
+        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Grupo</label>
+        <input type="text" id="mw-grupo" list="mw-grupos" placeholder="Colunas"
+          style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box">
+        <datalist id="mw-grupos"></datalist>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Produto</label>
+        <input type="text" id="mw-produto" placeholder="Áustria"
+          style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box">
+      </div>
+    </div>
+
+    <div style="font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px">Etapas</div>
+    <div id="mw-etapas"></div>
+    <button class="btn btn-ghost btn-sm" onclick="wipAddEtapa()" style="width:100%;margin-bottom:14px">+ Etapa</button>
+
+    <div style="font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px">Variações de cor <span style="text-transform:none;letter-spacing:0">(não somam no total)</span></div>
+    <div id="mw-variacoes"></div>
+    <button class="btn btn-ghost btn-sm" onclick="wipAddVariacao()" style="width:100%;margin-bottom:14px">+ Variação</button>
+
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Observação (opcional)</label>
+      <input type="text" id="mw-obs" placeholder="Ex: faltam 4 B/M para lixar"
+        style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box">
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button onclick="fecharModalWip()" class="btn btn-ghost btn-sm" style="flex:1">Cancelar</button>
+      <button onclick="salvarWipProduto()" class="btn btn-primary btn-sm" style="flex:2">Salvar</button>
+    </div>
+    <button id="mw-excluir" onclick="excluirWipProduto()" class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;color:var(--red);border-color:rgba(224,92,92,.3)">Remover produto do dia</button>
+  </div>
+</div>
+
+<datalist id="wip-etapas-mestre"></datalist>
+
+<!-- Modal recebimento -->
 <div id="modal-recebimento" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:400px">
     <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Confirmar recebimento</div>
@@ -1362,6 +1474,332 @@ document.getElementById('modal-recebimento').addEventListener('click',function(e
   if(e.target===this)fecharModalRecebimento();
 });
 
+/* ══════════════ ESTOQUE EM PROCESSO (WIP) ══════════════ */
+
+const WIP_ETAPAS_PADRAO=['Pronto','Cortada','Marcenaria','Acabamento marc','Montar','Lixar','Passar fundo','Pintar','Envernizar','Acabamento'];
+const WIP_SEED=[
+  ['Colunas',['Áustria','XG','Viena','Mônaco','Ipanema','Wells','Floripa','Ripada']],
+  ['Abajures',['Ab Áustria','XP','Ab Wells','Ab Soft','Ab Wood','Ab Sky','Ab Slim','Ab Mine','Prat pinus','Adega quad','Sup taça']]
+];
+let wipDataSel=null;
+let wipRows=[];
+let wipRowsOntem=[];
+
+function wipAddDias(dataStr,delta){
+  const[a,m,d]=dataStr.split('-').map(Number);
+  const dt=new Date(a,m-1,d);
+  dt.setDate(dt.getDate()+delta);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+function wipLabelData(dataStr){
+  const[a,m,d]=dataStr.split('-').map(Number);
+  const dt=new Date(a,m-1,d);
+  const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const hojeStr=hoje();
+  const prefixo=dataStr===hojeStr?'Hoje · ':dataStr===wipAddDias(hojeStr,-1)?'Ontem · ':'';
+  return prefixo+dias[dt.getDay()]+', '+String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0');
+}
+function wipTotal(row){
+  return (row.etapas||[]).reduce((a,e)=>a+(parseInt(e.qtd)||0),0);
+}
+function wipEhPronto(nome){return /^pronto/i.test((nome||'').trim())}
+function wipEhMarc(nome){return /marcenaria|marc\b|mrc/i.test((nome||'').trim())}
+
+async function loadWip(){
+  if(!wipDataSel)wipDataSel=hoje();
+  setSync('syncing');
+  try{
+    const[hojeRows,ontemRows]=await Promise.all([
+      sb('wip_snapshots?select=*&data=eq.'+wipDataSel+'&order=grupo,produto'),
+      sb('wip_snapshots?select=*&data=eq.'+wipAddDias(wipDataSel,-1)+'&order=grupo,produto')
+    ]);
+    wipRows=hojeRows;
+    wipRowsOntem=ontemRows;
+    setSync('ok');
+  }catch(e){setSync('err');toast('Erro ao carregar estoque em processo.','erro');wipRows=[];wipRowsOntem=[]}
+}
+
+function renderWip(){
+  document.getElementById('wip-data-label').textContent=wipLabelData(wipDataSel);
+  const total=wipRows.reduce((a,r)=>a+wipTotal(r),0);
+  const totalOntem=wipRowsOntem.reduce((a,r)=>a+wipTotal(r),0);
+  const delta=total-totalOntem;
+  const grupos=[...new Set(wipRows.map(r=>r.grupo||'Sem grupo'))];
+
+  // KPIs
+  document.getElementById('wip-kpis').innerHTML=`
+    <div class="kpi">
+      <div class="kpi-label">Total em processo</div>
+      <div class="kpi-val">${total.toLocaleString('pt-BR')}</div>
+      <div class="kpi-sub">peças em fabricação</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">vs dia anterior</div>
+      <div class="kpi-val" style="color:${totalOntem===0?'var(--text3)':delta>0?'var(--red)':delta<0?'var(--green)':'var(--blue)'}">${totalOntem===0?'—':(delta>0?'▲ ':delta<0?'▼ ':'→ ')+Math.abs(delta)}</div>
+      <div class="kpi-sub">${totalOntem===0?'sem dado anterior':delta>0?'estoque cresceu':delta<0?'estoque escoou':'estável'}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Produtos</div>
+      <div class="kpi-val">${wipRows.length}</div>
+      <div class="kpi-sub">${grupos.map(g=>wipRows.filter(r=>(r.grupo||'Sem grupo')===g).length+' '+g.toLowerCase()).join(' · ')||'nenhum lançado'}</div>
+    </div>`;
+
+  // Gargalos (exclui "Pronto")
+  const porEtapa={};
+  wipRows.forEach(r=>(r.etapas||[]).forEach(e=>{
+    const q=parseInt(e.qtd)||0;
+    if(!q||wipEhPronto(e.nome))return;
+    const k=(e.nome||'').trim();
+    porEtapa[k]=(porEtapa[k]||0)+q;
+  }));
+  const gargalos=Object.entries(porEtapa).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxG=gargalos.length?gargalos[0][1]:1;
+  document.getElementById('wip-gargalos').innerHTML=gargalos.length?`
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Gargalos — peças paradas por etapa</div>
+      ${gargalos.map(([nome,q],i)=>{
+        const pct=Math.round(q/maxG*100);
+        const cor=i===0?'var(--red)':i===1?'var(--amber)':wipEhMarc(nome)?'var(--blue)':'var(--accent)';
+        return `<div style="margin-bottom:${i===gargalos.length-1?'0':'10px'}">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span>${nome}</span><b style="font-family:'Inter',sans-serif">${q.toLocaleString('pt-BR')} pç</b>
+          </div>
+          <div style="height:8px;background:var(--ink3);border-radius:4px;overflow:hidden">
+            <div class="prog-bar" data-pct="${pct}" style="width:0%;background:${cor}"></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:'';
+
+  // Lista por grupo
+  const el=document.getElementById('wip-lista');
+  if(!wipRows.length){
+    el.innerHTML=`<div style="text-align:center;padding:28px 20px;background:var(--ink2);border-radius:var(--r2);border:1px solid var(--line)">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px">Nenhum produto neste dia</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px">Copie o dia anterior para ajustar só o que mudou,<br>ou monte a estrutura inicial de uma vez.</div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="wipCopiarOntem()">Copiar dia anterior</button>
+        <button class="btn btn-primary btn-sm" onclick="wipSeedInicial()">Criar estrutura inicial</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML=grupos.map(g=>{
+    const itens=wipRows.filter(r=>(r.grupo||'Sem grupo')===g);
+    const totG=itens.reduce((a,r)=>a+wipTotal(r),0);
+    return `<div style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:8px;margin:18px 0 10px">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em">${g}</div>
+        <div style="flex:1;height:1px;background:var(--line)"></div>
+        <span style="font-size:10px;padding:2px 9px;border-radius:20px;background:var(--ink3);color:var(--text3)">${totG.toLocaleString('pt-BR')} pç</span>
+      </div>
+      ${itens.map(r=>{
+        const etapas=(r.etapas||[]).filter(e=>(parseInt(e.qtd)||0)>0);
+        const vars=(r.variacoes||[]).filter(v=>(parseInt(v.qtd)||0)>0);
+        return `<div class="wip-prod" onclick="abrirWipProduto('${r.id}')">
+          <div class="wip-prod-head">
+            <div class="wip-prod-nome">${r.produto}</div>
+            <div class="wip-prod-total">${wipTotal(r).toLocaleString('pt-BR')}</div>
+          </div>
+          ${etapas.length?`<div class="wip-etapas">${etapas.map(e=>{
+            const cls=wipEhPronto(e.nome)?' pronto':wipEhMarc(e.nome)?' marc':'';
+            return `<span class="wip-etapa${cls}"><span class="q">${e.qtd}</span><span class="n">${e.nome}</span></span>`;
+          }).join('')}</div>`:`<div style="font-size:11px;color:var(--text3)">Sem peças em processo</div>`}
+          ${vars.length?`<div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">${vars.map(v=>`<span class="wip-var"><span class="wip-dot" style="background:${v.cor||'#888'}"></span>${v.qtd} ${v.nome}</span>`).join('')}</div>`:''}
+          ${r.obs?`<div class="wip-obs">${r.obs}</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+
+  animarBarras('wip-gargalos');
+}
+
+function wipNavDia(delta){
+  wipDataSel=wipAddDias(wipDataSel||hoje(),delta);
+  loadWip().then(renderWip);
+}
+
+async function wipCopiarOntem(){
+  if(!wipRowsOntem.length){toast('Não há dados no dia anterior.','aviso');return}
+  if(wipRows.length&&!confirm('Isso vai substituir os produtos já lançados neste dia. Continuar?'))return;
+  setSync('syncing');
+  try{
+    if(wipRows.length){
+      await sb('wip_snapshots?data=eq.'+wipDataSel,{method:'DELETE',prefer:'return=minimal'});
+    }
+    const novos=wipRowsOntem.map(r=>({
+      data:wipDataSel,grupo:r.grupo,produto:r.produto,
+      etapas:r.etapas||[],variacoes:r.variacoes||[],obs:r.obs||null,
+      total:wipTotal(r)
+    }));
+    await sb('wip_snapshots',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
+    await loadWip();renderWip();
+    toast('Dia anterior copiado. Ajuste o que mudou.');
+  }catch(e){setSync('err');toast('Erro ao copiar dia anterior.','erro')}
+}
+
+async function wipSeedInicial(){
+  setSync('syncing');
+  try{
+    const novos=[];
+    WIP_SEED.forEach(([grupo,prods])=>prods.forEach(p=>novos.push({
+      data:wipDataSel,grupo,produto:p,
+      etapas:[{nome:'Pronto',qtd:0}],variacoes:[],total:0
+    })));
+    await sb('wip_snapshots',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
+    await loadWip();renderWip();
+    toast('Estrutura criada. Toque num produto para preencher.');
+  }catch(e){setSync('err');toast('Erro ao criar estrutura.','erro')}
+}
+
+/* ── Modal ── */
+function wipEtapaRow(nome,qtd){
+  const div=document.createElement('div');
+  div.className='wip-etapa-row';
+  div.innerHTML=`<input type="text" list="wip-etapas-mestre" value="${(nome||'').replace(/"/g,'&quot;')}" placeholder="Etapa">
+    <input type="number" min="0" value="${parseInt(qtd)||0}" oninput="wipCalcTotal()">
+    <button class="del" onclick="this.parentElement.remove();wipCalcTotal()" title="Remover">&times;</button>`;
+  return div;
+}
+function wipAddEtapa(nome,qtd){
+  document.getElementById('mw-etapas').appendChild(wipEtapaRow(nome,qtd));
+  wipCalcTotal();
+}
+function wipVarRow(nome,cor,qtd){
+  const div=document.createElement('div');
+  div.className='wip-etapa-row';
+  div.innerHTML=`<input type="color" value="${cor||'#1a1a1a'}" style="width:38px;height:34px;padding:2px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);cursor:pointer">
+    <input type="text" value="${(nome||'').replace(/"/g,'&quot;')}" placeholder="Ex: preto">
+    <input type="number" min="0" value="${parseInt(qtd)||0}">
+    <button class="del" onclick="this.parentElement.remove()" title="Remover">&times;</button>`;
+  return div;
+}
+function wipAddVariacao(nome,cor,qtd){
+  document.getElementById('mw-variacoes').appendChild(wipVarRow(nome,cor,qtd));
+}
+function wipCalcTotal(){
+  let t=0;
+  document.querySelectorAll('#mw-etapas .wip-etapa-row').forEach(r=>{
+    t+=parseInt(r.querySelector('input[type=number]').value)||0;
+  });
+  document.getElementById('mw-total').textContent=t.toLocaleString('pt-BR');
+}
+function abrirWipProduto(id){
+  const r=id?wipRows.find(x=>x.id===id):null;
+  document.getElementById('mw-id').value=id||'';
+  document.getElementById('mw-titulo').textContent=r?r.produto:'Novo produto';
+  document.getElementById('mw-grupo').value=r?(r.grupo||''):(wipRows.length?wipRows[wipRows.length-1].grupo:'Colunas');
+  document.getElementById('mw-produto').value=r?r.produto:'';
+  document.getElementById('mw-obs').value=r&&r.obs?r.obs:'';
+  document.getElementById('mw-excluir').style.display=id?'block':'none';
+
+  // datalists
+  const etapasUsadas=[...new Set([].concat(...wipRows.map(x=>(x.etapas||[]).map(e=>e.nome))))].filter(Boolean);
+  const listaEtapas=[...new Set([...WIP_ETAPAS_PADRAO,...etapasUsadas])];
+  document.getElementById('wip-etapas-mestre').innerHTML=listaEtapas.map(e=>`<option value="${e}">`).join('');
+  const gruposUsados=[...new Set(wipRows.map(x=>x.grupo).filter(Boolean))];
+  document.getElementById('mw-grupos').innerHTML=[...new Set(['Colunas','Abajures',...gruposUsados])].map(g=>`<option value="${g}">`).join('');
+
+  const etEl=document.getElementById('mw-etapas');etEl.innerHTML='';
+  const vaEl=document.getElementById('mw-variacoes');vaEl.innerHTML='';
+  if(r){
+    (r.etapas||[]).forEach(e=>etEl.appendChild(wipEtapaRow(e.nome,e.qtd)));
+    (r.variacoes||[]).forEach(v=>vaEl.appendChild(wipVarRow(v.nome,v.cor,v.qtd)));
+    if(!(r.etapas||[]).length)etEl.appendChild(wipEtapaRow('Pronto',0));
+  } else {
+    etEl.appendChild(wipEtapaRow('Pronto',0));
+  }
+  wipCalcTotal();
+  document.getElementById('modal-wip').style.display='flex';
+}
+function fecharModalWip(){document.getElementById('modal-wip').style.display='none'}
+
+async function salvarWipProduto(){
+  const id=document.getElementById('mw-id').value;
+  const grupo=document.getElementById('mw-grupo').value.trim()||'Sem grupo';
+  const produto=document.getElementById('mw-produto').value.trim();
+  const obs=document.getElementById('mw-obs').value.trim();
+  if(!produto){toast('Informe o nome do produto.','aviso');return}
+  const etapas=[];
+  document.querySelectorAll('#mw-etapas .wip-etapa-row').forEach(r=>{
+    const nome=r.querySelector('input[type=text]').value.trim();
+    const qtd=parseInt(r.querySelector('input[type=number]').value)||0;
+    if(nome)etapas.push({nome,qtd});
+  });
+  const variacoes=[];
+  document.querySelectorAll('#mw-variacoes .wip-etapa-row').forEach(r=>{
+    const cor=r.querySelector('input[type=color]').value;
+    const nome=r.querySelector('input[type=text]').value.trim();
+    const qtd=parseInt(r.querySelector('input[type=number]').value)||0;
+    if(nome)variacoes.push({nome,cor,qtd});
+  });
+  const payload={data:wipDataSel,grupo,produto,etapas,variacoes,obs:obs||null,total:etapas.reduce((a,e)=>a+e.qtd,0)};
+  setSync('syncing');
+  try{
+    if(id){
+      await sb('wip_snapshots?id=eq.'+id,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
+    } else {
+      await sb('wip_snapshots',{method:'POST',body:JSON.stringify(payload),prefer:'return=minimal'});
+    }
+    await loadWip();renderWip();
+    fecharModalWip();
+    toast('Produto salvo!');
+  }catch(e){setSync('err');toast('Erro ao salvar produto.','erro')}
+}
+
+async function excluirWipProduto(){
+  const id=document.getElementById('mw-id').value;
+  if(!id)return;
+  if(!confirm('Remover este produto do dia selecionado?'))return;
+  setSync('syncing');
+  try{
+    await sb('wip_snapshots?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
+    await loadWip();renderWip();
+    fecharModalWip();
+    toast('Produto removido.');
+  }catch(e){setSync('err');toast('Erro ao remover.','erro')}
+}
+
+function wipGerarTexto(){
+  if(!wipRows.length){toast('Nada lançado neste dia.','aviso');return}
+  const[a,m,d]=wipDataSel.split('-');
+  const dias=['DOMINGO','SEGUNDA','TERÇA','QUARTA','QUINTA','SEXTA','SÁBADO'];
+  const dt=new Date(Number(a),Number(m)-1,Number(d));
+  let txt=`${d}/${m}/${a} - ${dias[dt.getDay()]}\nPeças ELÉTRICA\n`;
+  const grupos=[...new Set(wipRows.map(r=>r.grupo||'Sem grupo'))];
+  grupos.forEach(g=>{
+    txt+=`\n${g.toUpperCase()}:\n`;
+    wipRows.filter(r=>(r.grupo||'Sem grupo')===g).forEach(r=>{
+      const etapas=(r.etapas||[]).filter(e=>(parseInt(e.qtd)||0)>0);
+      const pronto=etapas.find(e=>wipEhPronto(e.nome));
+      const resto=etapas.filter(e=>!wipEhPronto(e.nome));
+      const vars=(r.variacoes||[]).filter(v=>(parseInt(v.qtd)||0)>0);
+      txt+=`- ${r.produto} - ${pronto?pronto.qtd:0}`;
+      if(vars.length)txt+=' '+vars.map(v=>`(+${v.qtd} ${v.nome})`).join(' ');
+      txt+='\n';
+      resto.forEach(e=>{txt+=`--> ${e.qtd} ${e.nome.toUpperCase()}\n`});
+      if(r.obs)txt+=`! ${r.obs}\n`;
+      txt+=`=> ${wipTotal(r)}\n`;
+    });
+  });
+  const total=wipRows.reduce((acc,r)=>acc+wipTotal(r),0);
+  txt+=`\nTOTAL EM PROCESSO: ${total}`;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>toast('Texto copiado! Cole no WhatsApp.')).catch(()=>wipMostrarTexto(txt));
+  } else wipMostrarTexto(txt);
+}
+function wipMostrarTexto(txt){
+  const w=window.open('','_blank');
+  if(w){w.document.write('<pre style="font-family:monospace;padding:16px;white-space:pre-wrap">'+txt.replace(/</g,'&lt;')+'</pre>');}
+  else toast('Não foi possível copiar.','erro');
+}
+
+document.getElementById('modal-wip').addEventListener('click',function(e){
+  if(e.target===this)fecharModalWip();
+});
+
 function init(){
   document.getElementById('f-data').value=hoje();
   setTimeout(initRipples,500);
@@ -1432,6 +1870,7 @@ function goTo(id,btn){
     renderDash();
   }
   if(id==='prod'){document.getElementById('f-data').value=hoje();renderProd();}
+  if(id==='wip'){if(!wipDataSel)wipDataSel=hoje();loadWip().then(renderWip);}
   if(id==='dev'){document.getElementById('dv-data').value=hoje();Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
   if(id==='comp'){skeletonKPIs('comp-kpis');skeletonLista('comp-lista');loadCompras().then(()=>{initCompras();filtrarMateriais();renderCompLista();const b=document.getElementById('comp-gestor-badge');if(b)b.style.display=modoGestorAtivo?'block':'none';})}
   if(id==='materiais'){loadCompras().then(()=>{initCompras();renderMatLista()})}
@@ -4231,6 +4670,7 @@ function refreshPaginaAtual(){
   const id=ativo.id.replace('page-','');
   if(id==='dash')return renderDash();
   if(id==='prod')return Promise.resolve(renderProd());
+  if(id==='wip')return loadWip().then(renderWip);
   if(id==='dev')return Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash());
   if(id==='comp')return loadCompras().then(()=>{filtrarMateriais();renderCompLista()});
   if(id==='materiais')return loadCompras().then(()=>renderMatLista());
