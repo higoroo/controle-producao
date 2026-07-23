@@ -195,6 +195,9 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 .wip-etapa.pronto{background:var(--green-d);border-color:rgba(76,175,125,.3)}
 .wip-etapa.pronto .q,.wip-etapa.pronto .n{color:var(--green)}
 .wip-etapa.marc{background:var(--blue-d);border-color:rgba(91,156,246,.3)}
+.wip-etapa.vazia{background:transparent;border-style:dashed;border-color:var(--line)}
+.wip-etapa.vazia .q{color:var(--text3)}
+.wip-etapa.vazia .n{color:var(--text3);opacity:.75}
 .wip-etapa.marc .q,.wip-etapa.marc .n{color:var(--blue)}
 .wip-var{font-size:10px;padding:2px 9px;border-radius:12px;background:var(--ink3);color:var(--text2);display:inline-flex;align-items:center;gap:5px}
 .wip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -1474,12 +1477,41 @@ document.getElementById('modal-recebimento').addEventListener('click',function(e
   if(e.target===this)fecharModalRecebimento();
 });
 
+function wipErroMsg(e){
+  let m=(e&&e.message)?e.message:String(e);
+  try{const j=JSON.parse(m);m=j.message||j.hint||j.details||m;}catch(_){}
+  if(/does not exist|relation .* does not exist/i.test(m))return 'tabela wip_snapshots não existe no banco';
+  if(/row-level security|permission denied/i.test(m))return 'permissão negada (RLS)';
+  return m.slice(0,110);
+}
+
 /* ══════════════ ESTOQUE EM PROCESSO (WIP) ══════════════ */
 
 const WIP_ETAPAS_PADRAO=['Pronto','Cortada','Marcenaria','Acabamento marc','Montar','Lixar','Passar fundo','Pintar','Envernizar','Acabamento'];
 const WIP_SEED=[
-  ['Colunas',['Áustria','XG','Viena','Mônaco','Ipanema','Wells','Floripa','Ripada']],
-  ['Abajures',['Ab Áustria','XP','Ab Wells','Ab Soft','Ab Wood','Ab Sky','Ab Slim','Ab Mine','Prat pinus','Adega quad','Sup taça']]
+  ['Colunas',[
+    ['Áustria',['Pronto','Passar fundo','Pintar','Envernizar','Lixar','Marcenaria']],
+    ['XG',['Prontos new','Prontos old','Pintar','Lixar','Passar fundo']],
+    ['Viena',['Pronto','Pintar','Passar fundo','Lixar','Marcenaria']],
+    ['Mônaco',['Pronto','Pintar','Envernizar','Lixar','Passar fundo','Marcenaria']],
+    ['Ipanema',['Pronto','Lixar','Pintar','Passar fundo','Cúp PT','Marcenaria']],
+    ['Wells',['Pronto']],
+    ['Floripa',['Pronto','Pintar','Lixar','Passar fundo','PT','Marcenaria']],
+    ['Ripada',['Pronto','Pintar','Lixar','Passar fundo','Montar','Cortada','Marcenaria']]
+  ]],
+  ['Abajures',[
+    ['Ab Áustria',['Pronto','Envernizar','Lixar','Pintar','Passar fundo','Acabamento marc']],
+    ['XP',['Prontos old','Prontos new','Lixar','Pintar','Passar fundo']],
+    ['Ab Wells',['Pronto','Preto']],
+    ['Ab Soft',['Pronto','Pintar']],
+    ['Ab Wood',['Pronto','Acabamento','Pintar','Lixar','Passar fundo','Marcenaria']],
+    ['Ab Sky',['Pronto','Envernizar','Passar fundo','Lixar','Pintar','Acabamento marc']],
+    ['Ab Slim',['Pronto','Pintar','Envernizar','Passar fundo','Acabamento marc','Lixar']],
+    ['Ab Mine',['Pronto','Passar fundo','Lixar','Pintar','Marcenaria']],
+    ['Prat pinus',['Pronto']],
+    ['Adega quad',['Pronto','Lixar encx']],
+    ['Sup taça',['Pronto']]
+  ]]
 ];
 let wipDataSel=null;
 let wipRows=[];
@@ -1516,7 +1548,7 @@ async function loadWip(){
     wipRows=hojeRows;
     wipRowsOntem=ontemRows;
     setSync('ok');
-  }catch(e){setSync('err');toast('Erro ao carregar estoque em processo.','erro');wipRows=[];wipRowsOntem=[]}
+  }catch(e){setSync('err');console.error('WIP load:',e);toast('Erro ao carregar: '+wipErroMsg(e),'erro');wipRows=[];wipRowsOntem=[]}
 }
 
 function renderWip(){
@@ -1595,7 +1627,7 @@ function renderWip(){
         <span style="font-size:10px;padding:2px 9px;border-radius:20px;background:var(--ink3);color:var(--text3)">${totG.toLocaleString('pt-BR')} pç</span>
       </div>
       ${itens.map(r=>{
-        const etapas=(r.etapas||[]).filter(e=>(parseInt(e.qtd)||0)>0);
+        const etapas=(r.etapas||[]);
         const vars=(r.variacoes||[]).filter(v=>(parseInt(v.qtd)||0)>0);
         return `<div class="wip-prod" onclick="abrirWipProduto('${r.id}')">
           <div class="wip-prod-head">
@@ -1603,9 +1635,10 @@ function renderWip(){
             <div class="wip-prod-total">${wipTotal(r).toLocaleString('pt-BR')}</div>
           </div>
           ${etapas.length?`<div class="wip-etapas">${etapas.map(e=>{
-            const cls=wipEhPronto(e.nome)?' pronto':wipEhMarc(e.nome)?' marc':'';
-            return `<span class="wip-etapa${cls}"><span class="q">${e.qtd}</span><span class="n">${e.nome}</span></span>`;
-          }).join('')}</div>`:`<div style="font-size:11px;color:var(--text3)">Sem peças em processo</div>`}
+            const q=parseInt(e.qtd)||0;
+            const cls=q===0?' vazia':wipEhPronto(e.nome)?' pronto':wipEhMarc(e.nome)?' marc':'';
+            return `<span class="wip-etapa${cls}"><span class="q">${q===0?'—':q}</span><span class="n">${e.nome}</span></span>`;
+          }).join('')}</div>`:`<div style="font-size:11px;color:var(--text3)">Nenhuma etapa cadastrada — toque para configurar</div>`}
           ${vars.length?`<div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">${vars.map(v=>`<span class="wip-var"><span class="wip-dot" style="background:${v.cor||'#888'}"></span>${v.qtd} ${v.nome}</span>`).join('')}</div>`:''}
           ${r.obs?`<div class="wip-obs">${r.obs}</div>`:''}
         </div>`;
@@ -1637,21 +1670,21 @@ async function wipCopiarOntem(){
     await sb('wip_snapshots',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
     await loadWip();renderWip();
     toast('Dia anterior copiado. Ajuste o que mudou.');
-  }catch(e){setSync('err');toast('Erro ao copiar dia anterior.','erro')}
+  }catch(e){setSync('err');console.error('WIP copiar:',e);toast('Erro ao copiar: '+wipErroMsg(e),'erro')}
 }
 
 async function wipSeedInicial(){
   setSync('syncing');
   try{
     const novos=[];
-    WIP_SEED.forEach(([grupo,prods])=>prods.forEach(p=>novos.push({
+    WIP_SEED.forEach(([grupo,prods])=>prods.forEach(([p,etapas])=>novos.push({
       data:wipDataSel,grupo,produto:p,
-      etapas:[{nome:'Pronto',qtd:0}],variacoes:[],total:0
+      etapas:etapas.map(nome=>({nome,qtd:0})),variacoes:[],total:0
     })));
     await sb('wip_snapshots',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
     await loadWip();renderWip();
     toast('Estrutura criada. Toque num produto para preencher.');
-  }catch(e){setSync('err');toast('Erro ao criar estrutura.','erro')}
+  }catch(e){setSync('err');console.error('WIP seed:',e);toast('Erro ao criar estrutura: '+wipErroMsg(e),'erro')}
 }
 
 /* ── Modal ── */
@@ -1746,7 +1779,7 @@ async function salvarWipProduto(){
     await loadWip();renderWip();
     fecharModalWip();
     toast('Produto salvo!');
-  }catch(e){setSync('err');toast('Erro ao salvar produto.','erro')}
+  }catch(e){setSync('err');console.error('WIP salvar:',e);toast('Erro ao salvar: '+wipErroMsg(e),'erro')}
 }
 
 async function excluirWipProduto(){
@@ -1759,7 +1792,7 @@ async function excluirWipProduto(){
     await loadWip();renderWip();
     fecharModalWip();
     toast('Produto removido.');
-  }catch(e){setSync('err');toast('Erro ao remover.','erro')}
+  }catch(e){setSync('err');console.error('WIP remover:',e);toast('Erro ao remover: '+wipErroMsg(e),'erro')}
 }
 
 function wipGerarTexto(){
@@ -1772,14 +1805,14 @@ function wipGerarTexto(){
   grupos.forEach(g=>{
     txt+=`\n${g.toUpperCase()}:\n`;
     wipRows.filter(r=>(r.grupo||'Sem grupo')===g).forEach(r=>{
-      const etapas=(r.etapas||[]).filter(e=>(parseInt(e.qtd)||0)>0);
+      const etapas=(r.etapas||[]);
       const pronto=etapas.find(e=>wipEhPronto(e.nome));
       const resto=etapas.filter(e=>!wipEhPronto(e.nome));
       const vars=(r.variacoes||[]).filter(v=>(parseInt(v.qtd)||0)>0);
       txt+=`- ${r.produto} - ${pronto?pronto.qtd:0}`;
       if(vars.length)txt+=' '+vars.map(v=>`(+${v.qtd} ${v.nome})`).join(' ');
       txt+='\n';
-      resto.forEach(e=>{txt+=`--> ${e.qtd} ${e.nome.toUpperCase()}\n`});
+      resto.forEach(e=>{const q=parseInt(e.qtd)||0;txt+=`--> ${q?q+' ':''}${e.nome.toUpperCase()}\n`});
       if(r.obs)txt+=`! ${r.obs}\n`;
       txt+=`=> ${wipTotal(r)}\n`;
     });
