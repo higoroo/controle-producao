@@ -177,131 +177,68 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}.chips::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12px;font-family:'Syne',sans-serif;font-weight:600;border:1px solid var(--line2);background:var(--ink3);color:var(--text3);cursor:pointer;transition:all .15s}
 .insights-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px}
-/* ── ESTOQUE EM PROCESSO (WIP) ── */
-.wip-datebar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--ink2);border:1px solid var(--line);border-radius:24px;padding:5px 6px;margin-bottom:12px}
-.wip-datebar button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:17px;padding:4px 12px;border-radius:18px;line-height:1}
-.wip-datebar button:hover{background:var(--ink3)}
-.wip-datebar .cur{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text);text-align:center;flex:1}
-.wip-prod{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:13px 15px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,transform .12s}
-.wip-prod:hover{border-color:var(--line2)}
-.wip-prod:active{transform:scale(.995)}
-.wip-prod-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
-.wip-prod-nome{font-family:'Inter',sans-serif;font-weight:800;font-size:15px;letter-spacing:-0.02em}
-.wip-prod-total{font-family:'Inter',sans-serif;font-weight:900;font-size:20px;color:var(--accent);letter-spacing:-0.02em}
-.wip-etapas{display:flex;flex-wrap:wrap;gap:5px}
-.wip-etapa{display:inline-flex;align-items:center;gap:5px;background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:12px}
-.wip-etapa .q{font-weight:700;font-family:'Inter',sans-serif;color:var(--text)}
-.wip-etapa .n{color:var(--text2);font-size:11px}
-.wip-etapa.pronto{background:var(--green-d);border-color:rgba(76,175,125,.3)}
-.wip-etapa.pronto .q,.wip-etapa.pronto .n{color:var(--green)}
-.wip-etapa.marc{background:var(--blue-d);border-color:rgba(91,156,246,.3)}
-.wip-etapa.vazia{background:transparent;border-style:dashed;border-color:var(--line)}
-.wip-etapa.vazia .q{color:var(--text3)}
-.wip-etapa.vazia .n{color:var(--text3);opacity:.75}
-.wip-etapa.marc .q,.wip-etapa.marc .n{color:var(--blue)}
-.wip-var{font-size:10px;padding:2px 9px;border-radius:12px;background:var(--ink3);color:var(--text2);display:inline-flex;align-items:center;gap:5px}
-.wip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.wip-obs{margin-top:8px;font-size:11px;color:var(--amber);background:var(--amber-d);border-radius:8px;padding:6px 10px;display:inline-block}
-.wip-etapa-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
-.wip-etapa-row input[type=text]{flex:1;min-width:0;padding:8px 10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box}
-.wip-etapa-row input[type=number]{width:74px;padding:8px 8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'Inter',sans-serif;font-weight:700;font-size:14px;text-align:center;box-sizing:border-box}
-.wip-etapa-row .del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:4px 6px;line-height:1}
-.wip-etapa-row .del:hover{color:var(--red)}
-
-@media(min-width:768px){.insights-grid{grid-template-columns:1fr 1fr}}
-
-/* ── SKELETON LOADING ── */
-@keyframes shimmer{
-  0%{background-position:-400px 0}
-  100%{background-position:400px 0}
-}
-.skeleton{
-  background:linear-gradient(90deg,var(--ink3) 25%,var(--ink2) 50%,var(--ink3) 75%);
-  background-size:800px 100%;
-  animation:shimmer 1.4s infinite linear;
-  border-radius:6px;
-}
-.skeleton-kpi{height:80px;border-radius:var(--r2)}
-.skeleton-card{height:100px;border-radius:var(--r2);margin-bottom:10px}
-.skeleton-bar{height:12px;border-radius:4px;margin-bottom:6px}
-.skeleton-bar.w60{width:60%}
-.skeleton-bar.w40{width:40%}
-.skeleton-bar.w80{width:80%}
-
-/* ── TOAST MELHORADO ── */
-@keyframes toastIn{
-  from{opacity:0;transform:translateX(-50%) translateY(10px)}
-  to{opacity:1;transform:translateX(-50%) translateY(0)}
-}
-@keyframes toastOut{
-  from{opacity:1;transform:translateX(-50%) translateY(0)}
-  to{opacity:0;transform:translateX(-50%) translateY(6px)}
-}
-#toast{
-  display:none;position:fixed;bottom:88px;left:50%;transform:translateX(-50%);
-  background:var(--ink);color:var(--text);
-  padding:0;border-radius:16px;
-  font-family:'Syne',sans-serif;font-weight:700;font-size:13px;
-  z-index:999;white-space:nowrap;max-width:90vw;
-  box-shadow:0 4px 20px rgba(0,0,0,.3);
-  border:1px solid var(--line2);
-  overflow:hidden;
-}
-#toast.show{animation:toastIn .2s ease-out forwards}
-#toast.hide{animation:toastOut .2s ease-in forwards}
-#toast-inner{display:flex;align-items:center;gap:8px;padding:10px 16px}
-#toast-bar{height:3px;background:var(--accent);transform-origin:left;transition:transform 2.5s linear}
-
-/* ── RIPPLE ── */
-.btn-ripple{position:relative;overflow:hidden}
-@keyframes rippleAnim{
-  from{transform:scale(0);opacity:.4}
-  to{transform:scale(4);opacity:0}
-}
-.ripple-circle{
-  position:absolute;border-radius:50%;
-  width:40px;height:40px;margin-top:-20px;margin-left:-20px;
-  background:rgba(255,255,255,0.3);
-  animation:rippleAnim .5s ease-out forwards;
-  pointer-events:none;
-}
-
-/* ── KPI FLIP ── */
-@keyframes kpiFlipOut{
-  from{transform:rotateX(0deg);opacity:1}
-  to{transform:rotateX(90deg);opacity:0}
-}
-@keyframes kpiFlipIn{
-  from{transform:rotateX(-90deg);opacity:0}
-  to{transform:rotateX(0deg);opacity:1}
-}
-.kpi-val.flip-out{animation:kpiFlipOut .15s ease-in forwards}
-.kpi-val.flip-in{animation:kpiFlipIn .15s ease-out forwards;animation-delay:.15s}
-.kpi-grid{perspective:400px}
-
-/* ── PULSE NO PRAZO HOJE ── */
-@keyframes pulseHoje{
-  0%,100%{opacity:1}
-  50%{opacity:.5}
-}
-.prazo-hoje{animation:pulseHoje 1.2s ease-in-out infinite}
-
-/* ── SWIPE TO ACTION ── */
-.swipe-wrap{position:relative;overflow:hidden;border-radius:var(--r2);margin-bottom:8px}
-.swipe-action{
-  position:absolute;right:0;top:0;bottom:0;width:80px;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--green);color:#fff;font-size:11px;font-weight:700;
-  font-family:'Syne',sans-serif;letter-spacing:.04em;
-  border-radius:0 var(--r2) var(--r2) 0;
-  transition:width .2s ease;
-}
-.swipe-card{
-  transition:transform .2s ease;
-  will-change:transform;
-}
-
-.insight-card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:14px}
+/* ── FLUXO DE PRODUÇÃO (WIP) ── */
+.wst{position:relative;padding-left:26px;padding-bottom:6px}
+.wst::before{content:'';position:absolute;left:6px;top:20px;bottom:-6px;width:2px;background:var(--line)}
+.wst:last-child::before{display:none}
+.wdot{position:absolute;left:0;top:13px;width:14px;height:14px;border-radius:50%;border:2px solid var(--line2);background:var(--ink)}
+.wst.has .wdot{border-color:var(--accent);background:var(--accent)}
+.wst.fim .wdot{border-color:var(--green);background:var(--green)}
+.wst-head{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:border-color .15s}
+.wst-head:hover{border-color:var(--line2)}
+.wst-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;flex:1}
+.wst-qtd{font-family:'Inter',sans-serif;font-weight:900;font-size:19px;letter-spacing:-0.02em}
+.wst-load{height:3px;border-radius:2px;background:var(--ink3);margin-top:7px;overflow:hidden}
+.wst-load i{display:block;height:100%;border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.wst-caret{color:var(--text3);font-size:11px;transition:transform .2s}
+.wst.open .wst-caret{transform:rotate(90deg)}
+.wst-body{display:none;padding:8px 0 10px 2px}
+.wst.open .wst-body{display:block}
+.wln{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--r);background:var(--ink3);margin-bottom:5px}
+.wln-nome{flex:1;font-size:12px;display:flex;align-items:center;gap:7px;min-width:0}
+.wln-nome span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wcor{width:9px;height:9px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25);display:inline-block}
+.wln-qtd{font-family:'Inter',sans-serif;font-weight:800;font-size:14px;min-width:34px;text-align:right}
+.wln-btn{border:none;background:var(--ink2);color:var(--accent);border-radius:14px;padding:5px 11px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap}
+.wln-btn:hover{background:var(--accent);color:var(--ink)}
+.wln-btn.done{color:var(--green)}
+.wln-btn.done:hover{background:var(--green);color:var(--ink)}
+.wfore{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12px}
+.wfore:last-child{border-bottom:none}
+.wfore b{font-family:'Inter',sans-serif;font-weight:800;font-size:15px}
+.wpcard{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:13px 15px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.wpcard:hover{border-color:var(--line2)}
+.wpcard-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.wpcard-n{font-family:'Inter',sans-serif;font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px}
+.wpcard-t{font-family:'Inter',sans-serif;font-weight:900;font-size:18px;color:var(--accent)}
+.wmini{display:flex;gap:3px;height:26px;align-items:flex-end}
+.wmini i{flex:1;border-radius:3px 3px 0 0;background:var(--ink3);min-height:3px}
+.wmini i.f{background:var(--accent)}
+.wmini i.p{background:var(--green)}
+.wminilab{display:flex;gap:3px;margin-top:4px}
+.wminilab span{flex:1;font-size:8px;color:var(--text3);text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.wov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;padding:16px}
+.wmodal{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:410px;max-height:88vh;overflow-y:auto}
+.wmodal h3{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:3px}
+.wmodal-sub{font-size:11px;color:var(--text3);margin-bottom:16px;line-height:1.6}
+.wfl{font-size:10px;color:var(--text3);display:block;margin-bottom:5px;letter-spacing:.04em}
+.wfi{width:100%;padding:9px 11px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;margin-bottom:12px;box-sizing:border-box}
+.wfi.big{font-family:'Inter',sans-serif;font-weight:800;font-size:20px;text-align:center}
+.wseg{display:flex;gap:5px;margin-bottom:14px}
+.wseg button{flex:1;padding:8px;border-radius:var(--r);border:1px solid var(--line2);background:none;color:var(--text3);font-size:11px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer}
+.wseg button.on{background:var(--ink3);color:var(--text);border-color:var(--accent)}
+.whint{font-size:11px;color:var(--text2);background:var(--ink3);border-radius:var(--r);padding:9px 11px;margin-bottom:14px;line-height:1.6}
+.wet-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.wet-row input[type=text]{flex:1;min-width:0;padding:8px 10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box}
+.wet-mv{background:var(--ink3);border:1px solid var(--line);color:var(--text3);border-radius:5px;font-size:8px;line-height:1;padding:3px 5px;cursor:pointer}
+.wet-mv:disabled{opacity:.3;cursor:default}
+.wet-mv:hover:not(:disabled){color:var(--accent);border-color:var(--accent)}
+.wet-uso{font-family:'Inter',sans-serif;font-weight:800;font-size:12px;color:var(--accent);min-width:26px;text-align:right}
+.wet-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:17px;padding:2px 5px;line-height:1}
+.wet-del:hover{color:var(--red)}
+.wfl-item{display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--ink3);border-radius:8px;margin-bottom:4px;cursor:pointer;font-size:12px}
+.wfl-item input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+.chip.wtab.on{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 
 /* ── ANIMAÇÕES ── */
 
@@ -650,25 +587,42 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 <!-- ── ESTOQUE EM PROCESSO ── -->
 <div id="page-wip" class="page"><div class="content-inner">
 
-  <div class="sec-title">Estoque em processo</div>
+  <div class="sec-title">Fluxo de produção</div>
 
-  <div class="wip-datebar">
-    <button onclick="wipNavDia(-1)" title="Dia anterior">&lsaquo;</button>
-    <span class="cur" id="wip-data-label">—</span>
-    <button onclick="wipNavDia(1)" title="Próximo dia">&rsaquo;</button>
+  <div id="wip-setup" style="display:none">
+    <div style="text-align:center;padding:30px 20px;background:var(--ink2);border-radius:var(--r2);border:1px solid var(--line)">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:7px">Configure o fluxo</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:16px">Cria as etapas de produção e os produtos com o caminho<br>que cada um percorre. Depois você lança o saldo atual uma vez.</div>
+      <button class="btn btn-primary btn-sm" onclick="wipCriarEstrutura()">Criar fluxo inicial</button>
+    </div>
   </div>
 
-  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-    <button class="btn btn-ghost btn-sm" onclick="wipCopiarOntem()">Copiar dia anterior</button>
-    <button class="btn btn-ghost btn-sm" onclick="abrirWipProduto(null)">+ Produto</button>
-    <button class="btn btn-ghost btn-sm" onclick="wipGerarTexto()">Gerar texto</button>
+  <div id="wip-conteudo">
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button class="chip wtab on active" onclick="wipSetView('fluxo',this)" style="flex:1">Por etapa</button>
+      <button class="chip wtab" onclick="wipSetView('prod',this)" style="flex:1">Por produto</button>
+    </div>
+
+    <div class="kpi-grid" id="wip-kpis" style="grid-template-columns:repeat(3,1fr)"></div>
+
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn btn-primary btn-sm" onclick="abrirWipEntrada()">+ Entrada</button>
+      <button class="btn btn-ghost btn-sm" onclick="abrirWipMovs()">Movimentos</button>
+      <button class="btn btn-ghost btn-sm" onclick="abrirWipLinha(null)">+ Produto</button>
+      <button class="btn btn-ghost btn-sm" onclick="abrirWipEtapas()">Etapas</button>
+      <button class="btn btn-ghost btn-sm" onclick="abrirWipInicial()">Saldo inicial</button>
+    </div>
+
+    <div id="wip-v-fluxo">
+      <div id="wip-track"></div>
+      <div class="sec-title" style="margin-top:22px">Chegando no fim do fluxo</div>
+      <div class="card" id="wip-forecast"></div>
+    </div>
+
+    <div id="wip-v-prod" style="display:none">
+      <div id="wip-produtos"></div>
+    </div>
   </div>
-
-  <div class="kpi-grid" id="wip-kpis" style="grid-template-columns:repeat(3,1fr)"></div>
-
-  <div id="wip-gargalos"></div>
-
-  <div id="wip-lista"></div>
 
 </div></div>
 
@@ -1017,56 +971,103 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <div id="comp-insights"><div class="loading"><div class="spinner"></div></div></div>
 
   <!-- MODAL CONFIRMAR COMPRA -->
-  <!-- Modal produto WIP -->
-<div id="modal-wip" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:16px">
-  <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:430px;max-height:88vh;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px" id="mw-titulo">Produto</div>
-      <div style="text-align:right">
-        <div style="font-size:9px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase">Total</div>
-        <div id="mw-total" style="font-family:'Inter',sans-serif;font-weight:900;font-size:22px;color:var(--accent);line-height:1">0</div>
-      </div>
+  <!-- ── Modais do fluxo ── -->
+<div id="wip-ov-mover" class="wov" onclick="if(event.target===this)wipFechar('wip-ov-mover')">
+  <div class="wmodal">
+    <h3 id="wmv-tit">Mover peças</h3>
+    <div class="wmodal-sub" id="wmv-sub"></div>
+    <div class="wseg" id="wmv-seg">
+      <button class="on" onclick="wipSetTipo('mover',this)">Avançar etapa</button>
+      <button onclick="wipSetTipo('perda',this)">Registrar perda</button>
     </div>
-
-    <input type="hidden" id="mw-id">
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div>
-        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Grupo</label>
-        <input type="text" id="mw-grupo" list="mw-grupos" placeholder="Colunas"
-          style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box">
-        <datalist id="mw-grupos"></datalist>
-      </div>
-      <div>
-        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Produto</label>
-        <input type="text" id="mw-produto" placeholder="Áustria"
-          style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box">
-      </div>
+    <div id="wmv-destino-wrap">
+      <label class="wfl">Vai para</label>
+      <select class="wfi" id="wmv-destino"></select>
     </div>
-
-    <div style="font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px">Etapas</div>
-    <div id="mw-etapas"></div>
-    <button class="btn btn-ghost btn-sm" onclick="wipAddEtapa()" style="width:100%;margin-bottom:14px">+ Etapa</button>
-
-    <div style="font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px">Variações de cor <span style="text-transform:none;letter-spacing:0">(não somam no total)</span></div>
-    <div id="mw-variacoes"></div>
-    <button class="btn btn-ghost btn-sm" onclick="wipAddVariacao()" style="width:100%;margin-bottom:14px">+ Variação</button>
-
-    <div style="margin-bottom:14px">
-      <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Observação (opcional)</label>
-      <input type="text" id="mw-obs" placeholder="Ex: faltam 4 B/M para lixar"
-        style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box">
-    </div>
-
+    <label class="wfl">Quantidade <span id="wmv-max" style="color:var(--text3)"></span></label>
+    <input type="number" class="wfi big" id="wmv-qtd" min="1">
     <div style="display:flex;gap:8px">
-      <button onclick="fecharModalWip()" class="btn btn-ghost btn-sm" style="flex:1">Cancelar</button>
-      <button onclick="salvarWipProduto()" class="btn btn-primary btn-sm" style="flex:2">Salvar</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="wipFechar('wip-ov-mover')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" id="wmv-ok" onclick="confirmarWipMover()">Mover</button>
     </div>
-    <button id="mw-excluir" onclick="excluirWipProduto()" class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;color:var(--red);border-color:rgba(224,92,92,.3)">Remover produto do dia</button>
   </div>
 </div>
 
-<datalist id="wip-etapas-mestre"></datalist>
+<div id="wip-ov-entrada" class="wov" onclick="if(event.target===this)wipFechar('wip-ov-entrada')">
+  <div class="wmodal">
+    <h3>Entrada no fluxo</h3>
+    <div class="wmodal-sub">Peças que a usinagem cortou e entram na produção</div>
+    <label class="wfl">Produto</label>
+    <select class="wfi" id="wen-linha" onchange="wipAtualizaEntradaEtapa()"></select>
+    <div class="whint">Entra na primeira etapa do fluxo: <b id="wen-etapa">—</b></div>
+    <label class="wfl">Quantidade</label>
+    <input type="number" class="wfi big" id="wen-qtd" min="1" value="10">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="wipFechar('wip-ov-entrada')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="confirmarWipEntrada()">Registrar entrada</button>
+    </div>
+  </div>
+</div>
+
+<div id="wip-ov-movs" class="wov" onclick="if(event.target===this)wipFechar('wip-ov-movs')">
+  <div class="wmodal">
+    <h3>Movimentos</h3>
+    <div class="wmodal-sub">Últimos 60 registros. Desfazer recalcula o saldo.</div>
+    <div id="wmov-lista" style="max-height:52vh;overflow-y:auto;margin-bottom:14px"></div>
+    <button class="btn btn-ghost btn-sm" style="width:100%" onclick="wipFechar('wip-ov-movs')">Fechar</button>
+  </div>
+</div>
+
+<div id="wip-ov-etapas" class="wov" onclick="if(event.target===this)wipFechar('wip-ov-etapas')">
+  <div class="wmodal">
+    <h3>Etapas do fluxo</h3>
+    <div class="wmodal-sub">A ordem define o caminho da peça. Renomear atualiza todo o histórico.</div>
+    <div id="wet-lista" style="margin-bottom:12px"></div>
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      <input type="text" class="wfi" id="wet-nova" placeholder="Nova etapa" style="margin-bottom:0">
+      <button class="btn btn-ghost btn-sm" onclick="addWipEtapa()">Adicionar</button>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="wipFechar('wip-ov-etapas')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarWipEtapasNomes()">Salvar nomes</button>
+    </div>
+  </div>
+</div>
+
+<div id="wip-ov-linha" class="wov" onclick="if(event.target===this)wipFechar('wip-ov-linha')">
+  <div class="wmodal">
+    <h3 id="wln-tit">Produto</h3>
+    <div class="wmodal-sub">Marque só as etapas por onde este produto passa</div>
+    <input type="hidden" id="wln-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div><label class="wfl">Grupo</label><input type="text" class="wfi" id="wln-grupo" list="wln-grupos"><datalist id="wln-grupos"></datalist></div>
+      <div><label class="wfl">Produto</label><input type="text" class="wfi" id="wln-produto"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 58px;gap:8px">
+      <div><label class="wfl">Cor (opcional — vira fluxo separado)</label><input type="text" class="wfi" id="wln-cor" placeholder="Ex: Preto"></div>
+      <div><label class="wfl">Tom</label><input type="color" class="wfi" id="wln-corhex" style="padding:3px;height:38px"></div>
+    </div>
+    <label class="wfl">Etapas do fluxo</label>
+    <div id="wln-fluxo" style="margin-bottom:14px"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="wipFechar('wip-ov-linha')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarWipLinha()">Salvar</button>
+    </div>
+    <button id="wln-excluir" class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;color:var(--red);border-color:rgba(224,92,92,.3)" onclick="excluirWipLinha()">Desativar produto</button>
+  </div>
+</div>
+
+<div id="wip-ov-inicial" class="wov" onclick="if(event.target===this)wipFechar('wip-ov-inicial')">
+  <div class="wmodal" style="max-width:520px">
+    <h3>Saldo inicial</h3>
+    <div class="wmodal-sub">Quantas peças estão em cada etapa agora. A partir daqui é só movimentar.</div>
+    <div id="wsi-lista" style="max-height:56vh;overflow-y:auto;margin-bottom:14px"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="wipFechar('wip-ov-inicial')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarWipInicial()">Salvar saldo</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal recebimento -->
 <div id="modal-recebimento" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
@@ -1477,361 +1478,479 @@ document.getElementById('modal-recebimento').addEventListener('click',function(e
   if(e.target===this)fecharModalRecebimento();
 });
 
+/* ══════════════ FLUXO DE PRODUÇÃO (WIP) ══════════════ */
+
+const WIP_ETAPAS_SEED=['Usinagem','Marcenaria','Acabamento marc','Cortada','Montar','Passar fundo','Lixar','Pintar','Envernizar','Pronto'];
+const WIP_LINHAS_SEED=[
+ ['Colunas','Áustria',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto']],
+ ['Colunas','XG',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Colunas','Viena',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Colunas','Mônaco',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto']],
+ ['Colunas','Ipanema',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Colunas','Wells',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Colunas','Floripa',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Colunas','Ripada','Cedro','#b07d4a',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Colunas','Ripada','Preto','#1c1c1c',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Colunas','Ripada','Natural','#6b4423',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Abajures','Ab Áustria',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto']],
+ ['Abajures','Ab Áustria','Preto','#1c1c1c',['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Abajures','XP',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Abajures','Ab Wells',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Abajures','Ab Soft',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Abajures','Ab Wood',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Abajures','Ab Sky',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto']],
+ ['Abajures','Ab Slim',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Pintar','Envernizar','Pronto']],
+ ['Abajures','Ab Mine',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
+ ['Abajures','Prat pinus',null,null,['Usinagem','Marcenaria','Lixar','Pronto']],
+ ['Abajures','Adega quad',null,null,['Usinagem','Marcenaria','Lixar','Pronto']],
+ ['Abajures','Sup taça',null,null,['Usinagem','Marcenaria','Lixar','Pronto']]
+];
+
+let wipEtapas=[];      // [{id,nome,ordem}]
+let wipLinhas=[];      // [{id,produto,cor,cor_hex,grupo,fluxo,ativo}]
+let wipMovs=[];        // log completo
+let wipSaldo={};       // {linhaId:{etapa:qtd}}
+let wipView='fluxo';
+let wipAbertas=new Set();
+let wipMvCtx=null, wipMvTipo='mover';
+
 function wipErroMsg(e){
   let m=(e&&e.message)?e.message:String(e);
   try{const j=JSON.parse(m);m=j.message||j.hint||j.details||m;}catch(_){}
-  if(/does not exist|relation .* does not exist/i.test(m))return 'tabela wip_snapshots não existe no banco';
+  if(/does not exist/i.test(m))return 'tabela não existe no banco — rode o SQL';
   if(/row-level security|permission denied/i.test(m))return 'permissão negada (RLS)';
   return m.slice(0,110);
 }
+const wipNome=l=>l.produto+(l.cor?' · '+l.cor:'');
+const wipLinha=id=>wipLinhas.find(l=>l.id===id);
+const wipEtapaNomes=()=>wipEtapas.map(e=>e.nome);
+const wipSald=(id,et)=>(wipSaldo[id]&&wipSaldo[id][et])||0;
+function wipProx(l,et){const i=(l.fluxo||[]).indexOf(et);return i>=0&&i<l.fluxo.length-1?l.fluxo[i+1]:null}
+function wipDistFim(l,et){const i=(l.fluxo||[]).indexOf(et);return i<0?null:l.fluxo.length-1-i}
+function wipEtapaFinal(l){return (l.fluxo||[])[(l.fluxo||[]).length-1]}
+function wipTotEtapa(et){return wipLinhas.reduce((a,l)=>a+wipSald(l.id,et),0)}
+function wipTotProcesso(){return wipLinhas.reduce((a,l)=>a+(l.fluxo||[]).reduce((b,e)=>b+(e===wipEtapaFinal(l)?0:wipSald(l.id,e)),0),0)}
+function wipTotPronto(){return wipLinhas.reduce((a,l)=>a+wipSald(l.id,wipEtapaFinal(l)),0)}
 
-/* ══════════════ ESTOQUE EM PROCESSO (WIP) ══════════════ */
-
-const WIP_ETAPAS_PADRAO=['Pronto','Cortada','Marcenaria','Acabamento marc','Montar','Lixar','Passar fundo','Pintar','Envernizar','Acabamento'];
-const WIP_SEED=[
-  ['Colunas',[
-    ['Áustria',['Pronto','Passar fundo','Pintar','Envernizar','Lixar','Marcenaria']],
-    ['XG',['Prontos new','Prontos old','Pintar','Lixar','Passar fundo']],
-    ['Viena',['Pronto','Pintar','Passar fundo','Lixar','Marcenaria']],
-    ['Mônaco',['Pronto','Pintar','Envernizar','Lixar','Passar fundo','Marcenaria']],
-    ['Ipanema',['Pronto','Lixar','Pintar','Passar fundo','Cúp PT','Marcenaria']],
-    ['Wells',['Pronto']],
-    ['Floripa',['Pronto','Pintar','Lixar','Passar fundo','PT','Marcenaria']],
-    ['Ripada',['Pronto','Pintar','Lixar','Passar fundo','Montar','Cortada','Marcenaria']]
-  ]],
-  ['Abajures',[
-    ['Ab Áustria',['Pronto','Envernizar','Lixar','Pintar','Passar fundo','Acabamento marc']],
-    ['XP',['Prontos old','Prontos new','Lixar','Pintar','Passar fundo']],
-    ['Ab Wells',['Pronto','Preto']],
-    ['Ab Soft',['Pronto','Pintar']],
-    ['Ab Wood',['Pronto','Acabamento','Pintar','Lixar','Passar fundo','Marcenaria']],
-    ['Ab Sky',['Pronto','Envernizar','Passar fundo','Lixar','Pintar','Acabamento marc']],
-    ['Ab Slim',['Pronto','Pintar','Envernizar','Passar fundo','Acabamento marc','Lixar']],
-    ['Ab Mine',['Pronto','Passar fundo','Lixar','Pintar','Marcenaria']],
-    ['Prat pinus',['Pronto']],
-    ['Adega quad',['Pronto','Lixar encx']],
-    ['Sup taça',['Pronto']]
-  ]]
-];
-let wipDataSel=null;
-let wipRows=[];
-let wipRowsOntem=[];
-
-function wipAddDias(dataStr,delta){
-  const[a,m,d]=dataStr.split('-').map(Number);
-  const dt=new Date(a,m-1,d);
-  dt.setDate(dt.getDate()+delta);
-  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+function wipCalcSaldos(){
+  wipSaldo={};
+  wipLinhas.forEach(l=>wipSaldo[l.id]={});
+  wipMovs.forEach(m=>{
+    const s=wipSaldo[m.linha_id]; if(!s)return;
+    const q=parseInt(m.qtd)||0;
+    if(m.etapa_de&&['mover','perda','baixa'].includes(m.tipo)) s[m.etapa_de]=(s[m.etapa_de]||0)-q;
+    if(m.etapa_para&&['mover','entrada','inicial','ajuste'].includes(m.tipo)) s[m.etapa_para]=(s[m.etapa_para]||0)+q;
+  });
+  Object.keys(wipSaldo).forEach(id=>Object.keys(wipSaldo[id]).forEach(e=>{if(wipSaldo[id][e]<=0)delete wipSaldo[id][e]}));
 }
-function wipLabelData(dataStr){
-  const[a,m,d]=dataStr.split('-').map(Number);
-  const dt=new Date(a,m-1,d);
-  const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-  const hojeStr=hoje();
-  const prefixo=dataStr===hojeStr?'Hoje · ':dataStr===wipAddDias(hojeStr,-1)?'Ontem · ':'';
-  return prefixo+dias[dt.getDay()]+', '+String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0');
-}
-function wipTotal(row){
-  return (row.etapas||[]).reduce((a,e)=>a+(parseInt(e.qtd)||0),0);
-}
-function wipEhPronto(nome){return /^pronto/i.test((nome||'').trim())}
-function wipEhMarc(nome){return /marcenaria|marc\b|mrc/i.test((nome||'').trim())}
 
 async function loadWip(){
-  if(!wipDataSel)wipDataSel=hoje();
   setSync('syncing');
   try{
-    const[hojeRows,ontemRows]=await Promise.all([
-      sb('wip_snapshots?select=*&data=eq.'+wipDataSel+'&order=grupo,produto'),
-      sb('wip_snapshots?select=*&data=eq.'+wipAddDias(wipDataSel,-1)+'&order=grupo,produto')
+    const[et,li,mv]=await Promise.all([
+      sb('wip_etapas?select=*&order=ordem'),
+      sb('wip_linhas?select=*&ativo=is.true&order=grupo,produto,cor'),
+      sbAll('wip_movimentos?select=*&order=created_at')
     ]);
-    wipRows=hojeRows;
-    wipRowsOntem=ontemRows;
+    wipEtapas=et; wipLinhas=li; wipMovs=mv;
+    wipCalcSaldos();
     setSync('ok');
-  }catch(e){setSync('err');console.error('WIP load:',e);toast('Erro ao carregar: '+wipErroMsg(e),'erro');wipRows=[];wipRowsOntem=[]}
+  }catch(e){setSync('err');console.error('WIP load',e);toast('Erro ao carregar fluxo: '+wipErroMsg(e),'erro');wipEtapas=[];wipLinhas=[];wipMovs=[];wipSaldo={}}
 }
 
+/* ─── Render ─── */
 function renderWip(){
-  document.getElementById('wip-data-label').textContent=wipLabelData(wipDataSel);
-  const total=wipRows.reduce((a,r)=>a+wipTotal(r),0);
-  const totalOntem=wipRowsOntem.reduce((a,r)=>a+wipTotal(r),0);
-  const delta=total-totalOntem;
-  const grupos=[...new Set(wipRows.map(r=>r.grupo||'Sem grupo'))];
+  const vazio=!wipEtapas.length||!wipLinhas.length;
+  document.getElementById('wip-setup').style.display=vazio?'block':'none';
+  document.getElementById('wip-conteudo').style.display=vazio?'none':'block';
+  if(vazio)return;
+  renderWipKpis(); renderWipTrack(); renderWipForecast(); renderWipProdutos();
+}
 
-  // KPIs
+function renderWipKpis(){
+  const h=hoje();
+  const dia=wipMovs.filter(m=>m.data===h);
+  const mov=dia.filter(m=>m.tipo==='mover').reduce((a,m)=>a+m.qtd,0);
+  const ent=dia.filter(m=>m.tipo==='entrada').reduce((a,m)=>a+m.qtd,0);
+  const per=dia.filter(m=>m.tipo==='perda').reduce((a,m)=>a+m.qtd,0);
   document.getElementById('wip-kpis').innerHTML=`
-    <div class="kpi">
-      <div class="kpi-label">Total em processo</div>
-      <div class="kpi-val">${total.toLocaleString('pt-BR')}</div>
-      <div class="kpi-sub">peças em fabricação</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">vs dia anterior</div>
-      <div class="kpi-val" style="color:${totalOntem===0?'var(--text3)':delta>0?'var(--red)':delta<0?'var(--green)':'var(--blue)'}">${totalOntem===0?'—':(delta>0?'▲ ':delta<0?'▼ ':'→ ')+Math.abs(delta)}</div>
-      <div class="kpi-sub">${totalOntem===0?'sem dado anterior':delta>0?'estoque cresceu':delta<0?'estoque escoou':'estável'}</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Produtos</div>
-      <div class="kpi-val">${wipRows.length}</div>
-      <div class="kpi-sub">${grupos.map(g=>wipRows.filter(r=>(r.grupo||'Sem grupo')===g).length+' '+g.toLowerCase()).join(' · ')||'nenhum lançado'}</div>
-    </div>`;
+    <div class="kpi"><div class="kpi-label">Em processo</div><div class="kpi-val">${wipTotProcesso().toLocaleString('pt-BR')}</div><div class="kpi-sub">peças ainda em etapa</div></div>
+    <div class="kpi"><div class="kpi-label">Prontas</div><div class="kpi-val" style="color:var(--green)">${wipTotPronto().toLocaleString('pt-BR')}</div><div class="kpi-sub">aguardando embalagem</div></div>
+    <div class="kpi"><div class="kpi-label">Movimentado hoje</div><div class="kpi-val">${mov.toLocaleString('pt-BR')}</div><div class="kpi-sub">${ent} entraram · ${per} perdidas</div></div>`;
+}
 
-  // Gargalos (exclui "Pronto")
-  const porEtapa={};
-  wipRows.forEach(r=>(r.etapas||[]).forEach(e=>{
-    const q=parseInt(e.qtd)||0;
-    if(!q||wipEhPronto(e.nome))return;
-    const k=(e.nome||'').trim();
-    porEtapa[k]=(porEtapa[k]||0)+q;
-  }));
-  const gargalos=Object.entries(porEtapa).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const maxG=gargalos.length?gargalos[0][1]:1;
-  document.getElementById('wip-gargalos').innerHTML=gargalos.length?`
-    <div class="card">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Gargalos — peças paradas por etapa</div>
-      ${gargalos.map(([nome,q],i)=>{
-        const pct=Math.round(q/maxG*100);
-        const cor=i===0?'var(--red)':i===1?'var(--amber)':wipEhMarc(nome)?'var(--blue)':'var(--accent)';
-        return `<div style="margin-bottom:${i===gargalos.length-1?'0':'10px'}">
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-            <span>${nome}</span><b style="font-family:'Inter',sans-serif">${q.toLocaleString('pt-BR')} pç</b>
+function renderWipTrack(){
+  const nomes=wipEtapaNomes();
+  const finais=new Set(wipLinhas.map(wipEtapaFinal));
+  const cargas=nomes.filter(e=>!finais.has(e)).map(wipTotEtapa);
+  const max=Math.max(1,...cargas);
+  document.getElementById('wip-track').innerHTML=nomes.map(et=>{
+    const q=wipTotEtapa(et);
+    const fim=finais.has(et);
+    const pct=fim?100:Math.round(q/max*100);
+    const cor=fim?'var(--green)':pct>=85?'var(--red)':pct>=50?'var(--amber)':'var(--accent)';
+    const ls=wipLinhas.filter(l=>wipSald(l.id,et)>0).sort((a,b)=>wipSald(b.id,et)-wipSald(a.id,et));
+    return `<div class="wst ${q>0?'has':''} ${fim?'fim':''} ${wipAbertas.has(et)?'open':''}">
+      <div class="wdot"></div>
+      <div class="wst-head" onclick="wipToggle('${et.replace(/'/g,"\\'")}')">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="wst-name">${et}</div>
+            <div class="wst-qtd" style="color:${q?(fim?'var(--green)':cor):'var(--text3)'}">${q||'—'}</div>
+            <div class="wst-caret">${q?'›':''}</div>
           </div>
-          <div style="height:8px;background:var(--ink3);border-radius:4px;overflow:hidden">
-            <div class="prog-bar" data-pct="${pct}" style="width:0%;background:${cor}"></div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`:'';
-
-  // Lista por grupo
-  const el=document.getElementById('wip-lista');
-  if(!wipRows.length){
-    el.innerHTML=`<div style="text-align:center;padding:28px 20px;background:var(--ink2);border-radius:var(--r2);border:1px solid var(--line)">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px">Nenhum produto neste dia</div>
-      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px">Copie o dia anterior para ajustar só o que mudou,<br>ou monte a estrutura inicial de uma vez.</div>
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" onclick="wipCopiarOntem()">Copiar dia anterior</button>
-        <button class="btn btn-primary btn-sm" onclick="wipSeedInicial()">Criar estrutura inicial</button>
+          ${q&&!fim?`<div class="wst-load"><i style="width:${pct}%;background:${cor}"></i></div>`:''}
+        </div>
       </div>
-    </div>`;
-    return;
-  }
-
-  el.innerHTML=grupos.map(g=>{
-    const itens=wipRows.filter(r=>(r.grupo||'Sem grupo')===g);
-    const totG=itens.reduce((a,r)=>a+wipTotal(r),0);
-    return `<div style="margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px;margin:18px 0 10px">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em">${g}</div>
-        <div style="flex:1;height:1px;background:var(--line)"></div>
-        <span style="font-size:10px;padding:2px 9px;border-radius:20px;background:var(--ink3);color:var(--text3)">${totG.toLocaleString('pt-BR')} pç</span>
-      </div>
-      ${itens.map(r=>{
-        const etapas=(r.etapas||[]);
-        const vars=(r.variacoes||[]).filter(v=>(parseInt(v.qtd)||0)>0);
-        return `<div class="wip-prod" onclick="abrirWipProduto('${r.id}')">
-          <div class="wip-prod-head">
-            <div class="wip-prod-nome">${r.produto}</div>
-            <div class="wip-prod-total">${wipTotal(r).toLocaleString('pt-BR')}</div>
-          </div>
-          ${etapas.length?`<div class="wip-etapas">${etapas.map(e=>{
-            const q=parseInt(e.qtd)||0;
-            const cls=q===0?' vazia':wipEhPronto(e.nome)?' pronto':wipEhMarc(e.nome)?' marc':'';
-            return `<span class="wip-etapa${cls}"><span class="q">${q===0?'—':q}</span><span class="n">${e.nome}</span></span>`;
-          }).join('')}</div>`:`<div style="font-size:11px;color:var(--text3)">Nenhuma etapa cadastrada — toque para configurar</div>`}
-          ${vars.length?`<div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">${vars.map(v=>`<span class="wip-var"><span class="wip-dot" style="background:${v.cor||'#888'}"></span>${v.qtd} ${v.nome}</span>`).join('')}</div>`:''}
-          ${r.obs?`<div class="wip-obs">${r.obs}</div>`:''}
+      ${q?`<div class="wst-body">${ls.map(l=>{
+        const s=wipSald(l.id,et), prox=wipProx(l,et);
+        return `<div class="wln">
+          <div class="wln-nome">${l.cor_hex?`<i class="wcor" style="background:${l.cor_hex}"></i>`:''}<span>${wipNome(l)}</span></div>
+          <div class="wln-qtd">${s}</div>
+          <button class="wln-btn ${prox?'':'done'}" onclick="event.stopPropagation();abrirWipMover('${l.id}','${et.replace(/'/g,"\\'")}')">${prox?'Mover →':'Baixa'}</button>
         </div>`;
-      }).join('')}
+      }).join('')}</div>`:''}
     </div>`;
   }).join('');
-
-  animarBarras('wip-gargalos');
 }
 
-function wipNavDia(delta){
-  wipDataSel=wipAddDias(wipDataSel||hoje(),delta);
-  loadWip().then(renderWip);
+function renderWipForecast(){
+  const b={};
+  wipLinhas.forEach(l=>(l.fluxo||[]).forEach(et=>{
+    if(et===wipEtapaFinal(l))return;
+    const s=wipSald(l.id,et); if(!s)return;
+    const d=wipDistFim(l,et); if(d==null)return;
+    b[d]=(b[d]||0)+s;
+  }));
+  const ks=Object.keys(b).map(Number).sort((a,b2)=>a-b2);
+  const el=document.getElementById('wip-forecast');
+  if(!ks.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Nada em processo — tudo já está pronto.</div>';return}
+  const vaz=wipVazaoDia();
+  el.innerHTML=ks.map(d=>{
+    const cor=d===1?'var(--green)':d===2?'var(--accent)':'var(--text2)';
+    const dias=vaz>0?Math.ceil(b[d]/vaz)+d:null;
+    return `<div class="wfore"><span style="color:${cor}">${d===1?'A 1 etapa do fim':'A '+d+' etapas do fim'}${dias?` <span style="color:var(--text3);font-size:10px">· ~${dias}d</span>`:''}</span><b style="color:${cor}">${b[d].toLocaleString('pt-BR')} pç</b></div>`;
+  }).join('')+(vaz>0?`<div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6">Estimativa baseada na média de ${vaz} peças movimentadas por dia nos últimos 14 dias.</div>`:`<div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6">Registre movimentos por alguns dias para o app estimar prazos.</div>`);
+}
+function wipVazaoDia(){
+  const lim=new Date();lim.setDate(lim.getDate()-14);
+  const recentes=wipMovs.filter(m=>m.tipo==='mover'&&new Date(m.data+'T12:00')>=lim);
+  const dias=new Set(recentes.map(m=>m.data)).size;
+  if(!dias)return 0;
+  return Math.round(recentes.reduce((a,m)=>a+m.qtd,0)/dias);
 }
 
-async function wipCopiarOntem(){
-  if(!wipRowsOntem.length){toast('Não há dados no dia anterior.','aviso');return}
-  if(wipRows.length&&!confirm('Isso vai substituir os produtos já lançados neste dia. Continuar?'))return;
+function renderWipProdutos(){
+  const grupos=[...new Set(wipLinhas.map(l=>l.grupo||'Sem grupo'))];
+  document.getElementById('wip-produtos').innerHTML=grupos.map(g=>{
+    const ls=wipLinhas.filter(l=>(l.grupo||'Sem grupo')===g);
+    return `<div class="sec-title" style="margin:18px 0 10px">${g}</div>`+ls.map(l=>{
+      const fl=l.fluxo||[];
+      const tot=fl.reduce((a,e)=>a+wipSald(l.id,e),0);
+      const mx=Math.max(1,...fl.map(e=>wipSald(l.id,e)));
+      const fim=wipEtapaFinal(l);
+      return `<div class="wpcard" onclick="abrirWipLinha('${l.id}')">
+        <div class="wpcard-h">
+          <div class="wpcard-n">${l.cor_hex?`<i class="wcor" style="background:${l.cor_hex}"></i>`:''}${wipNome(l)}</div>
+          <div class="wpcard-t">${tot}</div>
+        </div>
+        <div class="wmini">${fl.map(e=>{
+          const s=wipSald(l.id,e);
+          const h=s?Math.max(22,Math.round(s/mx*100)):5;
+          return `<i class="${s?(e===fim?'p':'f'):''}" style="height:${h}%" title="${e}: ${s}"></i>`;
+        }).join('')}</div>
+        <div class="wminilab">${fl.map(e=>`<span>${wipAbrev(e)}</span>`).join('')}</div>
+      </div>`;
+    }).join('');
+  }).join('');
+}
+function wipAbrev(e){
+  const m={'Passar fundo':'Fundo','Acabamento marc':'Acab.','Marcenaria':'Marc.','Envernizar':'Verniz','Usinagem':'Usin.'};
+  return m[e]||e;
+}
+
+/* ─── Interação ─── */
+function wipSetView(v,btn){
+  wipView=v;
+  document.querySelectorAll('#page-wip .wtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('wip-v-fluxo').style.display=v==='fluxo'?'block':'none';
+  document.getElementById('wip-v-prod').style.display=v==='prod'?'block':'none';
+}
+function wipToggle(et){
+  if(!wipTotEtapa(et))return;
+  wipAbertas.has(et)?wipAbertas.delete(et):wipAbertas.add(et);
+  renderWipTrack();
+}
+function wipFechar(id){document.getElementById(id).style.display='none'}
+
+/* Mover / perda / baixa */
+function abrirWipMover(id,et){
+  const l=wipLinha(id); if(!l)return;
+  const s=wipSald(id,et);
+  wipMvCtx={id,de:et,max:s}; wipMvTipo='mover';
+  document.querySelectorAll('#wmv-seg button').forEach((b,i)=>b.classList.toggle('on',i===0));
+  document.getElementById('wmv-tit').textContent=wipNome(l);
+  document.getElementById('wmv-sub').textContent='Saindo de '+et+' · '+s+' peças disponíveis';
+  const prox=wipProx(l,et);
+  document.getElementById('wmv-destino').innerHTML=(l.fluxo||[]).filter(e=>e!==et).map(e=>`<option value="${e}" ${e===prox?'selected':''}>${e}</option>`).join('');
+  document.getElementById('wmv-destino-wrap').style.display=prox?'block':'none';
+  document.getElementById('wmv-max').textContent='(máx '+s+')';
+  const q=document.getElementById('wmv-qtd'); q.max=s; q.value=s;
+  document.getElementById('wmv-ok').textContent=prox?'Mover':'Dar baixa';
+  document.getElementById('wip-ov-mover').style.display='flex';
+  setTimeout(()=>q.select(),80);
+}
+function wipSetTipo(t,btn){
+  wipMvTipo=t;
+  document.querySelectorAll('#wmv-seg button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  const l=wipLinha(wipMvCtx.id), prox=wipProx(l,wipMvCtx.de);
+  document.getElementById('wmv-destino-wrap').style.display=(t==='perda'||!prox)?'none':'block';
+  document.getElementById('wmv-ok').textContent=t==='perda'?'Registrar perda':(prox?'Mover':'Dar baixa');
+}
+async function confirmarWipMover(){
+  const q=parseInt(document.getElementById('wmv-qtd').value)||0;
+  if(q<1||q>wipMvCtx.max){toast('Quantidade inválida. Máximo: '+wipMvCtx.max,'aviso');return}
+  const l=wipLinha(wipMvCtx.id), de=wipMvCtx.de, prox=wipProx(l,de);
+  let tipo='baixa', para=null;
+  if(wipMvTipo==='perda') tipo='perda';
+  else if(prox){ tipo='mover'; para=document.getElementById('wmv-destino').value; }
+  await wipSalvarMov({data:hoje(),linha_id:l.id,tipo,etapa_de:de,etapa_para:para,qtd:q});
+  if(para)wipAbertas.add(para);
+  wipFechar('wip-ov-mover');
+}
+
+/* Entrada */
+function abrirWipEntrada(){
+  document.getElementById('wen-linha').innerHTML=wipLinhas.map(l=>`<option value="${l.id}">${wipNome(l)}</option>`).join('');
+  document.getElementById('wen-qtd').value=10;
+  wipAtualizaEntradaEtapa();
+  document.getElementById('wip-ov-entrada').style.display='flex';
+}
+function wipAtualizaEntradaEtapa(){
+  const l=wipLinha(document.getElementById('wen-linha').value);
+  document.getElementById('wen-etapa').textContent=l?(l.fluxo||[])[0]||'—':'—';
+}
+async function confirmarWipEntrada(){
+  const l=wipLinha(document.getElementById('wen-linha').value);
+  const q=parseInt(document.getElementById('wen-qtd').value)||0;
+  if(!l||q<1){toast('Informe a quantidade.','aviso');return}
+  const et=(l.fluxo||[])[0];
+  if(!et){toast('Esse produto não tem fluxo configurado.','aviso');return}
+  await wipSalvarMov({data:hoje(),linha_id:l.id,tipo:'entrada',etapa_de:null,etapa_para:et,qtd:q});
+  wipAbertas.add(et);
+  wipFechar('wip-ov-entrada');
+}
+
+async function wipSalvarMov(payload){
   setSync('syncing');
   try{
-    if(wipRows.length){
-      await sb('wip_snapshots?data=eq.'+wipDataSel,{method:'DELETE',prefer:'return=minimal'});
+    await sb('wip_movimentos',{method:'POST',body:JSON.stringify(payload),prefer:'return=minimal'});
+    await loadWip(); renderWip();
+    toast('Movimento registrado!');
+  }catch(e){setSync('err');console.error('WIP mov',e);toast('Erro ao registrar: '+wipErroMsg(e),'erro')}
+}
+
+/* Movimentos */
+function abrirWipMovs(){
+  const lista=wipMovs.slice().reverse().slice(0,60);
+  const el=document.getElementById('wmov-lista');
+  el.innerHTML=lista.length?lista.map(m=>{
+    const l=wipLinha(m.linha_id);
+    const cor=m.tipo==='perda'?'var(--red)':m.tipo==='entrada'?'var(--blue)':m.tipo==='baixa'?'var(--green)':m.tipo==='inicial'?'var(--text3)':'var(--text2)';
+    const txt=m.tipo==='entrada'?`entrou em ${m.etapa_para}`
+      :m.tipo==='inicial'?`saldo inicial em ${m.etapa_para}`
+      :m.tipo==='perda'?`perdidas em ${m.etapa_de}`
+      :m.tipo==='baixa'?`baixa do ${m.etapa_de}`
+      :`${m.etapa_de} → ${m.etapa_para}`;
+    return `<div class="wfore"><span style="flex:1"><b style="font-family:'Inter',sans-serif;color:${cor}">${m.qtd}</b> ${l?wipNome(l):'—'}<br><span style="font-size:10px;color:var(--text3)">${txt} · ${fmt(m.data)}</span></span>
+      <button class="wln-btn" style="color:var(--red)" onclick="desfazerWipMov('${m.id}')">Desfazer</button></div>`;
+  }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Nenhum movimento registrado ainda.</div>';
+  document.getElementById('wip-ov-movs').style.display='flex';
+}
+async function desfazerWipMov(id){
+  if(!confirm('Desfazer este movimento? O saldo volta ao que era antes.'))return;
+  setSync('syncing');
+  try{
+    await sb('wip_movimentos?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
+    await loadWip(); renderWip(); abrirWipMovs();
+    toast('Movimento desfeito.');
+  }catch(e){setSync('err');toast('Erro ao desfazer: '+wipErroMsg(e),'erro')}
+}
+
+/* Editor de etapas */
+function abrirWipEtapas(){
+  wipRenderEtapasEditor();
+  document.getElementById('wip-ov-etapas').style.display='flex';
+}
+function wipRenderEtapasEditor(){
+  document.getElementById('wet-lista').innerHTML=wipEtapas.map((e,i)=>`
+    <div class="wet-row">
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <button class="wet-mv" onclick="moverWipEtapa(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="wet-mv" onclick="moverWipEtapa(${i},1)" ${i===wipEtapas.length-1?'disabled':''}>▼</button>
+      </div>
+      <input type="text" value="${e.nome.replace(/"/g,'&quot;')}" data-id="${e.id}" data-orig="${e.nome.replace(/"/g,'&quot;')}">
+      <span class="wet-uso">${wipTotEtapa(e.nome)||''}</span>
+      <button class="wet-del" onclick="removerWipEtapa('${e.id}')">&times;</button>
+    </div>`).join('');
+}
+async function moverWipEtapa(i,d){
+  const j=i+d; if(j<0||j>=wipEtapas.length)return;
+  const a=wipEtapas[i], b=wipEtapas[j];
+  wipEtapas[i]=b; wipEtapas[j]=a;
+  setSync('syncing');
+  try{
+    await Promise.all(wipEtapas.map((e,k)=>sb('wip_etapas?id=eq.'+e.id,{method:'PATCH',body:JSON.stringify({ordem:k}),prefer:'return=minimal'})));
+    wipEtapas.forEach((e,k)=>e.ordem=k);
+    setSync('ok'); wipRenderEtapasEditor(); renderWip();
+  }catch(e){setSync('err');toast('Erro ao reordenar: '+wipErroMsg(e),'erro')}
+}
+async function addWipEtapa(){
+  const nome=(document.getElementById('wet-nova').value||'').trim();
+  if(!nome){toast('Digite o nome da etapa.','aviso');return}
+  if(wipEtapaNomes().some(n=>n.toLowerCase()===nome.toLowerCase())){toast('Essa etapa já existe.','aviso');return}
+  setSync('syncing');
+  try{
+    await sb('wip_etapas',{method:'POST',body:JSON.stringify({nome,ordem:wipEtapas.length}),prefer:'return=minimal'});
+    document.getElementById('wet-nova').value='';
+    await loadWip(); wipRenderEtapasEditor(); renderWip();
+    toast('Etapa adicionada.');
+  }catch(e){setSync('err');toast('Erro ao adicionar: '+wipErroMsg(e),'erro')}
+}
+async function removerWipEtapa(id){
+  const e=wipEtapas.find(x=>x.id===id); if(!e)return;
+  if(wipTotEtapa(e.nome)>0){toast('Há peças nesta etapa. Mova antes de remover.','aviso');return}
+  const usada=wipLinhas.filter(l=>(l.fluxo||[]).includes(e.nome));
+  if(!confirm(`Remover "${e.nome}"?`+(usada.length?`\nEla sai do fluxo de ${usada.length} produto(s).`:'')))return;
+  setSync('syncing');
+  try{
+    for(const l of usada){
+      const novo=(l.fluxo||[]).filter(x=>x!==e.nome);
+      await sb('wip_linhas?id=eq.'+l.id,{method:'PATCH',body:JSON.stringify({fluxo:novo}),prefer:'return=minimal'});
     }
-    const novos=wipRowsOntem.map(r=>({
-      data:wipDataSel,grupo:r.grupo,produto:r.produto,
-      etapas:r.etapas||[],variacoes:r.variacoes||[],obs:r.obs||null,
-      total:wipTotal(r)
-    }));
-    await sb('wip_snapshots',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
-    await loadWip();renderWip();
-    toast('Dia anterior copiado. Ajuste o que mudou.');
-  }catch(e){setSync('err');console.error('WIP copiar:',e);toast('Erro ao copiar: '+wipErroMsg(e),'erro')}
+    await sb('wip_etapas?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
+    await loadWip(); wipRenderEtapasEditor(); renderWip();
+    toast('Etapa removida.');
+  }catch(err){setSync('err');toast('Erro ao remover: '+wipErroMsg(err),'erro')}
 }
-
-async function wipSeedInicial(){
+async function salvarWipEtapasNomes(){
+  const inputs=[...document.querySelectorAll('#wet-lista input[type=text]')];
+  const mudou=inputs.filter(i=>i.value.trim()&&i.value.trim()!==i.dataset.orig);
+  if(!mudou.length){wipFechar('wip-ov-etapas');return}
   setSync('syncing');
   try{
-    const novos=[];
-    WIP_SEED.forEach(([grupo,prods])=>prods.forEach(([p,etapas])=>novos.push({
-      data:wipDataSel,grupo,produto:p,
-      etapas:etapas.map(nome=>({nome,qtd:0})),variacoes:[],total:0
-    })));
-    await sb('wip_snapshots',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
-    await loadWip();renderWip();
-    toast('Estrutura criada. Toque num produto para preencher.');
-  }catch(e){setSync('err');console.error('WIP seed:',e);toast('Erro ao criar estrutura: '+wipErroMsg(e),'erro')}
+    for(const inp of mudou){
+      const novo=inp.value.trim(), velho=inp.dataset.orig;
+      await sb('wip_etapas?id=eq.'+inp.dataset.id,{method:'PATCH',body:JSON.stringify({nome:novo}),prefer:'return=minimal'});
+      await sb('wip_movimentos?etapa_de=eq.'+encodeURIComponent(velho),{method:'PATCH',body:JSON.stringify({etapa_de:novo}),prefer:'return=minimal'});
+      await sb('wip_movimentos?etapa_para=eq.'+encodeURIComponent(velho),{method:'PATCH',body:JSON.stringify({etapa_para:novo}),prefer:'return=minimal'});
+      for(const l of wipLinhas.filter(x=>(x.fluxo||[]).includes(velho))){
+        const novoFluxo=(l.fluxo||[]).map(x=>x===velho?novo:x);
+        await sb('wip_linhas?id=eq.'+l.id,{method:'PATCH',body:JSON.stringify({fluxo:novoFluxo}),prefer:'return=minimal'});
+      }
+    }
+    await loadWip(); renderWip(); wipFechar('wip-ov-etapas');
+    toast('Etapas atualizadas.');
+  }catch(e){setSync('err');toast('Erro ao renomear: '+wipErroMsg(e),'erro')}
 }
 
-/* ── Modal ── */
-function wipEtapaRow(nome,qtd){
-  const div=document.createElement('div');
-  div.className='wip-etapa-row';
-  div.innerHTML=`<input type="text" list="wip-etapas-mestre" value="${(nome||'').replace(/"/g,'&quot;')}" placeholder="Etapa">
-    <input type="number" min="0" value="${parseInt(qtd)||0}" oninput="wipCalcTotal()">
-    <button class="del" onclick="this.parentElement.remove();wipCalcTotal()" title="Remover">&times;</button>`;
-  return div;
+/* Editor de produto (linha) */
+function abrirWipLinha(id){
+  const l=id?wipLinha(id):null;
+  document.getElementById('wln-id').value=id||'';
+  document.getElementById('wln-tit').textContent=l?wipNome(l):'Novo produto';
+  document.getElementById('wln-produto').value=l?l.produto:'';
+  document.getElementById('wln-cor').value=l&&l.cor?l.cor:'';
+  document.getElementById('wln-corhex').value=l&&l.cor_hex?l.cor_hex:'#8a8880';
+  document.getElementById('wln-grupo').value=l?(l.grupo||''):'Colunas';
+  document.getElementById('wln-grupos').innerHTML=[...new Set(['Colunas','Abajures',...wipLinhas.map(x=>x.grupo).filter(Boolean)])].map(g=>`<option value="${g}">`).join('');
+  const fluxo=l?(l.fluxo||[]):wipEtapaNomes();
+  document.getElementById('wln-fluxo').innerHTML=wipEtapas.map(e=>`
+    <label class="wfl-item"><input type="checkbox" value="${e.nome.replace(/"/g,'&quot;')}" ${fluxo.includes(e.nome)?'checked':''}><span>${e.nome}</span></label>`).join('');
+  document.getElementById('wln-excluir').style.display=id?'block':'none';
+  document.getElementById('wip-ov-linha').style.display='flex';
 }
-function wipAddEtapa(nome,qtd){
-  document.getElementById('mw-etapas').appendChild(wipEtapaRow(nome,qtd));
-  wipCalcTotal();
-}
-function wipVarRow(nome,cor,qtd){
-  const div=document.createElement('div');
-  div.className='wip-etapa-row';
-  div.innerHTML=`<input type="color" value="${cor||'#1a1a1a'}" style="width:38px;height:34px;padding:2px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);cursor:pointer">
-    <input type="text" value="${(nome||'').replace(/"/g,'&quot;')}" placeholder="Ex: preto">
-    <input type="number" min="0" value="${parseInt(qtd)||0}">
-    <button class="del" onclick="this.parentElement.remove()" title="Remover">&times;</button>`;
-  return div;
-}
-function wipAddVariacao(nome,cor,qtd){
-  document.getElementById('mw-variacoes').appendChild(wipVarRow(nome,cor,qtd));
-}
-function wipCalcTotal(){
-  let t=0;
-  document.querySelectorAll('#mw-etapas .wip-etapa-row').forEach(r=>{
-    t+=parseInt(r.querySelector('input[type=number]').value)||0;
-  });
-  document.getElementById('mw-total').textContent=t.toLocaleString('pt-BR');
-}
-function abrirWipProduto(id){
-  const r=id?wipRows.find(x=>x.id===id):null;
-  document.getElementById('mw-id').value=id||'';
-  document.getElementById('mw-titulo').textContent=r?r.produto:'Novo produto';
-  document.getElementById('mw-grupo').value=r?(r.grupo||''):(wipRows.length?wipRows[wipRows.length-1].grupo:'Colunas');
-  document.getElementById('mw-produto').value=r?r.produto:'';
-  document.getElementById('mw-obs').value=r&&r.obs?r.obs:'';
-  document.getElementById('mw-excluir').style.display=id?'block':'none';
-
-  // datalists
-  const etapasUsadas=[...new Set([].concat(...wipRows.map(x=>(x.etapas||[]).map(e=>e.nome))))].filter(Boolean);
-  const listaEtapas=[...new Set([...WIP_ETAPAS_PADRAO,...etapasUsadas])];
-  document.getElementById('wip-etapas-mestre').innerHTML=listaEtapas.map(e=>`<option value="${e}">`).join('');
-  const gruposUsados=[...new Set(wipRows.map(x=>x.grupo).filter(Boolean))];
-  document.getElementById('mw-grupos').innerHTML=[...new Set(['Colunas','Abajures',...gruposUsados])].map(g=>`<option value="${g}">`).join('');
-
-  const etEl=document.getElementById('mw-etapas');etEl.innerHTML='';
-  const vaEl=document.getElementById('mw-variacoes');vaEl.innerHTML='';
-  if(r){
-    (r.etapas||[]).forEach(e=>etEl.appendChild(wipEtapaRow(e.nome,e.qtd)));
-    (r.variacoes||[]).forEach(v=>vaEl.appendChild(wipVarRow(v.nome,v.cor,v.qtd)));
-    if(!(r.etapas||[]).length)etEl.appendChild(wipEtapaRow('Pronto',0));
-  } else {
-    etEl.appendChild(wipEtapaRow('Pronto',0));
-  }
-  wipCalcTotal();
-  document.getElementById('modal-wip').style.display='flex';
-}
-function fecharModalWip(){document.getElementById('modal-wip').style.display='none'}
-
-async function salvarWipProduto(){
-  const id=document.getElementById('mw-id').value;
-  const grupo=document.getElementById('mw-grupo').value.trim()||'Sem grupo';
-  const produto=document.getElementById('mw-produto').value.trim();
-  const obs=document.getElementById('mw-obs').value.trim();
+async function salvarWipLinha(){
+  const id=document.getElementById('wln-id').value;
+  const produto=document.getElementById('wln-produto').value.trim();
+  const cor=document.getElementById('wln-cor').value.trim();
+  const grupo=document.getElementById('wln-grupo').value.trim()||'Sem grupo';
+  const cor_hex=cor?document.getElementById('wln-corhex').value:null;
+  const fluxo=[...document.querySelectorAll('#wln-fluxo input:checked')].map(i=>i.value);
   if(!produto){toast('Informe o nome do produto.','aviso');return}
-  const etapas=[];
-  document.querySelectorAll('#mw-etapas .wip-etapa-row').forEach(r=>{
-    const nome=r.querySelector('input[type=text]').value.trim();
-    const qtd=parseInt(r.querySelector('input[type=number]').value)||0;
-    if(nome)etapas.push({nome,qtd});
-  });
-  const variacoes=[];
-  document.querySelectorAll('#mw-variacoes .wip-etapa-row').forEach(r=>{
-    const cor=r.querySelector('input[type=color]').value;
-    const nome=r.querySelector('input[type=text]').value.trim();
-    const qtd=parseInt(r.querySelector('input[type=number]').value)||0;
-    if(nome)variacoes.push({nome,cor,qtd});
-  });
-  const payload={data:wipDataSel,grupo,produto,etapas,variacoes,obs:obs||null,total:etapas.reduce((a,e)=>a+e.qtd,0)};
+  if(fluxo.length<2){toast('Selecione ao menos duas etapas no fluxo.','aviso');return}
+  const ordenado=wipEtapaNomes().filter(e=>fluxo.includes(e));
+  const payload={produto,cor:cor||null,cor_hex,grupo,fluxo:ordenado,ativo:true};
   setSync('syncing');
   try{
-    if(id){
-      await sb('wip_snapshots?id=eq.'+id,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
-    } else {
-      await sb('wip_snapshots',{method:'POST',body:JSON.stringify(payload),prefer:'return=minimal'});
-    }
-    await loadWip();renderWip();
-    fecharModalWip();
+    if(id) await sb('wip_linhas?id=eq.'+id,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
+    else await sb('wip_linhas',{method:'POST',body:JSON.stringify(payload),prefer:'return=minimal'});
+    await loadWip(); renderWip(); wipFechar('wip-ov-linha');
     toast('Produto salvo!');
-  }catch(e){setSync('err');console.error('WIP salvar:',e);toast('Erro ao salvar: '+wipErroMsg(e),'erro')}
+  }catch(e){setSync('err');toast('Erro ao salvar: '+wipErroMsg(e),'erro')}
 }
-
-async function excluirWipProduto(){
-  const id=document.getElementById('mw-id').value;
-  if(!id)return;
-  if(!confirm('Remover este produto do dia selecionado?'))return;
+async function excluirWipLinha(){
+  const id=document.getElementById('wln-id').value; if(!id)return;
+  if(!confirm('Desativar este produto do fluxo? O histórico de movimentos é mantido.'))return;
   setSync('syncing');
   try{
-    await sb('wip_snapshots?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
-    await loadWip();renderWip();
-    fecharModalWip();
-    toast('Produto removido.');
-  }catch(e){setSync('err');console.error('WIP remover:',e);toast('Erro ao remover: '+wipErroMsg(e),'erro')}
+    await sb('wip_linhas?id=eq.'+id,{method:'PATCH',body:JSON.stringify({ativo:false}),prefer:'return=minimal'});
+    await loadWip(); renderWip(); wipFechar('wip-ov-linha');
+    toast('Produto desativado.');
+  }catch(e){setSync('err');toast('Erro: '+wipErroMsg(e),'erro')}
 }
 
-function wipGerarTexto(){
-  if(!wipRows.length){toast('Nada lançado neste dia.','aviso');return}
-  const[a,m,d]=wipDataSel.split('-');
-  const dias=['DOMINGO','SEGUNDA','TERÇA','QUARTA','QUINTA','SEXTA','SÁBADO'];
-  const dt=new Date(Number(a),Number(m)-1,Number(d));
-  let txt=`${d}/${m}/${a} - ${dias[dt.getDay()]}\nPeças ELÉTRICA\n`;
-  const grupos=[...new Set(wipRows.map(r=>r.grupo||'Sem grupo'))];
-  grupos.forEach(g=>{
-    txt+=`\n${g.toUpperCase()}:\n`;
-    wipRows.filter(r=>(r.grupo||'Sem grupo')===g).forEach(r=>{
-      const etapas=(r.etapas||[]);
-      const pronto=etapas.find(e=>wipEhPronto(e.nome));
-      const resto=etapas.filter(e=>!wipEhPronto(e.nome));
-      const vars=(r.variacoes||[]).filter(v=>(parseInt(v.qtd)||0)>0);
-      txt+=`- ${r.produto} - ${pronto?pronto.qtd:0}`;
-      if(vars.length)txt+=' '+vars.map(v=>`(+${v.qtd} ${v.nome})`).join(' ');
-      txt+='\n';
-      resto.forEach(e=>{const q=parseInt(e.qtd)||0;txt+=`--> ${q?q+' ':''}${e.nome.toUpperCase()}\n`});
-      if(r.obs)txt+=`! ${r.obs}\n`;
-      txt+=`=> ${wipTotal(r)}\n`;
-    });
+/* Saldo inicial (a virada) */
+function abrirWipInicial(){
+  const el=document.getElementById('wsi-lista');
+  el.innerHTML=wipLinhas.map(l=>`
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;font-family:'Inter',sans-serif;margin-bottom:5px;display:flex;align-items:center;gap:7px">${l.cor_hex?`<i class="wcor" style="background:${l.cor_hex}"></i>`:''}${wipNome(l)}</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${(l.fluxo||[]).map(e=>`<div style="flex:1;min-width:74px">
+          <label style="font-size:9px;color:var(--text3);display:block;margin-bottom:2px">${wipAbrev(e)}</label>
+          <input type="number" min="0" value="${wipSald(l.id,e)||''}" placeholder="0" data-linha="${l.id}" data-etapa="${e.replace(/"/g,'&quot;')}"
+            style="width:100%;padding:6px;background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-weight:700;font-size:13px;text-align:center;box-sizing:border-box">
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+  document.getElementById('wip-ov-inicial').style.display='flex';
+}
+async function salvarWipInicial(){
+  const inputs=[...document.querySelectorAll('#wsi-lista input[type=number]')];
+  const novos=[];
+  inputs.forEach(i=>{
+    const q=parseInt(i.value)||0;
+    const atual=wipSald(i.dataset.linha,i.dataset.etapa);
+    const delta=q-atual;
+    if(delta!==0) novos.push({data:hoje(),linha_id:i.dataset.linha,tipo:delta>0?'inicial':'ajuste',etapa_de:null,etapa_para:i.dataset.etapa,qtd:delta,obs:'saldo inicial'});
   });
-  const total=wipRows.reduce((acc,r)=>acc+wipTotal(r),0);
-  txt+=`\nTOTAL EM PROCESSO: ${total}`;
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(()=>toast('Texto copiado! Cole no WhatsApp.')).catch(()=>wipMostrarTexto(txt));
-  } else wipMostrarTexto(txt);
-}
-function wipMostrarTexto(txt){
-  const w=window.open('','_blank');
-  if(w){w.document.write('<pre style="font-family:monospace;padding:16px;white-space:pre-wrap">'+txt.replace(/</g,'&lt;')+'</pre>');}
-  else toast('Não foi possível copiar.','erro');
+  if(!novos.length){wipFechar('wip-ov-inicial');return}
+  setSync('syncing');
+  try{
+    await sb('wip_movimentos',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
+    await loadWip(); renderWip(); wipFechar('wip-ov-inicial');
+    toast('Saldo inicial registrado!');
+  }catch(e){setSync('err');toast('Erro ao salvar saldo: '+wipErroMsg(e),'erro')}
 }
 
-document.getElementById('modal-wip').addEventListener('click',function(e){
-  if(e.target===this)fecharModalWip();
-});
+/* Setup inicial */
+async function wipCriarEstrutura(){
+  setSync('syncing');
+  try{
+    if(!wipEtapas.length){
+      await sb('wip_etapas',{method:'POST',body:JSON.stringify(WIP_ETAPAS_SEED.map((nome,i)=>({nome,ordem:i}))),prefer:'return=minimal'});
+    }
+    if(!wipLinhas.length){
+      await sb('wip_linhas',{method:'POST',body:JSON.stringify(WIP_LINHAS_SEED.map(([grupo,produto,cor,cor_hex,fluxo])=>({grupo,produto,cor,cor_hex,fluxo,ativo:true}))),prefer:'return=minimal'});
+    }
+    await loadWip(); renderWip();
+    toast('Fluxo criado! Agora lance o saldo inicial.');
+    setTimeout(abrirWipInicial,600);
+  }catch(e){setSync('err');console.error('WIP setup',e);toast('Erro ao criar fluxo: '+wipErroMsg(e),'erro')}
+}
 
 function init(){
   document.getElementById('f-data').value=hoje();
@@ -1903,7 +2022,7 @@ function goTo(id,btn){
     renderDash();
   }
   if(id==='prod'){document.getElementById('f-data').value=hoje();renderProd();}
-  if(id==='wip'){if(!wipDataSel)wipDataSel=hoje();loadWip().then(renderWip);}
+  if(id==='wip'){loadWip().then(renderWip);}
   if(id==='dev'){document.getElementById('dv-data').value=hoje();Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
   if(id==='comp'){skeletonKPIs('comp-kpis');skeletonLista('comp-lista');loadCompras().then(()=>{initCompras();filtrarMateriais();renderCompLista();const b=document.getElementById('comp-gestor-badge');if(b)b.style.display=modoGestorAtivo?'block':'none';})}
   if(id==='materiais'){loadCompras().then(()=>{initCompras();renderMatLista()})}
