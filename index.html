@@ -589,11 +589,14 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 
   <div class="sec-title">Fluxo de produção</div>
 
+  <div id="wip-erro" style="display:none;background:var(--red-d);border:1px solid rgba(224,92,92,.35);border-radius:var(--r2);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--red);line-height:1.6"></div>
+
   <div id="wip-setup" style="display:none">
     <div style="text-align:center;padding:30px 20px;background:var(--ink2);border-radius:var(--r2);border:1px solid var(--line)">
       <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:7px">Configure o fluxo</div>
       <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:16px">Cria as etapas de produção e os produtos com o caminho<br>que cada um percorre. Depois você lança o saldo atual uma vez.</div>
       <button class="btn btn-primary btn-sm" onclick="wipCriarEstrutura()">Criar fluxo inicial</button>
+      <button class="btn btn-ghost btn-sm" onclick="wipDiagnostico()" style="margin-left:6px">Diagnóstico</button>
     </div>
   </div>
 
@@ -1480,6 +1483,31 @@ document.getElementById('modal-recebimento').addEventListener('click',function(e
 
 /* ══════════════ FLUXO DE PRODUÇÃO (WIP) ══════════════ */
 
+function wipMostraErro(msg){
+  const el=document.getElementById('wip-erro');
+  if(!el)return;
+  el.style.display=msg?'block':'none';
+  el.innerHTML=msg||'';
+}
+async function wipDiagnostico(){
+  const tabelas=['wip_etapas','wip_linhas','wip_movimentos'];
+  const linhas=[];
+  for(const t of tabelas){
+    try{
+      const r=await sb(t+'?select=id&limit=1');
+      linhas.push('leitura ok em <b>'+t+'</b> ('+r.length+' registro'+(r.length===1?'':'s')+' visto)');
+    }catch(e){ linhas.push('FALHA em <b>'+t+'</b>: '+wipErroMsg(e)); }
+  }
+  try{
+    const r=await sb('wip_etapas',{method:'POST',body:JSON.stringify({nome:'__teste__',ordem:999})});
+    const id=Array.isArray(r)&&r[0]?r[0].id:null;
+    linhas.push('escrita ok em <b>wip_etapas</b>');
+    if(id) await sb('wip_etapas?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
+    else await sb('wip_etapas?nome=eq.__teste__',{method:'DELETE',prefer:'return=minimal'});
+  }catch(e){ linhas.push('FALHA ao gravar: '+wipErroMsg(e)); }
+  wipMostraErro('<b>Diagnóstico</b><br>'+linhas.join('<br>'));
+}
+
 const WIP_ETAPAS_SEED=['Usinagem','Marcenaria','Acabamento marc','Cortada','Montar','Passar fundo','Lixar','Pintar','Envernizar','Pronto'];
 const WIP_LINHAS_SEED=[
  ['Colunas','Áustria',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto']],
@@ -1555,7 +1583,7 @@ async function loadWip(){
     wipEtapas=et; wipLinhas=li; wipMovs=mv;
     wipCalcSaldos();
     setSync('ok');
-  }catch(e){setSync('err');console.error('WIP load',e);toast('Erro ao carregar fluxo: '+wipErroMsg(e),'erro');wipEtapas=[];wipLinhas=[];wipMovs=[];wipSaldo={}}
+  }catch(e){setSync('err');console.error('WIP load',e);wipMostraErro('Não consegui carregar o fluxo: '+wipErroMsg(e));wipEtapas=[];wipLinhas=[];wipMovs=[];wipSaldo={}}
 }
 
 /* ─── Render ─── */
@@ -1564,7 +1592,13 @@ function renderWip(){
   document.getElementById('wip-setup').style.display=vazio?'block':'none';
   document.getElementById('wip-conteudo').style.display=vazio?'none':'block';
   if(vazio)return;
-  renderWipKpis(); renderWipTrack(); renderWipForecast(); renderWipProdutos();
+  try{
+    renderWipKpis(); renderWipTrack(); renderWipForecast(); renderWipProdutos();
+    wipMostraErro('');
+  }catch(e){
+    console.error('WIP render',e);
+    wipMostraErro('Erro ao montar a tela: '+(e&&e.message?e.message:e));
+  }
 }
 
 function renderWipKpis(){
@@ -1949,7 +1983,7 @@ async function wipCriarEstrutura(){
     await loadWip(); renderWip();
     toast('Fluxo criado! Agora lance o saldo inicial.');
     setTimeout(abrirWipInicial,600);
-  }catch(e){setSync('err');console.error('WIP setup',e);toast('Erro ao criar fluxo: '+wipErroMsg(e),'erro')}
+  }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
 function init(){
