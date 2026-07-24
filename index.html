@@ -975,7 +975,94 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <div id="comp-insights"><div class="loading"><div class="spinner"></div></div></div>
 
   <!-- MODAL CONFIRMAR COMPRA -->
-  <!-- ── Modais do fluxo ── -->
+  <!-- Modal recebimento -->
+<div id="modal-recebimento" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:400px">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Confirmar recebimento</div>
+    <div id="mr-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
+    <input type="hidden" id="mr-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Qtd solicitada</label>
+        <input type="number" id="mr-qtd-sol" disabled
+          style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text3);font-family:'DM Mono',monospace;font-size:14px;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Qtd recebida</label>
+        <input type="number" id="mr-qtd-rec" min="0"
+          style="width:100%;padding:8px 10px;background:var(--ink2);border:1px solid var(--accent);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;font-weight:700;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Obs do recebimento (opcional)</label>
+      <input type="text" id="mr-obs" placeholder="Ex: chegou incompleto, produto diferente..."
+        style="width:100%;padding:8px 10px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box">
+    </div>
+    <div id="mr-alerta" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--r);margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="fecharModalRecebimento()" class="btn btn-ghost btn-sm" style="flex:1">Cancelar</button>
+      <button onclick="confirmarRecebimento()" class="btn btn-primary btn-sm" style="flex:2">Confirmar recebimento</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-compra" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Registrar compra</div>
+      <div id="modal-compra-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
+      <input type="hidden" id="mc-id">
+      <div class="field">
+        <label class="field-label">Comprador</label>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <button onclick="document.getElementById('mc-comprador').value='Gabi'" style="padding:6px 14px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--line2)';this.style.color='var(--text2)'">Gabi</button>
+          <button onclick="document.getElementById('mc-comprador').value='Higor'" style="padding:6px 14px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--line2)';this.style.color='var(--text2)'">Higor</button>
+        </div>
+        <input type="text" id="mc-comprador" placeholder="ou digite o nome">
+      </div>
+      <div class="field"><label class="field-label">Data da compra</label><input type="date" id="mc-data"></div>
+      <div class="field"><label class="field-label">Fornecedor</label><input type="text" id="mc-forn" placeholder="Nome do fornecedor"></div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">Valor unitário (R$)</label><input type="number" id="mc-vunit" min="0" step="0.01" placeholder="0,00" oninput="calcTotal()"></div>
+        <div class="field"><label class="field-label">Valor total (R$)</label><input type="number" id="mc-vtotal" min="0" step="0.01" placeholder="0,00"></div>
+      </div>
+      <div class="field"><label class="field-label">Nota fiscal</label><input type="text" id="mc-nf" placeholder="Nº da NF"></div>
+      <div class="field" style="margin-bottom:16px"><label class="field-label">Observações</label><input type="text" id="mc-obs" placeholder="Observações da compra"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="fecharModalCompra()">Cancelar</button>
+        <button class="btn btn-accent" style="flex:1" onclick="confirmarCompra()">Confirmar compra</button>
+      </div>
+    </div>
+  </div>
+
+</div></div>
+
+<!-- ── MATERIAIS CADASTRADOS ── -->
+<div id="page-materiais" class="page"><div class="content-inner">
+  <div class="sec-title">Cadastrar novo material</div>
+  <div class="card">
+    <div class="form-2col">
+      <div class="field"><label class="field-label">Categoria</label><select id="nm-cat"><option value="">— selecione —</option></select></div>
+      <div class="field"><label class="field-label">Nome do material</label><input type="text" id="nm-nome" placeholder="Ex: MDF 18mm"></div>
+      <div class="field"><label class="field-label">Unidade padrão</label><select id="nm-unidade"><option>UN</option><option>KG</option><option>LT</option><option>MT</option><option>CX</option><option>PC</option><option>RL</option><option>GL</option></select></div>
+      <div class="field"><label class="field-label">Fornecedor padrão</label><input type="text" id="nm-forn" placeholder="Opcional"></div>
+    </div>
+    <button class="btn btn-accent" onclick="salvarMaterial()">Cadastrar material</button>
+  </div>
+  <div class="sec-title">Materiais cadastrados</div>
+  <div id="mat-lista"><div class="loading"><div class="spinner"></div></div></div>
+</div></div>
+
+</div><!-- /scroll-area -->
+<div id="toast">
+  <div id="toast-inner">
+    <span id="toast-icon" style="font-size:14px;flex-shrink:0"></span>
+    <span id="toast-msg"></span>
+  </div>
+  <div id="toast-bar"></div>
+</div>
+<div id="ptr-indicator">↻</div>
+
+<!-- ── Modais do fluxo ── -->
 <div id="wip-ov-mover" class="wov" onclick="if(event.target===this)wipFechar('wip-ov-mover')">
   <div class="wmodal">
     <h3 id="wmv-tit">Mover peças</h3>
@@ -1073,92 +1160,6 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   </div>
 </div>
 
-<!-- Modal recebimento -->
-<div id="modal-recebimento" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:400px">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Confirmar recebimento</div>
-    <div id="mr-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
-    <input type="hidden" id="mr-id">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-      <div>
-        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Qtd solicitada</label>
-        <input type="number" id="mr-qtd-sol" disabled
-          style="width:100%;padding:8px 10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text3);font-family:'DM Mono',monospace;font-size:14px;box-sizing:border-box">
-      </div>
-      <div>
-        <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Qtd recebida</label>
-        <input type="number" id="mr-qtd-rec" min="0"
-          style="width:100%;padding:8px 10px;background:var(--ink2);border:1px solid var(--accent);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;font-weight:700;box-sizing:border-box">
-      </div>
-    </div>
-    <div style="margin-bottom:14px">
-      <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">Obs do recebimento (opcional)</label>
-      <input type="text" id="mr-obs" placeholder="Ex: chegou incompleto, produto diferente..."
-        style="width:100%;padding:8px 10px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;box-sizing:border-box">
-    </div>
-    <div id="mr-alerta" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--r);margin-bottom:12px"></div>
-    <div style="display:flex;gap:8px">
-      <button onclick="fecharModalRecebimento()" class="btn btn-ghost btn-sm" style="flex:1">Cancelar</button>
-      <button onclick="confirmarRecebimento()" class="btn btn-primary btn-sm" style="flex:2">Confirmar recebimento</button>
-    </div>
-  </div>
-</div>
-
-<div id="modal-compra" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
-    <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Registrar compra</div>
-      <div id="modal-compra-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
-      <input type="hidden" id="mc-id">
-      <div class="field">
-        <label class="field-label">Comprador</label>
-        <div style="display:flex;gap:6px;margin-bottom:6px">
-          <button onclick="document.getElementById('mc-comprador').value='Gabi'" style="padding:6px 14px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--line2)';this.style.color='var(--text2)'">Gabi</button>
-          <button onclick="document.getElementById('mc-comprador').value='Higor'" style="padding:6px 14px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--line2)';this.style.color='var(--text2)'">Higor</button>
-        </div>
-        <input type="text" id="mc-comprador" placeholder="ou digite o nome">
-      </div>
-      <div class="field"><label class="field-label">Data da compra</label><input type="date" id="mc-data"></div>
-      <div class="field"><label class="field-label">Fornecedor</label><input type="text" id="mc-forn" placeholder="Nome do fornecedor"></div>
-      <div class="field-row">
-        <div class="field"><label class="field-label">Valor unitário (R$)</label><input type="number" id="mc-vunit" min="0" step="0.01" placeholder="0,00" oninput="calcTotal()"></div>
-        <div class="field"><label class="field-label">Valor total (R$)</label><input type="number" id="mc-vtotal" min="0" step="0.01" placeholder="0,00"></div>
-      </div>
-      <div class="field"><label class="field-label">Nota fiscal</label><input type="text" id="mc-nf" placeholder="Nº da NF"></div>
-      <div class="field" style="margin-bottom:16px"><label class="field-label">Observações</label><input type="text" id="mc-obs" placeholder="Observações da compra"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" style="flex:1" onclick="fecharModalCompra()">Cancelar</button>
-        <button class="btn btn-accent" style="flex:1" onclick="confirmarCompra()">Confirmar compra</button>
-      </div>
-    </div>
-  </div>
-
-</div></div>
-
-<!-- ── MATERIAIS CADASTRADOS ── -->
-<div id="page-materiais" class="page"><div class="content-inner">
-  <div class="sec-title">Cadastrar novo material</div>
-  <div class="card">
-    <div class="form-2col">
-      <div class="field"><label class="field-label">Categoria</label><select id="nm-cat"><option value="">— selecione —</option></select></div>
-      <div class="field"><label class="field-label">Nome do material</label><input type="text" id="nm-nome" placeholder="Ex: MDF 18mm"></div>
-      <div class="field"><label class="field-label">Unidade padrão</label><select id="nm-unidade"><option>UN</option><option>KG</option><option>LT</option><option>MT</option><option>CX</option><option>PC</option><option>RL</option><option>GL</option></select></div>
-      <div class="field"><label class="field-label">Fornecedor padrão</label><input type="text" id="nm-forn" placeholder="Opcional"></div>
-    </div>
-    <button class="btn btn-accent" onclick="salvarMaterial()">Cadastrar material</button>
-  </div>
-  <div class="sec-title">Materiais cadastrados</div>
-  <div id="mat-lista"><div class="loading"><div class="spinner"></div></div></div>
-</div></div>
-
-</div><!-- /scroll-area -->
-<div id="toast">
-  <div id="toast-inner">
-    <span id="toast-icon" style="font-size:14px;flex-shrink:0"></span>
-    <span id="toast-msg"></span>
-  </div>
-  <div id="toast-bar"></div>
-</div>
-<div id="ptr-indicator">↻</div>
 
 <script>
 let toggleDia = 'emb';
@@ -1996,7 +1997,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='fluxo-3 · 24/07';
+const APP_VERSION='fluxo-4 · 24/07';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 function init(){
