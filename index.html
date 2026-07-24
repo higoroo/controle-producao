@@ -1948,34 +1948,79 @@ async function excluirWipLinha(){
 }
 
 /* Saldo inicial (a virada) */
+function wsiCampo(linhaId,etapa,valor){
+  return `<div style="flex:1;min-width:74px">
+    <label style="font-size:9px;color:var(--text3);display:block;margin-bottom:2px">${wipAbrev(etapa)}</label>
+    <input type="number" min="0" value="${valor||''}" placeholder="0" data-linha="${linhaId}" data-etapa="${etapa.replace(/"/g,'&quot;')}"
+      style="width:100%;padding:6px;background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-weight:700;font-size:13px;text-align:center;box-sizing:border-box">
+  </div>`;
+}
 function abrirWipInicial(){
   const el=document.getElementById('wsi-lista');
   el.innerHTML=wipLinhas.map(l=>`
-    <div style="margin-bottom:12px">
+    <div style="margin-bottom:14px" data-linha-bloco="${l.id}">
       <div style="font-size:12px;font-weight:700;font-family:'Inter',sans-serif;margin-bottom:5px;display:flex;align-items:center;gap:7px">${l.cor_hex?`<i class="wcor" style="background:${l.cor_hex}"></i>`:''}${wipNome(l)}</div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${(l.fluxo||[]).map(e=>`<div style="flex:1;min-width:74px">
-          <label style="font-size:9px;color:var(--text3);display:block;margin-bottom:2px">${wipAbrev(e)}</label>
-          <input type="number" min="0" value="${wipSald(l.id,e)||''}" placeholder="0" data-linha="${l.id}" data-etapa="${e.replace(/"/g,'&quot;')}"
-            style="width:100%;padding:6px;background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-weight:700;font-size:13px;text-align:center;box-sizing:border-box">
-        </div>`).join('')}
+      <div style="display:flex;gap:5px;flex-wrap:wrap" data-campos="${l.id}">
+        ${(l.fluxo||[]).map(e=>wsiCampo(l.id,e,wipSald(l.id,e))).join('')}
+        <button type="button" onclick="wsiAddEtapa('${l.id}')" title="Adicionar etapa ao fluxo deste produto"
+          style="flex:0 0 auto;align-self:flex-end;height:31px;padding:0 12px;background:none;border:1px dashed var(--line2);border-radius:8px;color:var(--text3);font-size:12px;cursor:pointer">+ etapa</button>
       </div>
     </div>`).join('');
   document.getElementById('wip-ov-inicial').style.display='flex';
 }
+function wsiAddEtapa(linhaId){
+  const l=wipLinha(linhaId); if(!l)return;
+  const jaTem=[...document.querySelectorAll(`[data-campos="${linhaId}"] input`)].map(i=>i.dataset.etapa);
+  const disp=wipEtapaNomes().filter(e=>!jaTem.includes(e));
+  if(!disp.length){toast('Todas as etapas já estão nesse produto.','aviso');return}
+  const cont=document.querySelector(`[data-campos="${linhaId}"]`);
+  const wrap=document.createElement('div');
+  wrap.style.cssText='flex:1;min-width:120px;display:flex;gap:5px;align-items:flex-end';
+  wrap.innerHTML=`<div style="flex:1">
+      <label style="font-size:9px;color:var(--accent);display:block;margin-bottom:2px">Nova etapa</label>
+      <select data-linha="${linhaId}" data-nova="1"
+        style="width:100%;padding:6px;background:var(--ink3);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:11px;box-sizing:border-box">
+        ${disp.map(e=>`<option value="${e}">${e}</option>`).join('')}
+      </select>
+    </div>
+    <input type="number" min="0" placeholder="0" data-qtd="1"
+      style="width:60px;padding:6px;background:var(--ink3);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-weight:700;font-size:13px;text-align:center;box-sizing:border-box">`;
+  cont.insertBefore(wrap,cont.lastElementChild); // antes do botão +
+}
 async function salvarWipInicial(){
-  const inputs=[...document.querySelectorAll('#wsi-lista input[type=number]')];
   const novos=[];
-  inputs.forEach(i=>{
+  // Campos das etapas que o produto já tinha
+  document.querySelectorAll('#wsi-lista input[type=number][data-etapa]').forEach(i=>{
     const q=parseInt(i.value)||0;
     const atual=wipSald(i.dataset.linha,i.dataset.etapa);
     const delta=q-atual;
     if(delta!==0) novos.push({data:hoje(),linha_id:i.dataset.linha,tipo:delta>0?'inicial':'ajuste',etapa_de:null,etapa_para:i.dataset.etapa,qtd:delta,obs:'saldo inicial'});
   });
-  if(!novos.length){wipFechar('wip-ov-inicial');return}
+  // Etapas novas adicionadas na hora (select + qtd) — entram no fluxo do produto
+  const fluxosMudados={};
+  document.querySelectorAll('#wsi-lista select[data-nova]').forEach(sel=>{
+    const linhaId=sel.dataset.linha;
+    const etapa=sel.value;
+    const qtdInput=sel.parentElement.parentElement.querySelector('input[data-qtd]');
+    const q=parseInt(qtdInput&&qtdInput.value)||0;
+    const l=wipLinha(linhaId); if(!l)return;
+    if(!(l.fluxo||[]).includes(etapa)){
+      if(!fluxosMudados[linhaId]) fluxosMudados[linhaId]=[...(l.fluxo||[])];
+      if(!fluxosMudados[linhaId].includes(etapa)) fluxosMudados[linhaId].push(etapa);
+    }
+    if(q>0) novos.push({data:hoje(),linha_id:linhaId,tipo:'inicial',etapa_de:null,etapa_para:etapa,qtd:q,obs:'saldo inicial'});
+  });
+
+  const temFluxo=Object.keys(fluxosMudados).length>0;
+  if(!novos.length&&!temFluxo){wipFechar('wip-ov-inicial');return}
   setSync('syncing');
   try{
-    await sb('wip_movimentos',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
+    // Primeiro grava os fluxos alterados, reordenando pela ordem oficial das etapas
+    for(const linhaId of Object.keys(fluxosMudados)){
+      const ordenado=wipEtapaNomes().filter(e=>fluxosMudados[linhaId].includes(e));
+      await sb('wip_linhas?id=eq.'+linhaId,{method:'PATCH',body:JSON.stringify({fluxo:ordenado}),prefer:'return=minimal'});
+    }
+    if(novos.length) await sb('wip_movimentos',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
     await loadWip(); renderWip(); wipFechar('wip-ov-inicial');
     toast('Saldo inicial registrado!');
   }catch(e){setSync('err');console.error('WIP inicial',e);wipMostraErro('Erro ao salvar saldo inicial: '+wipErroMsg(e));toast('Erro ao salvar saldo','erro')}
@@ -1997,7 +2042,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='fluxo-4 · 24/07';
+const APP_VERSION='fluxo-5 · 24/07';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 function init(){
