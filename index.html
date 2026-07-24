@@ -1616,6 +1616,15 @@ function renderWipKpis(){
 function renderWipTrack(){
   const nomes=wipEtapaNomes();
   const finais=new Set(wipLinhas.map(wipEtapaFinal));
+  const vazio=nomes.every(e=>wipTotEtapa(e)===0);
+  if(vazio){
+    document.getElementById('wip-track').innerHTML=`<div style="text-align:center;padding:26px 20px;background:var(--ink2);border-radius:var(--r2);border:1px dashed var(--line2)">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px">O fluxo está zerado</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:15px">Lance quantas peças estão hoje em cada etapa.<br>Depois disso é só movimentar.</div>
+      <button class="btn btn-primary btn-sm" onclick="abrirWipInicial()">Lançar saldo inicial</button>
+    </div>`;
+    return;
+  }
   const cargas=nomes.filter(e=>!finais.has(e)).map(wipTotEtapa);
   const max=Math.max(1,...cargas);
   document.getElementById('wip-track').innerHTML=nomes.map(et=>{
@@ -1783,7 +1792,7 @@ async function wipSalvarMov(payload){
     await sb('wip_movimentos',{method:'POST',body:JSON.stringify(payload),prefer:'return=minimal'});
     await loadWip(); renderWip();
     toast('Movimento registrado!');
-  }catch(e){setSync('err');console.error('WIP mov',e);toast('Erro ao registrar: '+wipErroMsg(e),'erro')}
+  }catch(e){setSync('err');console.error('WIP mov',e);wipMostraErro('Erro ao registrar movimento: '+wipErroMsg(e));toast('Erro ao registrar','erro')}
 }
 
 /* Movimentos */
@@ -1810,7 +1819,7 @@ async function desfazerWipMov(id){
     await sb('wip_movimentos?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
     await loadWip(); renderWip(); abrirWipMovs();
     toast('Movimento desfeito.');
-  }catch(e){setSync('err');toast('Erro ao desfazer: '+wipErroMsg(e),'erro')}
+  }catch(e){setSync('err');wipMostraErro('Erro ao desfazer: '+wipErroMsg(e));toast('Erro ao desfazer','erro')}
 }
 
 /* Editor de etapas */
@@ -1923,7 +1932,7 @@ async function salvarWipLinha(){
     else await sb('wip_linhas',{method:'POST',body:JSON.stringify(payload),prefer:'return=minimal'});
     await loadWip(); renderWip(); wipFechar('wip-ov-linha');
     toast('Produto salvo!');
-  }catch(e){setSync('err');toast('Erro ao salvar: '+wipErroMsg(e),'erro')}
+  }catch(e){setSync('err');console.error('WIP linha',e);wipMostraErro('Erro ao salvar produto: '+wipErroMsg(e));toast('Erro ao salvar','erro')}
 }
 async function excluirWipLinha(){
   const id=document.getElementById('wln-id').value; if(!id)return;
@@ -1967,7 +1976,7 @@ async function salvarWipInicial(){
     await sb('wip_movimentos',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
     await loadWip(); renderWip(); wipFechar('wip-ov-inicial');
     toast('Saldo inicial registrado!');
-  }catch(e){setSync('err');toast('Erro ao salvar saldo: '+wipErroMsg(e),'erro')}
+  }catch(e){setSync('err');console.error('WIP inicial',e);wipMostraErro('Erro ao salvar saldo inicial: '+wipErroMsg(e));toast('Erro ao salvar saldo','erro')}
 }
 
 /* Setup inicial */
