@@ -587,7 +587,8 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 <!-- ── ESTOQUE EM PROCESSO ── -->
 <div id="page-wip" class="page"><div class="content-inner">
 
-  <div class="sec-title">Fluxo de produção</div>
+  <div class="sec-title" style="margin-bottom:2px">Fluxo de produção</div>
+  <div style="font-size:10px;color:var(--text3);margin-bottom:14px">versão <b id="app-ver">—</b></div>
 
   <div id="wip-erro" style="display:none;background:var(--red-d);border:1px solid rgba(224,92,92,.35);border-radius:var(--r2);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--red);line-height:1.6"></div>
 
@@ -1994,6 +1995,9 @@ async function wipCriarEstrutura(){
     setTimeout(abrirWipInicial,600);
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
+
+const APP_VERSION='fluxo-3 · 24/07';
+(function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 function init(){
   document.getElementById('f-data').value=hoje();
