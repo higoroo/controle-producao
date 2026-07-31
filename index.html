@@ -184,6 +184,8 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 .wdot{position:absolute;left:0;top:13px;width:14px;height:14px;border-radius:50%;border:2px solid var(--line2);background:var(--ink)}
 .wst.has .wdot{border-color:var(--accent);background:var(--accent)}
 .wst.fim .wdot{border-color:var(--green);background:var(--green)}
+.wst.pronto .wdot{border-color:var(--amber);background:var(--amber)}
+.wst.estoque .wdot{border-color:var(--green);background:var(--green)}
 .wst-head{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:border-color .15s}
 .wst-head:hover{border-color:var(--line2)}
 .wst-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;flex:1}
@@ -202,6 +204,8 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 .wln-btn{border:none;background:var(--ink2);color:var(--accent);border-radius:14px;padding:5px 11px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap}
 .wln-btn:hover{background:var(--accent);color:var(--ink)}
 .wln-btn.done{color:var(--green)}
+.wln-btn.exp{color:var(--green);border:1px solid rgba(76,175,125,.4)}
+.wln-btn.exp:hover{background:var(--green);color:var(--ink)}
 .wln-btn.done:hover{background:var(--green);color:var(--ink)}
 .wfore{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12px}
 .wfore:last-child{border-bottom:none}
@@ -619,7 +623,7 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 
     <div id="wip-v-fluxo">
       <div id="wip-track"></div>
-      <div class="sec-title" style="margin-top:22px">Chegando no fim do fluxo</div>
+      <div class="sec-title" style="margin-top:22px">Chegando no pronto</div>
       <div class="card" id="wip-forecast"></div>
     </div>
 
@@ -1067,6 +1071,7 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <div class="wmodal">
     <h3 id="wmv-tit">Mover peças</h3>
     <div class="wmodal-sub" id="wmv-sub"></div>
+    <div id="wmv-audit" style="font-size:10px;color:var(--text3);margin:-10px 0 14px"></div>
     <div class="wseg" id="wmv-seg">
       <button class="on" onclick="wipSetTipo('mover',this)">Avançar etapa</button>
       <button onclick="wipSetTipo('perda',this)">Registrar perda</button>
@@ -1510,30 +1515,30 @@ async function wipDiagnostico(){
   wipMostraErro('<b>Diagnóstico</b><br>'+linhas.join('<br>'));
 }
 
-const WIP_ETAPAS_SEED=['Usinagem','Marcenaria','Acabamento marc','Cortada','Montar','Passar fundo','Lixar','Pintar','Envernizar','Pronto'];
+const WIP_ETAPAS_SEED=['Usinagem','Marcenaria','Acabamento marc','Cortada','Montar','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque'];
 const WIP_LINHAS_SEED=[
- ['Colunas','Áustria',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto']],
- ['Colunas','XG',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
- ['Colunas','Viena',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
- ['Colunas','Mônaco',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto']],
- ['Colunas','Ipanema',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
- ['Colunas','Wells',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
- ['Colunas','Floripa',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
- ['Colunas','Ripada','Cedro','#b07d4a',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto']],
- ['Colunas','Ripada','Preto','#1c1c1c',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto']],
- ['Colunas','Ripada','Natural','#6b4423',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto']],
- ['Abajures','Ab Áustria',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto']],
- ['Abajures','Ab Áustria','Preto','#1c1c1c',['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto']],
- ['Abajures','XP',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
- ['Abajures','Ab Wells',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
- ['Abajures','Ab Soft',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
- ['Abajures','Ab Wood',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto']],
- ['Abajures','Ab Sky',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto']],
- ['Abajures','Ab Slim',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Pintar','Envernizar','Pronto']],
- ['Abajures','Ab Mine',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto']],
- ['Abajures','Prat pinus',null,null,['Usinagem','Marcenaria','Lixar','Pronto']],
- ['Abajures','Adega quad',null,null,['Usinagem','Marcenaria','Lixar','Pronto']],
- ['Abajures','Sup taça',null,null,['Usinagem','Marcenaria','Lixar','Pronto']]
+ ['Colunas','Áustria',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
+ ['Colunas','XG',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Viena',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Mônaco',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
+ ['Colunas','Ipanema',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Wells',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Floripa',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Ripada','Cedro','#b07d4a',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Ripada','Preto','#1c1c1c',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Ripada','Natural','#6b4423',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Áustria',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
+ ['Abajures','Ab Áustria','Preto','#1c1c1c',['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','XP',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Wells',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Soft',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Wood',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Sky',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
+ ['Abajures','Ab Slim',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Pintar','Envernizar','Pronto','Estoque']],
+ ['Abajures','Ab Mine',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Prat pinus',null,null,['Usinagem','Marcenaria','Lixar','Pronto','Estoque']],
+ ['Abajures','Adega quad',null,null,['Usinagem','Marcenaria','Lixar','Pronto','Estoque']],
+ ['Abajures','Sup taça',null,null,['Usinagem','Marcenaria','Lixar','Pronto','Estoque']]
 ];
 
 let wipEtapas=[];      // [{id,nome,ordem}]
@@ -1560,6 +1565,7 @@ function wipDistFim(l,et){const i=(l.fluxo||[]).indexOf(et);return i<0?null:l.fl
 function wipEtapaFinal(l){return (l.fluxo||[])[(l.fluxo||[]).length-1]}
 function wipTotEtapa(et){return wipLinhas.reduce((a,l)=>a+wipSald(l.id,et),0)}
 function wipTotProcesso(){return wipLinhas.reduce((a,l)=>a+(l.fluxo||[]).reduce((b,e)=>b+(e===wipEtapaFinal(l)?0:wipSald(l.id,e)),0),0)}
+function wipTotProcessoReal(){return wipLinhas.reduce((a,l)=>a+(l.fluxo||[]).reduce((b,e)=>b+((e==='Pronto'||e==='Estoque')?0:wipSald(l.id,e)),0),0)}
 function wipTotPronto(){return wipLinhas.reduce((a,l)=>a+wipSald(l.id,wipEtapaFinal(l)),0)}
 
 function wipCalcSaldos(){
@@ -1568,7 +1574,7 @@ function wipCalcSaldos(){
   wipMovs.forEach(m=>{
     const s=wipSaldo[m.linha_id]; if(!s)return;
     const q=parseInt(m.qtd)||0;
-    if(m.etapa_de&&['mover','perda','baixa'].includes(m.tipo)) s[m.etapa_de]=(s[m.etapa_de]||0)-q;
+    if(m.etapa_de&&['mover','perda','baixa','expedida'].includes(m.tipo)) s[m.etapa_de]=(s[m.etapa_de]||0)-q;
     if(m.etapa_para&&['mover','entrada','inicial','ajuste'].includes(m.tipo)) s[m.etapa_para]=(s[m.etapa_para]||0)+q;
   });
   Object.keys(wipSaldo).forEach(id=>Object.keys(wipSaldo[id]).forEach(e=>{if(wipSaldo[id][e]<=0)delete wipSaldo[id][e]}));
@@ -1603,16 +1609,13 @@ function renderWip(){
   }
 }
 
+function wipTotProntas(){return wipLinhas.reduce((a,l)=>a+wipSald(l.id,'Pronto'),0)}
+function wipTotEstoque(){return wipLinhas.reduce((a,l)=>a+wipSald(l.id,'Estoque'),0)}
 function renderWipKpis(){
-  const h=hoje();
-  const dia=wipMovs.filter(m=>m.data===h);
-  const mov=dia.filter(m=>m.tipo==='mover').reduce((a,m)=>a+m.qtd,0);
-  const ent=dia.filter(m=>m.tipo==='entrada').reduce((a,m)=>a+m.qtd,0);
-  const per=dia.filter(m=>m.tipo==='perda').reduce((a,m)=>a+m.qtd,0);
   document.getElementById('wip-kpis').innerHTML=`
-    <div class="kpi"><div class="kpi-label">Em processo</div><div class="kpi-val">${wipTotProcesso().toLocaleString('pt-BR')}</div><div class="kpi-sub">peças ainda em etapa</div></div>
-    <div class="kpi"><div class="kpi-label">Prontas</div><div class="kpi-val" style="color:var(--green)">${wipTotPronto().toLocaleString('pt-BR')}</div><div class="kpi-sub">aguardando embalagem</div></div>
-    <div class="kpi"><div class="kpi-label">Movimentado hoje</div><div class="kpi-val">${mov.toLocaleString('pt-BR')}</div><div class="kpi-sub">${ent} entraram · ${per} perdidas</div></div>`;
+    <div class="kpi"><div class="kpi-label">Em processo</div><div class="kpi-val">${wipTotProcessoReal().toLocaleString('pt-BR')}</div><div class="kpi-sub">ainda em produção</div></div>
+    <div class="kpi"><div class="kpi-label">Prontas</div><div class="kpi-val" style="color:var(--amber)">${wipTotProntas().toLocaleString('pt-BR')}</div><div class="kpi-sub">aguardando embalagem</div></div>
+    <div class="kpi"><div class="kpi-label">Em estoque</div><div class="kpi-val" style="color:var(--green)">${wipTotEstoque().toLocaleString('pt-BR')}</div><div class="kpi-sub">embaladas p/ vender</div></div>`;
 }
 
 function renderWipTrack(){
@@ -1631,17 +1634,19 @@ function renderWipTrack(){
   const max=Math.max(1,...cargas);
   document.getElementById('wip-track').innerHTML=nomes.map(et=>{
     const q=wipTotEtapa(et);
-    const fim=finais.has(et);
+    const ehEstoque=et==='Estoque', ehPronto=et==='Pronto';
+    const fim=finais.has(et)||ehEstoque||ehPronto;
     const pct=fim?100:Math.round(q/max*100);
-    const cor=fim?'var(--green)':pct>=85?'var(--red)':pct>=50?'var(--amber)':'var(--accent)';
+    const corFim=ehEstoque?'var(--green)':ehPronto?'var(--amber)':'var(--green)';
+    const cor=fim?corFim:pct>=85?'var(--red)':pct>=50?'var(--amber)':'var(--accent)';
     const ls=wipLinhas.filter(l=>wipSald(l.id,et)>0).sort((a,b)=>wipSald(b.id,et)-wipSald(a.id,et));
-    return `<div class="wst ${q>0?'has':''} ${fim?'fim':''} ${wipAbertas.has(et)?'open':''}">
+    return `<div class="wst ${q>0?'has':''} ${fim?'fim':''} ${ehEstoque?'estoque':''} ${ehPronto?'pronto':''} ${wipAbertas.has(et)?'open':''}">
       <div class="wdot"></div>
       <div class="wst-head" onclick="wipToggle('${et.replace(/'/g,"\\'")}')">
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:8px">
             <div class="wst-name">${et}</div>
-            <div class="wst-qtd" style="color:${q?(fim?'var(--green)':cor):'var(--text3)'}">${q||'—'}</div>
+            <div class="wst-qtd" style="color:${q?cor:'var(--text3)'}">${q||'—'}</div>
             <div class="wst-caret">${q?'›':''}</div>
           </div>
           ${q&&!fim?`<div class="wst-load"><i style="width:${pct}%;background:${cor}"></i></div>`:''}
@@ -1652,7 +1657,7 @@ function renderWipTrack(){
         return `<div class="wln">
           <div class="wln-nome">${l.cor_hex?`<i class="wcor" style="background:${l.cor_hex}"></i>`:''}<span>${wipNome(l)}</span></div>
           <div class="wln-qtd">${s}</div>
-          <button class="wln-btn ${prox?'':'done'}" onclick="event.stopPropagation();abrirWipMover('${l.id}','${et.replace(/'/g,"\\'")}')">${prox?'Mover →':'Baixa'}</button>
+          <button class="wln-btn ${et==='Estoque'?'exp':(prox?'':'done')}" onclick="event.stopPropagation();abrirWipMover('${l.id}','${et.replace(/'/g,"\\'")}')">${et==='Estoque'?'Expedir':(prox?'Mover →':'Baixa')}</button>
         </div>`;
       }).join('')}</div>`:''}
     </div>`;
@@ -1662,19 +1667,21 @@ function renderWipTrack(){
 function renderWipForecast(){
   const b={};
   wipLinhas.forEach(l=>(l.fluxo||[]).forEach(et=>{
-    if(et===wipEtapaFinal(l))return;
+    if(et==='Pronto'||et==='Estoque')return;      // só o que ainda está em produção
     const s=wipSald(l.id,et); if(!s)return;
-    const d=wipDistFim(l,et); if(d==null)return;
+    const idx=(l.fluxo||[]).indexOf(et);
+    const idxPronto=(l.fluxo||[]).indexOf('Pronto');
+    const d=idxPronto>idx?idxPronto-idx:1;         // etapas até ficar pronto
     b[d]=(b[d]||0)+s;
   }));
   const ks=Object.keys(b).map(Number).sort((a,b2)=>a-b2);
   const el=document.getElementById('wip-forecast');
-  if(!ks.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Nada em processo — tudo já está pronto.</div>';return}
+  if(!ks.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Nada em produção — tudo já está pronto ou em estoque.</div>';return}
   const vaz=wipVazaoDia();
   el.innerHTML=ks.map(d=>{
     const cor=d===1?'var(--green)':d===2?'var(--accent)':'var(--text2)';
     const dias=vaz>0?Math.ceil(b[d]/vaz)+d:null;
-    return `<div class="wfore"><span style="color:${cor}">${d===1?'A 1 etapa do fim':'A '+d+' etapas do fim'}${dias?` <span style="color:var(--text3);font-size:10px">· ~${dias}d</span>`:''}</span><b style="color:${cor}">${b[d].toLocaleString('pt-BR')} pç</b></div>`;
+    return `<div class="wfore"><span style="color:${cor}">${d===1?'A 1 etapa do pronto':'A '+d+' etapas do pronto'}${dias?` <span style="color:var(--text3);font-size:10px">· ~${dias}d</span>`:''}</span><b style="color:${cor}">${b[d].toLocaleString('pt-BR')} pç</b></div>`;
   }).join('')+(vaz>0?`<div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6">Estimativa baseada na média de ${vaz} peças movimentadas por dia nos últimos 14 dias.</div>`:`<div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6">Registre movimentos por alguns dias para o app estimar prazos.</div>`);
 }
 function wipVazaoDia(){
@@ -1733,16 +1740,29 @@ function wipFechar(id){document.getElementById(id).style.display='none'}
 function abrirWipMover(id,et){
   const l=wipLinha(id); if(!l)return;
   const s=wipSald(id,et);
-  wipMvCtx={id,de:et,max:s}; wipMvTipo='mover';
+  const ehEstoque=et==='Estoque';
+  wipMvCtx={id,de:et,max:s,estoque:ehEstoque}; wipMvTipo='mover';
   document.querySelectorAll('#wmv-seg button').forEach((b,i)=>b.classList.toggle('on',i===0));
-  document.getElementById('wmv-tit').textContent=wipNome(l);
-  document.getElementById('wmv-sub').textContent='Saindo de '+et+' · '+s+' peças disponíveis';
+  document.getElementById('wmv-seg').style.display=ehEstoque?'none':'flex';
+  document.getElementById('wmv-tit').textContent=(ehEstoque?'Expedir — ':'')+wipNome(l);
+  document.getElementById('wmv-sub').textContent=ehEstoque
+    ? s+' em estoque · a saída é registrada e some do fluxo'
+    : 'Saindo de '+et+' · '+s+' peças disponíveis';
+  // auditoria: soma de entradas/saídas que formaram esse saldo
+  const audit=wipMovs.filter(m=>m.linha_id===id).reduce((a,m)=>{
+    const qq=parseInt(m.qtd)||0;
+    if(m.etapa_para===et&&['mover','entrada','inicial','ajuste'].includes(m.tipo))a.ent+=qq;
+    if(m.etapa_de===et&&['mover','perda','baixa','expedida'].includes(m.tipo))a.sai+=qq;
+    return a;
+  },{ent:0,sai:0});
+  const auditEl=document.getElementById('wmv-audit');
+  if(auditEl)auditEl.textContent=audit.sai>0?`Entraram ${audit.ent} · saíram ${audit.sai} · saldo ${audit.ent-audit.sai}`:'';
   const prox=wipProx(l,et);
   document.getElementById('wmv-destino').innerHTML=(l.fluxo||[]).filter(e=>e!==et).map(e=>`<option value="${e}" ${e===prox?'selected':''}>${e}</option>`).join('');
-  document.getElementById('wmv-destino-wrap').style.display=prox?'block':'none';
+  document.getElementById('wmv-destino-wrap').style.display=(prox&&!ehEstoque)?'block':'none';
   document.getElementById('wmv-max').textContent='(máx '+s+')';
   const q=document.getElementById('wmv-qtd'); q.max=s; q.value=s;
-  document.getElementById('wmv-ok').textContent=prox?'Mover':'Dar baixa';
+  document.getElementById('wmv-ok').textContent=ehEstoque?'Expedir':(prox?'Mover':'Dar baixa');
   document.getElementById('wip-ov-mover').style.display='flex';
   setTimeout(()=>q.select(),80);
 }
@@ -1759,7 +1779,8 @@ async function confirmarWipMover(){
   if(q<1||q>wipMvCtx.max){toast('Quantidade inválida. Máximo: '+wipMvCtx.max,'aviso');return}
   const l=wipLinha(wipMvCtx.id), de=wipMvCtx.de, prox=wipProx(l,de);
   let tipo='baixa', para=null;
-  if(wipMvTipo==='perda') tipo='perda';
+  if(wipMvCtx.estoque) tipo='expedida';
+  else if(wipMvTipo==='perda') tipo='perda';
   else if(prox){ tipo='mover'; para=document.getElementById('wmv-destino').value; }
   await wipSalvarMov({data:hoje(),linha_id:l.id,tipo,etapa_de:de,etapa_para:para,qtd:q});
   if(para)wipAbertas.add(para);
@@ -1803,10 +1824,11 @@ function abrirWipMovs(){
   const el=document.getElementById('wmov-lista');
   el.innerHTML=lista.length?lista.map(m=>{
     const l=wipLinha(m.linha_id);
-    const cor=m.tipo==='perda'?'var(--red)':m.tipo==='entrada'?'var(--blue)':m.tipo==='baixa'?'var(--green)':m.tipo==='inicial'?'var(--text3)':'var(--text2)';
+    const cor=m.tipo==='perda'?'var(--red)':m.tipo==='entrada'?'var(--blue)':m.tipo==='expedida'?'var(--green)':m.tipo==='baixa'?'var(--green)':m.tipo==='inicial'?'var(--text3)':'var(--text2)';
     const txt=m.tipo==='entrada'?`entrou em ${m.etapa_para}`
       :m.tipo==='inicial'?`saldo inicial em ${m.etapa_para}`
       :m.tipo==='perda'?`perdidas em ${m.etapa_de}`
+      :m.tipo==='expedida'?`expedidas do estoque`
       :m.tipo==='baixa'?`baixa do ${m.etapa_de}`
       :`${m.etapa_de} → ${m.etapa_para}`;
     return `<div class="wfore"><span style="flex:1"><b style="font-family:'Inter',sans-serif;color:${cor}">${m.qtd}</b> ${l?wipNome(l):'—'}<br><span style="font-size:10px;color:var(--text3)">${txt} · ${fmt(m.data)}</span></span>
@@ -2042,7 +2064,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='fluxo-5 · 24/07';
+const APP_VERSION='fluxo-6 · 30/07';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 function init(){
