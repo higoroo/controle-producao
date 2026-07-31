@@ -1515,30 +1515,30 @@ async function wipDiagnostico(){
   wipMostraErro('<b>Diagnóstico</b><br>'+linhas.join('<br>'));
 }
 
-const WIP_ETAPAS_SEED=['Usinagem','Marcenaria','Acabamento marc','Cortada','Montar','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque'];
+const WIP_ETAPAS_SEED=['Usinagem','Cortada','Marcenaria','Acabamento marc','Montar','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque'];
 const WIP_LINHAS_SEED=[
- ['Colunas','Áustria',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
- ['Colunas','XG',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Colunas','Viena',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Colunas','Mônaco',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
- ['Colunas','Ipanema',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Colunas','Wells',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Colunas','Floripa',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Colunas','Ripada','Cedro','#b07d4a',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Colunas','Ripada','Preto','#1c1c1c',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Colunas','Ripada','Natural','#6b4423',['Usinagem','Cortada','Montar','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Abajures','Ab Áustria',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
- ['Abajures','Ab Áustria','Preto','#1c1c1c',['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Abajures','XP',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Abajures','Ab Wells',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Abajures','Ab Soft',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Abajures','Ab Wood',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Abajures','Ab Sky',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
- ['Abajures','Ab Slim',null,null,['Usinagem','Marcenaria','Acabamento marc','Passar fundo','Pintar','Envernizar','Pronto','Estoque']],
- ['Abajures','Ab Mine',null,null,['Usinagem','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
- ['Abajures','Prat pinus',null,null,['Usinagem','Marcenaria','Lixar','Pronto','Estoque']],
- ['Abajures','Adega quad',null,null,['Usinagem','Marcenaria','Lixar','Pronto','Estoque']],
- ['Abajures','Sup taça',null,null,['Usinagem','Marcenaria','Lixar','Pronto','Estoque']]
+ ['Colunas','Áustria',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
+ ['Colunas','XG',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Viena',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Mônaco',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
+ ['Colunas','Ipanema',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Wells',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Floripa',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Ripada','Cedro','#b07d4a',['Usinagem','Cortada','Marcenaria','Montar','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Ripada','Preto','#1c1c1c',['Usinagem','Cortada','Marcenaria','Montar','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Colunas','Ripada','Natural','#6b4423',['Usinagem','Cortada','Marcenaria','Montar','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Áustria',null,null,['Usinagem','Cortada','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
+ ['Abajures','Ab Áustria','Preto','#1c1c1c',['Usinagem','Cortada','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','XP',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Wells',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Soft',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Wood',null,null,['Usinagem','Cortada','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Ab Sky',null,null,['Usinagem','Cortada','Marcenaria','Acabamento marc','Passar fundo','Lixar','Pintar','Envernizar','Pronto','Estoque']],
+ ['Abajures','Ab Slim',null,null,['Usinagem','Cortada','Marcenaria','Acabamento marc','Passar fundo','Pintar','Envernizar','Pronto','Estoque']],
+ ['Abajures','Ab Mine',null,null,['Usinagem','Cortada','Marcenaria','Passar fundo','Lixar','Pintar','Pronto','Estoque']],
+ ['Abajures','Prat pinus',null,null,['Usinagem','Cortada','Marcenaria','Lixar','Pronto','Estoque']],
+ ['Abajures','Adega quad',null,null,['Usinagem','Cortada','Marcenaria','Lixar','Pronto','Estoque']],
+ ['Abajures','Sup taça',null,null,['Usinagem','Cortada','Marcenaria','Lixar','Pronto','Estoque']]
 ];
 
 let wipEtapas=[];      // [{id,nome,ordem}]
@@ -2064,7 +2064,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='fluxo-6 · 30/07';
+const APP_VERSION='fluxo-7 · 30/07';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 function init(){
