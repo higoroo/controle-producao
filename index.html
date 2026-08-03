@@ -1621,13 +1621,19 @@ function renderWipKpis(){
     <div class="kpi"><div class="kpi-label">Em estoque</div><div class="kpi-val" style="color:var(--green)">${wipTotEstoque().toLocaleString('pt-BR')}</div><div class="kpi-sub">embaladas p/ vender</div></div>`;
 }
 
+const WIP_COMPLEMENTOS=['XG','XP'];   // não aparecem na lista de estoque
+function wipDisponivel(id){            // pronto + estoque = o que dá pra vender
+  return wipSald(id,'Pronto')+wipSald(id,'Estoque');
+}
 function wipLinhasComEstoque(){
-  return wipLinhas.slice().sort((a,b)=>{
-    const sa=wipSald(a.id,'Estoque'), sb2=wipSald(b.id,'Estoque');
-    if((sa===0)!==(sb2===0)) return sa===0?-1:1;   // zerados no topo
-    if(sa!==sb2) return sb2-sa;                      // depois por quantidade desc
-    return wipNome(a).localeCompare(wipNome(b));
-  });
+  return wipLinhas
+    .filter(l=>!WIP_COMPLEMENTOS.includes(l.produto))
+    .slice().sort((a,b)=>{
+      const da=wipDisponivel(a.id), db=wipDisponivel(b.id);
+      if((da===0)!==(db===0)) return da===0?-1:1;    // sem estoque no topo
+      if(da!==db) return db-da;                        // depois por disponível desc
+      return wipNome(a).localeCompare(wipNome(b));
+    });
 }
 function renderWipTrack(){
   const nomes=wipEtapaNomes();
@@ -1665,13 +1671,24 @@ function renderWipTrack(){
       </div>
       ${(q||ehEstoque)?`<div class="wst-body">${(ehEstoque?wipLinhasComEstoque():ls).map(l=>{
         const s=wipSald(l.id,et), prox=wipProx(l,et);
-        const zero=s===0;
-        return `<div class="wln${ehEstoque&&zero?' semestoque':''}">
+        if(ehEstoque){
+          const disp=wipDisponivel(l.id);       // pronto + estoque
+          const emb=wipSald(l.id,'Estoque');     // já embalado
+          const pronto=wipSald(l.id,'Pronto');   // pronto, falta embalar
+          const zero=disp===0;
+          return `<div class="wln${zero?' semestoque':''}">
+            <div class="wln-nome">${l.cor_hex?`<i class="wcor" style="background:${l.cor_hex}"></i>`:''}<span>${wipNome(l)}</span></div>
+            <div style="display:flex;align-items:center;gap:8px">
+              ${zero?'':`<span style="font-size:10px;color:var(--text3)">${pronto>0?pronto+' pronto':''}${pronto>0&&emb>0?' · ':''}${emb>0?emb+' emb.':''}</span>`}
+              <div class="wln-qtd"${zero?' style="color:var(--red)"':''}>${disp}</div>
+              ${zero?`<span class="wln-flag">sem estoque</span>`:(emb>0?`<button class="wln-btn exp" onclick="event.stopPropagation();abrirWipMover('${l.id}','Estoque')">Expedir</button>`:`<span style="width:64px"></span>`)}
+            </div>
+          </div>`;
+        }
+        return `<div class="wln">
           <div class="wln-nome">${l.cor_hex?`<i class="wcor" style="background:${l.cor_hex}"></i>`:''}<span>${wipNome(l)}</span></div>
-          <div class="wln-qtd"${ehEstoque&&zero?' style="color:var(--red)"':''}>${s}</div>
-          ${ehEstoque
-            ? (zero?`<span class="wln-flag">sem estoque</span>`:`<button class="wln-btn exp" onclick="event.stopPropagation();abrirWipMover('${l.id}','Estoque')">Expedir</button>`)
-            : `<button class="wln-btn ${prox?'':'done'}" onclick="event.stopPropagation();abrirWipMover('${l.id}','${et.replace(/'/g,"\\'")}')">${prox?'Mover →':'Baixa'}</button>`}
+          <div class="wln-qtd">${s}</div>
+          <button class="wln-btn ${prox?'':'done'}" onclick="event.stopPropagation();abrirWipMover('${l.id}','${et.replace(/'/g,"\\'")}')">${prox?'Mover →':'Baixa'}</button>
         </div>`;
       }).join('')}</div>`:''}
     </div>`;
@@ -2078,7 +2095,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='fluxo-8 · 31/07';
+const APP_VERSION='fluxo-9 · 31/07';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 function init(){
