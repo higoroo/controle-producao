@@ -204,6 +204,9 @@ tr:last-child td{border-bottom:none}.td-r{text-align:right;font-variant-numeric:
 .wln-btn{border:none;background:var(--ink2);color:var(--accent);border-radius:14px;padding:5px 11px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap}
 .wln-btn:hover{background:var(--accent);color:var(--ink)}
 .wln-btn.done{color:var(--green)}
+.wln.semestoque{background:var(--red-d);border:1px solid rgba(224,92,92,.25)}
+.wln.semestoque .wln-nome{color:var(--red)}
+.wln-flag{font-size:10px;font-weight:700;font-family:'Syne',sans-serif;color:var(--red);background:none;border:1px solid rgba(224,92,92,.4);border-radius:14px;padding:5px 11px}
 .wln-btn.exp{color:var(--green);border:1px solid rgba(76,175,125,.4)}
 .wln-btn.exp:hover{background:var(--green);color:var(--ink)}
 .wln-btn.done:hover{background:var(--green);color:var(--ink)}
@@ -1618,6 +1621,14 @@ function renderWipKpis(){
     <div class="kpi"><div class="kpi-label">Em estoque</div><div class="kpi-val" style="color:var(--green)">${wipTotEstoque().toLocaleString('pt-BR')}</div><div class="kpi-sub">embaladas p/ vender</div></div>`;
 }
 
+function wipLinhasComEstoque(){
+  return wipLinhas.slice().sort((a,b)=>{
+    const sa=wipSald(a.id,'Estoque'), sb2=wipSald(b.id,'Estoque');
+    if((sa===0)!==(sb2===0)) return sa===0?-1:1;   // zerados no topo
+    if(sa!==sb2) return sb2-sa;                      // depois por quantidade desc
+    return wipNome(a).localeCompare(wipNome(b));
+  });
+}
 function renderWipTrack(){
   const nomes=wipEtapaNomes();
   const finais=new Set(wipLinhas.map(wipEtapaFinal));
@@ -1647,17 +1658,20 @@ function renderWipTrack(){
           <div style="display:flex;align-items:center;gap:8px">
             <div class="wst-name">${et}</div>
             <div class="wst-qtd" style="color:${q?cor:'var(--text3)'}">${q||'—'}</div>
-            <div class="wst-caret">${q?'›':''}</div>
+            <div class="wst-caret">${(q||ehEstoque)?'›':''}</div>
           </div>
           ${q&&!fim?`<div class="wst-load"><i style="width:${pct}%;background:${cor}"></i></div>`:''}
         </div>
       </div>
-      ${q?`<div class="wst-body">${ls.map(l=>{
+      ${(q||ehEstoque)?`<div class="wst-body">${(ehEstoque?wipLinhasComEstoque():ls).map(l=>{
         const s=wipSald(l.id,et), prox=wipProx(l,et);
-        return `<div class="wln">
+        const zero=s===0;
+        return `<div class="wln${ehEstoque&&zero?' semestoque':''}">
           <div class="wln-nome">${l.cor_hex?`<i class="wcor" style="background:${l.cor_hex}"></i>`:''}<span>${wipNome(l)}</span></div>
-          <div class="wln-qtd">${s}</div>
-          <button class="wln-btn ${et==='Estoque'?'exp':(prox?'':'done')}" onclick="event.stopPropagation();abrirWipMover('${l.id}','${et.replace(/'/g,"\\'")}')">${et==='Estoque'?'Expedir':(prox?'Mover →':'Baixa')}</button>
+          <div class="wln-qtd"${ehEstoque&&zero?' style="color:var(--red)"':''}>${s}</div>
+          ${ehEstoque
+            ? (zero?`<span class="wln-flag">sem estoque</span>`:`<button class="wln-btn exp" onclick="event.stopPropagation();abrirWipMover('${l.id}','Estoque')">Expedir</button>`)
+            : `<button class="wln-btn ${prox?'':'done'}" onclick="event.stopPropagation();abrirWipMover('${l.id}','${et.replace(/'/g,"\\'")}')">${prox?'Mover →':'Baixa'}</button>`}
         </div>`;
       }).join('')}</div>`:''}
     </div>`;
@@ -1730,7 +1744,7 @@ function wipSetView(v,btn){
   document.getElementById('wip-v-prod').style.display=v==='prod'?'block':'none';
 }
 function wipToggle(et){
-  if(!wipTotEtapa(et))return;
+  if(!wipTotEtapa(et)&&et!=='Estoque')return;
   wipAbertas.has(et)?wipAbertas.delete(et):wipAbertas.add(et);
   renderWipTrack();
 }
@@ -2064,7 +2078,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='fluxo-7 · 30/07';
+const APP_VERSION='fluxo-8 · 31/07';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 function init(){
