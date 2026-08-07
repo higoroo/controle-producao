@@ -266,7 +266,13 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   from{opacity:0;transform:translateY(10px)}
   to{opacity:1;transform:translateY(0)}
 }
-.insight-card{animation:cardIn .35s ease-out backwards}
+.insight-card{
+  background:var(--ink2);
+  border:1px solid var(--line);
+  border-radius:var(--r2);
+  padding:14px 15px;
+  animation:cardIn .35s ease-out backwards;
+}
 
 /* Hover/tap nos cards de solicitação (Compras) */
 .solic-card{transition:transform .15s ease,box-shadow .15s ease}
@@ -2095,7 +2101,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='fluxo-9 · 31/07';
+const APP_VERSION='fluxo-9b · 07/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 function init(){
@@ -3030,6 +3036,58 @@ function renderInsights(){
     </div>`;
   };
 
+  // ══════ NOVOS INSIGHTS (aproveitando histórico) ══════
+
+  // 1) Melhor semana histórica de embalagem
+  const semanasMap={};
+  emb.forEach(l=>{
+    const dt=new Date(l.data+'T12:00');
+    const onejan=new Date(dt.getFullYear(),0,1);
+    const semNum=Math.ceil((((dt-onejan)/86400000)+onejan.getDay()+1)/7);
+    const key=dt.getFullYear()+'-S'+String(semNum).padStart(2,'0');
+    semanasMap[key]=(semanasMap[key]||0)+l.qtd;
+  });
+  const semanasArr=Object.entries(semanasMap).sort((a,b)=>b[1]-a[1]);
+  const melhorSemana=semanasArr[0];
+  const mediaSemanal=semanasArr.length?Math.round(semanasArr.reduce((a,x)=>a+x[1],0)/semanasArr.length):0;
+
+  // 2) Projeção de fechamento do mês (ritmo atual)
+  const diasComProdMes=totPorDia.filter(x=>x.d.startsWith(mesAtual())&&x.v>0).length;
+  const mediaDiariaMes=diasComProdMes>0?totMes/diasComProdMes:0;
+  const projecaoMes=Math.round(mediaDiariaMes*diasMes);
+
+  // 3) Produto em ascensão (comparar share do produto: 1ª metade vs 2ª metade do histórico)
+  const embOrd=[...emb].sort((a,b)=>a.data.localeCompare(b.data));
+  const meioIdx=Math.floor(embOrd.length/2);
+  const prim=embOrd.slice(0,meioIdx), seg2=embOrd.slice(meioIdx);
+  const shareProduto=(arr,prod)=>{const t=arr.reduce((a,l)=>a+l.qtd,0);return t?arr.filter(l=>l.produto===prod).reduce((a,l)=>a+l.qtd,0)/t*100:0};
+  let produtoEmAlta=null;
+  if(embOrd.length>=10){
+    const prods=[...new Set(emb.map(l=>l.produto))];
+    const variacoes=prods.map(p=>({prod:p,delta:Math.round(shareProduto(seg2,p)-shareProduto(prim,p)),shareAtual:Math.round(shareProduto(seg2,p))})).filter(x=>x.shareAtual>=8);
+    produtoEmAlta=variacoes.sort((a,b)=>b.delta-a.delta)[0];
+  }
+
+  // 4) Regularidade — % de dias úteis com lançamento no mês
+  const diasUteisMes=(()=>{let c2=0;const y=new Date().getFullYear(),mo=new Date().getMonth();for(let d=1;d<=diaAtual;d++){const wd=new Date(y,mo,d).getDay();if(wd>=1&&wd<=5)c2++;}return c2;})();
+  const diasComLancMes=new Set(cachedLancs.filter(l=>l.data.startsWith(mesAtual())).map(l=>l.data)).size;
+  const regularidade=diasUteisMes>0?Math.round(diasComLancMes/diasUteisMes*100):0;
+
+  // 5) Gargalo estrutural — setor com menor vazão relativa vs embalagem (acúmulo)
+  const vazaoEmb=media;
+  const gargaloSetores=setorStats.filter(s=>!['Embalagem','Expedição'].includes(s.setor)&&s.media>0)
+    .map(s=>({setor:s.setor,media:s.media,ratio:s.media/vazaoEmb}))
+    .sort((a,b)=>a.ratio-b.ratio);
+  const gargalo=gargaloSetores[0];
+
+  // 6) Devoluções — produto que mais devolve (proporção)
+  const devPorProduto={};
+  devMesAtual.forEach(d=>{if(d.produto)devPorProduto[d.produto]=(devPorProduto[d.produto]||0)+(d.quantidade||0);});
+  const embPorProdMes={};
+  emb.filter(l=>l.data.startsWith(mesAtual())).forEach(l=>{embPorProdMes[l.produto]=(embPorProdMes[l.produto]||0)+l.qtd});
+  const taxaDevProd=Object.entries(devPorProduto).map(([p,q])=>({prod:p,dev:q,emb:embPorProdMes[p]||0,taxa:embPorProdMes[p]?q/embPorProdMes[p]*100:0})).filter(x=>x.emb>=5&&x.taxa>0).sort((a,b)=>b.taxa-a.taxa);
+  const piorProdDev=taxaDevProd[0];
+
   let html='';
 
   // ═══ SEÇÃO: Destaques e conquistas ═══
@@ -3104,7 +3162,33 @@ function renderInsights(){
 
   if(cardsDestaques){
     html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px">Destaques</div>`;
-    html+=`<div class="insights-grid">${cardsDestaques}</div>`;
+    // Melhor semana histórica
+  if(melhorSemana&&melhorSemana[1]>mediaSemanal){
+    cardsDestaques+=card({
+      icone:'★',bg:'rgba(232,197,71,.12)',cor:'var(--accent)',borda:'rgba(232,197,71,.25)',
+      categoria:'Melhor semana',
+      titulo:`${melhorSemana[1].toLocaleString('pt-BR')} pç na melhor semana`,
+      badge:melhorSemana[1].toLocaleString('pt-BR'),
+      detalhe:`Recorde semanal de embalagem. Média semanal é ${mediaSemanal.toLocaleString('pt-BR')} pç — essa semana rendeu ${Math.round((melhorSemana[1]/mediaSemanal-1)*100)}% acima.`
+    });
+  }
+
+  // Projeção de fechamento do mês
+  if(mediaDiariaMes>0&&diasRestantes>0){
+    const baterMeta=meta>0&&projecaoMes>=meta;
+    cardsDestaques+=card({
+      icone:baterMeta?'▲':'◷',
+      bg:baterMeta?'rgba(76,175,125,.12)':'rgba(91,156,246,.12)',
+      cor:baterMeta?'var(--green)':'var(--blue)',
+      borda:baterMeta?'rgba(76,175,125,.25)':'rgba(91,156,246,.25)',
+      categoria:'Projeção do mês',
+      titulo:`No ritmo atual, ~${projecaoMes.toLocaleString('pt-BR')} pç até o fim do mês`,
+      badge:projecaoMes.toLocaleString('pt-BR'),
+      detalhe:`Média de ${Math.round(mediaDiariaMes).toLocaleString('pt-BR')} pç/dia nos ${diasComProdMes} dias produzidos.${meta>0?(baterMeta?` Deve bater a meta de ${meta.toLocaleString('pt-BR')}.`:` Meta de ${meta.toLocaleString('pt-BR')} exige acelerar.`):''}`
+    });
+  }
+
+  html+=`<div class="insights-grid">${cardsDestaques}</div>`;
   }
 
   // ═══ SEÇÃO: Produção geral ═══
@@ -3132,7 +3216,22 @@ function renderInsights(){
 
   if(cardsProducao){
     html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px">Produção — embalagem</div>`;
-    html+=`<div class="insights-grid">${cardsProducao}</div>`;
+    // Regularidade de lançamento
+  if(diasUteisMes>=3){
+    const bom=regularidade>=80;
+    cardsProducao+=card({
+      icone:bom?'✓':'○',
+      bg:bom?'rgba(76,175,125,.12)':'rgba(232,156,71,.12)',
+      cor:bom?'var(--green)':'var(--amber)',
+      borda:bom?'rgba(76,175,125,.25)':'rgba(232,156,71,.25)',
+      categoria:'Regularidade',
+      titulo:`${regularidade}% dos dias úteis com lançamento`,
+      badge:regularidade+'%',
+      detalhe:`${diasComLancMes} de ${diasUteisMes} dias úteis do mês tiveram registro.${bom?' Consistência ótima nos apontamentos.':' Registrar todo dia deixa os números mais confiáveis.'}`
+    });
+  }
+
+  html+=`<div class="insights-grid">${cardsProducao}</div>`;
   }
 
   // ═══ SEÇÃO: Mix de produtos ═══
@@ -3146,7 +3245,18 @@ function renderInsights(){
   }
   if(cardsMix){
     html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px">Mix de produtos</div>`;
-    html+=`<div class="insights-grid">${cardsMix}</div>`;
+    // Produto em ascensão
+  if(produtoEmAlta&&produtoEmAlta.delta>=3){
+    cardsMix+=card({
+      icone:'▲',bg:'rgba(76,175,125,.12)',cor:'var(--green)',borda:'rgba(76,175,125,.25)',
+      categoria:'Produto em ascensão',
+      titulo:`${produtoEmAlta.prod} ganhando espaço no mix`,
+      badge:'+'+produtoEmAlta.delta+'pp',
+      detalhe:`Passou a representar ${produtoEmAlta.shareAtual}% da produção recente, ${produtoEmAlta.delta} pontos acima do início do histórico. Vale garantir insumo desse produto.`
+    });
+  }
+
+  html+=`<div class="insights-grid">${cardsMix}</div>`;
   }
 
   // ═══ SEÇÃO: Desempenho por setor ═══
@@ -3164,7 +3274,18 @@ function renderInsights(){
   }
   if(cardsSetor){
     html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px">Desempenho por setor</div>`;
-    html+=`<div class="insights-grid">${cardsSetor}</div>`;
+    // Gargalo estrutural
+  if(gargalo&&gargalo.ratio<0.7){
+    cardsSetor+=card({
+      icone:'!',bg:'rgba(224,92,92,.12)',cor:'var(--red)',borda:'rgba(224,92,92,.25)',
+      categoria:'Possível gargalo',
+      titulo:`${gargalo.setor} processa menos que a embalagem`,
+      badge:Math.round(gargalo.ratio*100)+'%',
+      detalhe:`${gargalo.setor} faz ${gargalo.media.toLocaleString('pt-BR')} pç/dia contra ${vazaoEmb.toLocaleString('pt-BR')} da embalagem. Se esse setor não acelerar, pode faltar peça na ponta.`
+    });
+  }
+
+  html+=`<div class="insights-grid">${cardsSetor}</div>`;
   }
 
   // ═══ SEÇÃO: Devoluções ═══
@@ -3183,7 +3304,18 @@ function renderInsights(){
   }
   if(cardsDev){
     html+=`<div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px">Devoluções</div>`;
-    html+=`<div class="insights-grid">${cardsDev}</div>`;
+    // Produto com maior taxa de devolução
+  if(piorProdDev&&piorProdDev.taxa>=3){
+    cardsDev+=card({
+      icone:'▼',bg:'rgba(224,92,92,.12)',cor:'var(--red)',borda:'rgba(224,92,92,.25)',
+      categoria:'Atenção — devolução por produto',
+      titulo:`${piorProdDev.prod} tem a maior taxa de devolução`,
+      badge:piorProdDev.taxa.toFixed(1)+'%',
+      detalhe:`${piorProdDev.dev} devolvidas de ${piorProdDev.emb} embaladas neste mês. Vale investigar embalagem ou qualidade desse produto.`
+    });
+  }
+
+  html+=`<div class="insights-grid">${cardsDev}</div>`;
   }
 
   el.innerHTML=html;
