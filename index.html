@@ -1363,15 +1363,13 @@ async function sbAll(path, pageSize=1000){
 async function loadAll(){
   setSync('syncing');
   try{
-    const[lancs,metas,devs,prods,solic,expes]=await Promise.all([
+    const[lancs,metas,devs,prods,solic]=await Promise.all([
       sbAll('lancamentos?select=*&order=data.desc,created_at.desc'),
       sb('metas?select=*'),
       sb('devolucoes?select=*&order=data.desc,created_at.desc'),
       sb('produtos_extra?select=*&order=nome'),
-      sbAll('solicitacoes?select=*&order=created_at.desc'),
-      sbAll('wip_movimentos?select=data,qtd,tipo&tipo=eq.expedida').catch(()=>[])
+      sbAll('solicitacoes?select=*&order=created_at.desc')
     ]);
-    cachedExpedidos=expes||[];
     cachedLancs=lancs;
     cachedMetas={};metas.forEach(m=>{cachedMetas[m.setor]=m.quantidade});
     cachedDevs=devs;
@@ -1548,8 +1546,7 @@ const WIP_LINHAS_SEED=[
 
 let wipEtapas=[];      // [{id,nome,ordem}]
 let wipLinhas=[];      // [{id,produto,cor,cor_hex,grupo,fluxo,ativo}]
-let wipMovs=[];
-let cachedExpedidos=[];        // log completo
+let wipMovs=[];        // log completo
 let wipSaldo={};       // {linhaId:{etapa:qtd}}
 let wipView='fluxo';
 let wipAbertas=new Set();
@@ -2098,7 +2095,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='fluxo-9 · 31/07 · exp';
+const APP_VERSION='fluxo-9 · 31/07';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 function init(){
@@ -2372,7 +2369,7 @@ function renderChartSetores(){
     document.getElementById('legend-setores').innerHTML='';
     const anoAtual=String(new Date().getFullYear());
     const embAno=cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data.startsWith(anoAtual));
-    const expAno=(cachedExpedidos||[]).filter(m=>m.data&&m.data.startsWith(anoAtual));
+    const expAno=cachedLancs.filter(l=>l.setor==='Expedição'&&l.data.startsWith(anoAtual));
     const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
     const hojeM=new Date().getMonth();
     const vals=meses.map((_,i)=>{
@@ -2384,7 +2381,7 @@ function renderChartSetores(){
     const valsExp=meses.map((_,i)=>{
       const mm=String(i+1).padStart(2,'0');
       if(i>hojeM)return null;
-      return expAno.filter(m=>m.data.slice(5,7)===mm).reduce((a,m)=>a+(parseInt(m.qtd)||0),0);
+      return expAno.filter(l=>l.data.slice(5,7)===mm).reduce((a,l)=>a+l.qtd,0);
     });
     const datasets=[{label:'Embalados',data:vals,backgroundColor:'rgba(232,197,71,0.75)',borderRadius:5,borderSkipped:false}];
     if(temExp) datasets.push({label:'Expedidos',data:valsExp,backgroundColor:'rgba(76,175,125,0.7)',borderRadius:5,borderSkipped:false});
