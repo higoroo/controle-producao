@@ -2186,13 +2186,14 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='prod-2 · 12/08';
+const APP_VERSION='prod-3 · 12/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
 const PROD2_BASE_PESSOAS=4, PROD2_BASE_PECAS=700;  // marco histórico (4 pessoas → 700/mês)
 const PROD2_EMB_DIA_TALO=50;                        // embalagem no talo
-let prod2Equipe=[];      // [{setor,qtd_pessoas}]
+let prod2Equipe=[];      // config atual [{setor,qtd_pessoas}]
+let prod2EquipeHist=[];  // histórico [{setor,qtd_pessoas,mes_inicio}]
 let prod2Meta={min:1000,max:1200};
 
 function prod2Erro(msg){
@@ -2212,11 +2213,25 @@ function prod2EmbaladoPorMes(){
 }
 function prod2MesAtualKey(){return hoje().slice(0,7)}
 
+function prod2PrimeiroMes(){
+  const datas=cachedLancs.map(l=>l.data).filter(Boolean).sort();
+  return datas.length?datas[0].slice(0,7):hoje().slice(0,7);
+}
+// pessoas de um setor num mês específico (usa o registro vigente mais recente até aquele mês)
+function prod2PessoasNoMes(setor,mesKey){
+  const regs=prod2EquipeHist.filter(r=>r.setor===setor&&(r.mes_inicio||'2000-01')<=mesKey)
+    .sort((a,b)=>(b.mes_inicio||'2000-01').localeCompare(a.mes_inicio||'2000-01'));
+  return regs.length?parseInt(regs[0].qtd_pessoas)||0:0;
+}
 async function loadProd2(){
   setSync('syncing');
   try{
-    const eq=await sb('equipe_setores?select=*&order=setor').catch(()=>[]);
-    prod2Equipe=eq||[];
+    const eq=await sb('equipe_setores?select=*&order=setor,mes_inicio').catch(()=>[]);
+    prod2EquipeHist=eq||[];
+    // config ATUAL: para cada setor, o registro vigente mais recente
+    const hojeMes=hoje().slice(0,7);
+    const setores=[...new Set(prod2EquipeHist.map(r=>r.setor))];
+    prod2Equipe=setores.map(s=>({setor:s,qtd_pessoas:prod2PessoasNoMes(s,hojeMes)})).filter(x=>x.qtd_pessoas>0);
     // meta guardada em metas? usar tabela metas com setor especial, ou localStorage simples
     const savedMin=localStorage.getItem('prod2_meta_min');
     const savedMax=localStorage.getItem('prod2_meta_max');
@@ -2310,48 +2325,78 @@ function renderProd2Equipe(){
 
 function renderProd2PorPessoa(){
   const el=document.getElementById('prod2-porpessoa');
-  if(!prod2Equipe.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Cadastre a equipe para ver a produtividade por setor.</div>';return}
+  if(!prod2Equipe.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Cadastre a equipe para ver a evolução por setor.</div>';return}
 
-  const mesKey=prod2MesAtualKey();
-  // dias úteis já passados no mês (pra média diária justa)
-  const hj=new Date(),ano=hj.getFullYear(),mes=hj.getMonth();
-  let uteisPass=0;
-  for(let dd=1;dd<=hj.getDate();dd++){const wd=new Date(ano,mes,dd).getDay();if(wd>=1&&wd<=5)uteisPass++;}
+  // meses do histórico (do primeiro lançamento até agora)
+  const primeiro=prod2PrimeiroMes();
+  const meses=[];
+  let [ay,am]=primeiro.split('-').map(Number);
+  const [hy,hm]=hoje().slice(0,7).split('-').map(Number);
+  while(ay<hy||(ay===hy&&am<=hm)){
+    meses.push(`${ay}-${String(am).padStart(2,'0')}`);
+    am++; if(am>12){am=1;ay++;}
+  }
+  const mesesRecentes=meses.slice(-6); // últimos 6 meses
 
-  // produção do mês por setor
-  const prodMesSetor={};
-  cachedLancs.filter(l=>l.data.slice(0,7)===mesKey).forEach(l=>{prodMesSetor[l.setor]=(prodMesSetor[l.setor]||0)+l.qtd;});
+  // dias úteis por mês (para média diária)
+  const uteisNoMes=(mk)=>{
+    const[y,m]=mk.split('-').map(Number);
+    const ult=new Date(y,m,0).getDate();
+    let u=0;
+    const ehMesAtual=mk===hoje().slice(0,7);
+    const limite=ehMesAtual?new Date().getDate():ult;
+    for(let d=1;d<=limite;d++){const wd=new Date(y,m-1,d).getDay();if(wd>=1&&wd<=5)u++;}
+    return u||1;
+  };
 
-  // monta dados só dos setores que têm gente cadastrada
-  const dados=prod2Equipe.filter(e=>e.qtd_pessoas>0).map(e=>{
-    const prodMes=prodMesSetor[e.setor]||0;
-    const porPessoaMes=Math.round(prodMes/e.qtd_pessoas);
-    const porPessoaDia=uteisPass>0?Math.round(prodMes/e.qtd_pessoas/uteisPass):0;
-    return {setor:e.setor,pessoas:e.qtd_pessoas,prodMes,porPessoaMes,porPessoaDia};
-  }).filter(d=>d.prodMes>0).sort((a,b)=>b.porPessoaDia-a.porPessoaDia);
+  // produção por setor por mês
+  const prodSM={};
+  cachedLancs.forEach(l=>{const k=l.setor+'|'+l.data.slice(0,7);prodSM[k]=(prodSM[k]||0)+l.qtd;});
 
-  if(!dados.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Sem lançamentos deste mês nos setores da equipe ainda.</div>';return}
+  // setores da equipe (só os que têm gente cadastrada em algum momento)
+  const setoresEquipe=[...new Set(prod2EquipeHist.map(r=>r.setor))];
 
-  const maxPP=Math.max(1,...dados.map(d=>d.porPessoaDia));
-  const melhor=dados[0], pior=dados[dados.length-1];
+  const blocos=setoresEquipe.map(setor=>{
+    const serie=mesesRecentes.map(mk=>{
+      const prod=prodSM[setor+'|'+mk]||0;
+      const pessoas=prod2PessoasNoMes(setor,mk);
+      const ppd=pessoas>0?prod/pessoas/uteisNoMes(mk):0;
+      return {mk,ppd:Math.round(ppd),pessoas,prod};
+    });
+    const comDados=serie.filter(s=>s.prod>0);
+    if(!comDados.length)return '';
+    const atual=serie[serie.length-1];
+    const anterior=[...serie].reverse().find((s,idx)=>idx>0&&s.prod>0);
+    const delta=(anterior&&anterior.ppd>0)?Math.round((atual.ppd/anterior.ppd-1)*100):null;
+    const max=Math.max(1,...serie.map(s=>s.ppd));
 
-  el.innerHTML=dados.map((d,i)=>{
-    const pct=Math.round(d.porPessoaDia/maxPP*100);
-    const ehMelhor=d.setor===melhor.setor&&dados.length>1;
-    const ehPior=d.setor===pior.setor&&dados.length>1;
-    const cor=ehMelhor?'var(--green)':ehPior?'var(--red)':'var(--accent)';
-    const tag=ehMelhor?'<span style="font-size:9px;font-weight:700;color:var(--green);background:var(--green-d);padding:2px 7px;border-radius:10px;margin-left:6px">MELHOR</span>':ehPior?'<span style="font-size:9px;font-weight:700;color:var(--red);background:var(--red-d);padding:2px 7px;border-radius:10px;margin-left:6px">MENOR</span>':'';
-    return `<div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px">
-        <span>${d.setor} <span style="color:var(--text3)">· ${d.pessoas}p</span>${tag}</span>
-        <span><b style="font-family:'Inter',sans-serif;color:${cor}">${d.porPessoaDia}</b><span style="color:var(--text3);font-size:11px">/pessoa/dia</span></span>
+    const seta=delta===null?'':delta>3?'▲':delta<-3?'▼':'→';
+    const corSeta=delta===null?'var(--text3)':delta>3?'var(--green)':delta<-3?'var(--red)':'var(--text3)';
+
+    // mini sparkline com barras
+    const bars=serie.map(s=>{
+      const h=s.ppd>0?Math.max(12,Math.round(s.ppd/max*100)):4;
+      const ehAtual=s.mk===atual.mk;
+      return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px" title="${s.mk}: ${s.ppd}/pessoa/dia (${s.pessoas}p)">
+        <div style="width:100%;max-width:22px;height:${h}%;min-height:3px;background:${ehAtual?'var(--accent)':'var(--ink3)'};border-radius:3px 3px 0 0"></div>
+        <div style="font-size:8px;color:var(--text3)">${s.mk.slice(5)}</div>
+      </div>`;
+    }).join('');
+
+    return `<div style="margin-bottom:16px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+        <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:14px">${setor} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${atual.pessoas}p agora</span></div>
+        <div style="text-align:right">
+          <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:18px;color:var(--accent)">${atual.ppd}</span>
+          <span style="font-size:10px;color:var(--text3)">/pessoa/dia</span>
+          ${delta!==null?`<span style="font-size:11px;color:${corSeta};margin-left:4px">${seta} ${Math.abs(delta)}%</span>`:''}
+        </div>
       </div>
-      <div style="height:8px;background:var(--ink3);border-radius:4px;overflow:hidden">
-        <div class="prog-bar" data-pct="${pct}" style="width:0%;background:${cor};border-radius:4px"></div>
-      </div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:56px">${bars}</div>
     </div>`;
-  }).join('')+`<div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">Peças que cada setor produz por pessoa, por dia útil deste mês. ${dados.length>1?`<b style="color:var(--green)">${melhor.setor}</b> rende mais por pessoa; <b style="color:var(--red)">${pior.setor}</b> menos — mas lembre que setores fazem trabalhos diferentes, nem sempre é comparável direto.`:''}</div>`;
-  animarBarras('prod2-porpessoa');
+  }).filter(Boolean).join('');
+
+  el.innerHTML=blocos+`<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6">Cada setor comparado com ele mesmo ao longo dos meses — peças por pessoa, por dia útil. A seta compara com o mês anterior. Usa o número real de pessoas de cada mês.</div>`;
 }
 
 function renderProd2Setores(){
@@ -2542,20 +2587,34 @@ async function salvarProd2Equipe(){
     if(setor)novos.push({setor,qtd_pessoas:qtd});
   });
   if(!novos.length){toast('Adicione ao menos um setor.','aviso');return}
+  const mesAtual=hoje().slice(0,7);
   setSync('syncing');
   try{
-    // apaga os que sumiram e faz upsert dos atuais
-    const atuais=prod2Equipe.map(e=>e.setor);
-    const novosNomes=novos.map(n=>n.setor);
-    for(const velho of atuais){
-      if(!novosNomes.includes(velho)) await sb('equipe_setores?setor=eq.'+encodeURIComponent(velho),{method:'DELETE',prefer:'return=minimal'});
-    }
+    // Para cada setor, registra a mudança A PARTIR do mês atual (preservando o histórico).
+    // Se já existe um registro deste setor iniciando neste mesmo mês, atualiza; senão cria novo.
     for(const n of novos){
-      await sb('equipe_setores',{method:'POST',body:JSON.stringify(n),prefer:'resolution=merge-duplicates,return=minimal',headers:{'Prefer':'resolution=merge-duplicates,return=minimal'}});
+      const atualMes=prod2PessoasNoMes(n.setor,mesAtual);
+      if(atualMes===n.qtd_pessoas) continue; // não mudou, não registra
+      // já há registro deste setor começando neste mês?
+      const existeMesmoMes=prod2EquipeHist.find(r=>r.setor===n.setor&&(r.mes_inicio||'')===mesAtual);
+      if(existeMesmoMes){
+        await sb('equipe_setores?id=eq.'+existeMesmoMes.id,{method:'PATCH',body:JSON.stringify({qtd_pessoas:n.qtd_pessoas}),prefer:'return=minimal'});
+      } else {
+        await sb('equipe_setores',{method:'POST',body:JSON.stringify({setor:n.setor,qtd_pessoas:n.qtd_pessoas,mes_inicio:mesAtual}),prefer:'return=minimal'});
+      }
+    }
+    // setores removidos: registra como 0 pessoas a partir deste mês
+    const novosNomes=novos.map(n=>n.setor);
+    for(const s of prod2Equipe){
+      if(!novosNomes.includes(s.setor)){
+        const existeMesmoMes=prod2EquipeHist.find(r=>r.setor===s.setor&&(r.mes_inicio||'')===mesAtual);
+        if(existeMesmoMes) await sb('equipe_setores?id=eq.'+existeMesmoMes.id,{method:'PATCH',body:JSON.stringify({qtd_pessoas:0}),prefer:'return=minimal'});
+        else await sb('equipe_setores',{method:'POST',body:JSON.stringify({setor:s.setor,qtd_pessoas:0,mes_inicio:mesAtual}),prefer:'return=minimal'});
+      }
     }
     await loadProd2(); renderProd2();
     document.getElementById('prod2-ov-equipe').style.display='none';
-    toast('Quadro da equipe salvo!');
+    toast('Quadro atualizado a partir de '+mesAtual+'.');
   }catch(e){setSync('err');prod2Erro('Erro ao salvar equipe: '+(e.message||e));toast('Erro ao salvar','erro')}
 }
 
