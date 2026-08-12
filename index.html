@@ -840,6 +840,12 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
     <div class="chart-wrap" style="height:200px"><canvas id="prod2-chart-evol"></canvas></div>
   </div>
 
+  <!-- Produtividade por pessoa por setor -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Peças por pessoa · por setor</div>
+    <div id="prod2-porpessoa"></div>
+  </div>
+
   <!-- Capacidade por setor (gargalo) -->
   <div class="card" style="margin-bottom:16px">
     <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Capacidade por setor</div>
@@ -2180,7 +2186,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='prod-1 · 12/08';
+const APP_VERSION='prod-2 · 12/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -2232,6 +2238,7 @@ function renderProd2(){
   renderProd2Kpis();
   renderProd2Termometro();
   renderProd2Equipe();
+  renderProd2PorPessoa();
   renderProd2Setores();
   renderProd2Insights();
   renderProd2ChartEvol();
@@ -2301,6 +2308,52 @@ function renderProd2Equipe(){
     </div>`).join('')}</div>`;
 }
 
+function renderProd2PorPessoa(){
+  const el=document.getElementById('prod2-porpessoa');
+  if(!prod2Equipe.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Cadastre a equipe para ver a produtividade por setor.</div>';return}
+
+  const mesKey=prod2MesAtualKey();
+  // dias úteis já passados no mês (pra média diária justa)
+  const hj=new Date(),ano=hj.getFullYear(),mes=hj.getMonth();
+  let uteisPass=0;
+  for(let dd=1;dd<=hj.getDate();dd++){const wd=new Date(ano,mes,dd).getDay();if(wd>=1&&wd<=5)uteisPass++;}
+
+  // produção do mês por setor
+  const prodMesSetor={};
+  cachedLancs.filter(l=>l.data.slice(0,7)===mesKey).forEach(l=>{prodMesSetor[l.setor]=(prodMesSetor[l.setor]||0)+l.qtd;});
+
+  // monta dados só dos setores que têm gente cadastrada
+  const dados=prod2Equipe.filter(e=>e.qtd_pessoas>0).map(e=>{
+    const prodMes=prodMesSetor[e.setor]||0;
+    const porPessoaMes=Math.round(prodMes/e.qtd_pessoas);
+    const porPessoaDia=uteisPass>0?Math.round(prodMes/e.qtd_pessoas/uteisPass):0;
+    return {setor:e.setor,pessoas:e.qtd_pessoas,prodMes,porPessoaMes,porPessoaDia};
+  }).filter(d=>d.prodMes>0).sort((a,b)=>b.porPessoaDia-a.porPessoaDia);
+
+  if(!dados.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Sem lançamentos deste mês nos setores da equipe ainda.</div>';return}
+
+  const maxPP=Math.max(1,...dados.map(d=>d.porPessoaDia));
+  const melhor=dados[0], pior=dados[dados.length-1];
+
+  el.innerHTML=dados.map((d,i)=>{
+    const pct=Math.round(d.porPessoaDia/maxPP*100);
+    const ehMelhor=d.setor===melhor.setor&&dados.length>1;
+    const ehPior=d.setor===pior.setor&&dados.length>1;
+    const cor=ehMelhor?'var(--green)':ehPior?'var(--red)':'var(--accent)';
+    const tag=ehMelhor?'<span style="font-size:9px;font-weight:700;color:var(--green);background:var(--green-d);padding:2px 7px;border-radius:10px;margin-left:6px">MELHOR</span>':ehPior?'<span style="font-size:9px;font-weight:700;color:var(--red);background:var(--red-d);padding:2px 7px;border-radius:10px;margin-left:6px">MENOR</span>':'';
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px">
+        <span>${d.setor} <span style="color:var(--text3)">· ${d.pessoas}p</span>${tag}</span>
+        <span><b style="font-family:'Inter',sans-serif;color:${cor}">${d.porPessoaDia}</b><span style="color:var(--text3);font-size:11px">/pessoa/dia</span></span>
+      </div>
+      <div style="height:8px;background:var(--ink3);border-radius:4px;overflow:hidden">
+        <div class="prog-bar" data-pct="${pct}" style="width:0%;background:${cor};border-radius:4px"></div>
+      </div>
+    </div>`;
+  }).join('')+`<div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">Peças que cada setor produz por pessoa, por dia útil deste mês. ${dados.length>1?`<b style="color:var(--green)">${melhor.setor}</b> rende mais por pessoa; <b style="color:var(--red)">${pior.setor}</b> menos — mas lembre que setores fazem trabalhos diferentes, nem sempre é comparável direto.`:''}</div>`;
+  animarBarras('prod2-porpessoa');
+}
+
 function renderProd2Setores(){
   // capacidade = melhor MÊS histórico de cada setor; atual = mês corrente
   const porSetorMes={};
@@ -2344,15 +2397,54 @@ function renderProd2Insights(){
   const capEmbMes=PROD2_EMB_DIA_TALO*22;
   let cards='';
 
-  // Alerta teto embalagem
-  const projMensal=atual; // simplificado
+  // ── Gargalo: setor cuja capacidade (melhor mês) é a menor entre os de produção ──
+  const porSetorMes={};
+  cachedLancs.forEach(l=>{const k=l.setor+'|'+l.data.slice(0,7);porSetorMes[k]=(porSetorMes[k]||0)+l.qtd;});
+  const setoresProd=[...new Set(cachedLancs.map(l=>l.setor))].filter(s=>!['Expedição','Usinagem','Embalagem'].includes(s));
+  const caps=setoresProd.map(setor=>{
+    const vals=Object.keys(porSetorMes).filter(k=>k.startsWith(setor+'|')).map(k=>porSetorMes[k]);
+    return {setor,cap:vals.length?Math.max(...vals):0};
+  }).filter(x=>x.cap>0).sort((a,b)=>a.cap-b.cap);
+
+  if(caps.length>=2){
+    const gargalo=caps[0], forte=caps[caps.length-1];
+    const folga=Math.round((forte.cap/gargalo.cap-1)*100);
+    if(folga>=20){
+      cards+=prod2Card('!','var(--red)','rgba(224,92,92,.12)','Gargalo da produção',
+        `${gargalo.setor} é o setor de menor capacidade`,
+        `No melhor mês, ${gargalo.setor} fez ${gargalo.cap.toLocaleString('pt-BR')} pç, contra ${forte.cap.toLocaleString('pt-BR')} de ${forte.setor} (${folga}% mais). O ritmo final tende a ser limitado por ${gargalo.setor} — reforçar aqui costuma destravar mais que reforçar os outros.`);
+    }
+  }
+
+  // ── Setor com potencial: está produzindo bem abaixo da própria capacidade neste mês ──
+  const mesKey=prod2MesAtualKey();
+  const hj=new Date(),ano=hj.getFullYear(),mes=hj.getMonth();
+  const ultimoDia=new Date(ano,mes+1,0).getDate();
+  let uteisPass=0,uteisTot=0;
+  for(let dd=1;dd<=ultimoDia;dd++){const wd=new Date(ano,mes,dd).getDay();if(wd>=1&&wd<=5){uteisTot++;if(dd<=hj.getDate())uteisPass++;}}
+  const potencial=setoresProd.map(setor=>{
+    const vals=Object.keys(porSetorMes).filter(k=>k.startsWith(setor+'|')).map(k=>porSetorMes[k]);
+    const cap=vals.length?Math.max(...vals):0;
+    const atualMes=porSetorMes[setor+'|'+mesKey]||0;
+    const projMes=uteisPass>0?Math.round(atualMes/uteisPass*uteisTot):0;
+    return {setor,cap,projMes,folga:cap>0?Math.round((1-projMes/cap)*100):0};
+  }).filter(x=>x.cap>0&&x.projMes>0).sort((a,b)=>b.folga-a.folga);
+
+  if(potencial.length&&potencial[0].folga>=25){
+    const p=potencial[0];
+    cards+=prod2Card('▲','var(--blue)','rgba(91,156,246,.12)','Setor com folga',
+      `${p.setor} pode render mais este mês`,
+      `Projetado em ${p.projMes.toLocaleString('pt-BR')} pç, mas já fez ${p.cap.toLocaleString('pt-BR')} no melhor mês — ${p.folga}% de folga. Se o gargalo estiver em outro lugar, esse setor tem espaço pra ajudar ou acelerar.`);
+  }
+
+  // ── Alerta teto embalagem ──
   if(atual>capEmbMes*0.9){
     cards+=prod2Card('!','var(--red)','rgba(224,92,92,.12)','Teto da embalagem',
       `Embalagem perto do limite (~${capEmbMes.toLocaleString('pt-BR')}/mês)`,
       `A ${PROD2_EMB_DIA_TALO}/dia, a embalagem faz ~${capEmbMes.toLocaleString('pt-BR')} por mês. Acima disso, vale realocar alguém para embalar.`);
   }
 
-  // Produtividade vs base
+  // ── Produtividade vs base (usa projeção) ──
   const projMes=prod2ProjecaoMes();
   const prodAtual=totPessoas>0?Math.round(projMes/totPessoas):0;
   const prodBase=Math.round(PROD2_BASE_PECAS/PROD2_BASE_PESSOAS);
@@ -2361,12 +2453,26 @@ function renderProd2Insights(){
     cards+=prod2Card(manteve?'▲':'▼',manteve?'var(--green)':'var(--amber)',manteve?'rgba(76,175,125,.12)':'rgba(232,156,71,.12)',
       'Produtividade com equipe maior',
       manteve?`Produtividade mantida com ${totPessoas} pessoas`:`Produtividade caiu com a equipe maior`,
-      manteve?`${prodAtual} peças/pessoa vs ${prodBase} da base. A equipe maior está rendendo proporcional.`:`${prodAtual} peças/pessoa vs ${prodBase} da base. Pode ser curva de aprendizado dos novos, ou algum setor travando. Acompanhe as próximas semanas.`);
+      manteve?`Projeção de ${prodAtual} peças/pessoa vs ${prodBase} da base. A equipe maior rende proporcional.`:`Projeção de ${prodAtual} peças/pessoa vs ${prodBase} da base. Pode ser curva de aprendizado dos novos, ou algum setor travando. Acompanhe as próximas semanas.`);
+  }
+
+  // ── Melhor mês da história (motivação) ──
+  const embKeys=Object.keys(embMes);
+  if(embKeys.length>=2){
+    const melhorMes=embKeys.map(k=>({k,v:embMes[k]})).sort((a,b)=>b.v-a.v)[0];
+    if(melhorMes.k!==mesKey){
+      const[a2,m2]=melhorMes.k.split('-');
+      const nomeM=new Date(a2,m2-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+      cards+=prod2Card('★','var(--accent)','rgba(232,197,71,.12)','Recorde de embalagem',
+        `${melhorMes.v.toLocaleString('pt-BR')} peças no melhor mês`,
+        `Foi em ${nomeM}. É a referência a superar — com a equipe maior, dá pra mirar acima disso.`);
+    }
   }
 
   if(cards) document.getElementById('prod2-insights').innerHTML=`<div class="insights-grid">${cards}</div>`;
   else document.getElementById('prod2-insights').innerHTML='';
 }
+
 function prod2Card(icone,cor,bg,cat,titulo,detalhe){
   return `<div class="insight-card" style="border-color:${cor.replace('var(--','rgba(').replace(')',',.25)')}">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
