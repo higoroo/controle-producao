@@ -392,13 +392,19 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     Produtos
   </button>
-  <button class="sb-item" onclick="goTo('wip',this)" id="sb-wip">
+  <!-- aba Processo oculta (mantida para retomada futura)
+<button class="sb-item" onclick="goTo('wip',this)" id="sb-wip">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="6" y="12" width="3" height="6" rx="1"/><rect x="11" y="8" width="3" height="10" rx="1"/><rect x="16" y="4" width="3" height="14" rx="1"/></svg>
     Processo
   </button>
+-->
   <button class="sb-item" onclick="goTo('dev',this)" id="sb-dev">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
     Devoluções
+  </button>
+  <button class="sb-item" onclick="goTo('prod2',this)" id="sb-prod2">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Produtividade
   </button>
   <button class="sb-item" onclick="goTo('anal',this)" id="sb-anal">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -437,10 +443,12 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     Produtos
   </button>
-  <button class="nav-item" onclick="goTo('wip',this)">
+  <!-- aba Processo oculta
+<button class="nav-item" onclick="goTo('wip',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/></svg>
     Processo
   </button>
+-->
   <button class="nav-item" onclick="goTo('dev',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
     Devol.
@@ -800,6 +808,48 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 </div></div>
 
 <!-- ── ANÁLISE ── -->
+<div id="page-prod2" class="page"><div class="content-inner">
+  <div class="sec-title">Produtividade da equipe</div>
+
+  <div id="prod2-erro" style="display:none;background:var(--red-d);border:1px solid rgba(224,92,92,.35);border-radius:var(--r2);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--red)"></div>
+
+  <!-- KPIs principais -->
+  <div class="kpi-grid" id="prod2-kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"></div>
+
+  <!-- Termômetro da meta -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)">Meta do mês</div>
+      <button class="btn btn-ghost btn-sm" onclick="abrirProd2Meta()">Ajustar meta</button>
+    </div>
+    <div id="prod2-termometro"></div>
+  </div>
+
+  <!-- Quadro da equipe -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)">Quadro da equipe</div>
+      <button class="btn btn-ghost btn-sm" onclick="abrirProd2Equipe()">Editar</button>
+    </div>
+    <div id="prod2-equipe"></div>
+  </div>
+
+  <!-- Evolução da produtividade -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Produtividade por mês — embalado ÷ pessoas</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="prod2-chart-evol"></canvas></div>
+  </div>
+
+  <!-- Capacidade por setor (gargalo) -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Capacidade por setor</div>
+    <div id="prod2-setores"></div>
+  </div>
+
+  <div id="prod2-insights"></div>
+
+</div></div>
+
 <div id="page-anal" class="page"><div class="content-inner">
   <div class="sec-title">Insights automáticos</div>
   <div id="insights-area"><div class="loading"><div class="spinner"></div>Calculando...</div></div>
@@ -1174,6 +1224,35 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   </div>
 </div>
 
+
+<!-- Modais Produtividade -->
+<div id="prod2-ov-equipe" class="wov" onclick="if(event.target===this)document.getElementById('prod2-ov-equipe').style.display='none'">
+  <div class="wmodal">
+    <h3>Quadro da equipe</h3>
+    <div class="wmodal-sub">Quantas pessoas em cada setor. Fica fixo — edite só quando mudar.</div>
+    <div id="prod2-equipe-form"></div>
+    <button class="btn btn-ghost btn-sm" onclick="prod2AddSetorLinha()" style="width:100%;margin-bottom:14px">+ Setor</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('prod2-ov-equipe').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarProd2Equipe()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="prod2-ov-meta" class="wov" onclick="if(event.target===this)document.getElementById('prod2-ov-meta').style.display='none'">
+  <div class="wmodal">
+    <h3>Meta mensal</h3>
+    <div class="wmodal-sub">Faixa de peças embaladas por mês que você quer atingir.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div><label class="wfl">Meta mínima</label><input type="number" class="wfi" id="prod2-meta-min" value="1000"></div>
+      <div><label class="wfl">Meta ideal</label><input type="number" class="wfi" id="prod2-meta-max" value="1200"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('prod2-ov-meta').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarProd2Meta()">Salvar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 let toggleDia = 'emb';
@@ -2101,8 +2180,294 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='fluxo-9b · 07/08';
+const APP_VERSION='prod-1 · 12/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
+
+/* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
+const PROD2_BASE_PESSOAS=4, PROD2_BASE_PECAS=700;  // marco histórico (4 pessoas → 700/mês)
+const PROD2_EMB_DIA_TALO=50;                        // embalagem no talo
+let prod2Equipe=[];      // [{setor,qtd_pessoas}]
+let prod2Meta={min:1000,max:1200};
+
+function prod2Erro(msg){
+  const el=document.getElementById('prod2-erro');
+  if(!el)return; el.style.display=msg?'block':'none'; el.textContent=msg||'';
+}
+function prod2TotalPessoas(){return prod2Equipe.reduce((a,s)=>a+(parseInt(s.qtd_pessoas)||0),0)}
+
+// embalado por mês (do histórico de lançamentos)
+function prod2EmbaladoPorMes(){
+  const m={};
+  cachedLancs.filter(l=>l.setor==='Embalagem').forEach(l=>{
+    const k=l.data.slice(0,7);
+    m[k]=(m[k]||0)+l.qtd;
+  });
+  return m;
+}
+function prod2MesAtualKey(){return hoje().slice(0,7)}
+
+async function loadProd2(){
+  setSync('syncing');
+  try{
+    const eq=await sb('equipe_setores?select=*&order=setor').catch(()=>[]);
+    prod2Equipe=eq||[];
+    // meta guardada em metas? usar tabela metas com setor especial, ou localStorage simples
+    const savedMin=localStorage.getItem('prod2_meta_min');
+    const savedMax=localStorage.getItem('prod2_meta_max');
+    if(savedMin)prod2Meta.min=parseInt(savedMin);
+    if(savedMax)prod2Meta.max=parseInt(savedMax);
+    setSync('ok');
+  }catch(e){setSync('err');prod2Erro('Erro ao carregar equipe: '+(e.message||e));prod2Equipe=[]}
+}
+
+function renderProd2(){
+  if(!prod2Equipe.length){
+    document.getElementById('prod2-kpis').innerHTML='';
+    document.getElementById('prod2-equipe').innerHTML=`<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">Nenhum setor cadastrado. Toque em <b>Editar</b> para montar o quadro da equipe.</div>`;
+    document.getElementById('prod2-termometro').innerHTML='';
+    document.getElementById('prod2-setores').innerHTML='';
+    document.getElementById('prod2-insights').innerHTML='';
+    return;
+  }
+  renderProd2Kpis();
+  renderProd2Termometro();
+  renderProd2Equipe();
+  renderProd2Setores();
+  renderProd2Insights();
+  renderProd2ChartEvol();
+}
+
+function prod2ProjecaoMes(){
+  const embMes=prod2EmbaladoPorMes();
+  const atual=embMes[prod2MesAtualKey()]||0;
+  const hj=new Date(),ano=hj.getFullYear(),mes=hj.getMonth();
+  const ultimoDia=new Date(ano,mes+1,0).getDate();
+  let uteisTot=0,uteisPass=0;
+  for(let dd=1;dd<=ultimoDia;dd++){const wd=new Date(ano,mes,dd).getDay();if(wd>=1&&wd<=5){uteisTot++;if(dd<=hj.getDate())uteisPass++;}}
+  return uteisPass>0?Math.round(atual/uteisPass*uteisTot):atual;
+}
+function renderProd2Kpis(){
+  const embMes=prod2EmbaladoPorMes();
+  const mesAtualEmb=embMes[prod2MesAtualKey()]||0;
+  const totPessoas=prod2TotalPessoas();
+  const projMes=prod2ProjecaoMes();
+  const prodAtual=totPessoas>0?Math.round(projMes/totPessoas):0;  // projeção ÷ pessoas
+  const prodBase=Math.round(PROD2_BASE_PECAS/PROD2_BASE_PESSOAS); // 175
+  const deltaProd=prodBase>0?Math.round((prodAtual/prodBase-1)*100):0;
+
+  document.getElementById('prod2-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Embalado no mês</div><div class="kpi-val">${mesAtualEmb.toLocaleString('pt-BR')}</div><div class="kpi-sub">meta ${prod2Meta.min.toLocaleString('pt-BR')}–${prod2Meta.max.toLocaleString('pt-BR')}</div></div>
+    <div class="kpi"><div class="kpi-label">Equipe</div><div class="kpi-val">${totPessoas}</div><div class="kpi-sub">${prod2Equipe.map(s=>s.qtd_pessoas+' '+abrevSetor(s.setor)).join(' · ')}</div></div>
+    <div class="kpi"><div class="kpi-label">Peças / pessoa (proj.)</div><div class="kpi-val" style="color:${deltaProd>=0?'var(--green)':'var(--red)'}">${prodAtual}</div><div class="kpi-sub">base ${prodBase} · ${deltaProd>=0?'+':''}${deltaProd}%</div></div>`;
+}
+function abrevSetor(s){const m={'Marcenaria':'marc','Pintura':'pint','Embalagem':'emb','Usinagem':'usin','Montagem':'mont','Expedição':'exp','Fundo':'fundo','Lixa de Fundo':'lixa','Elétrica':'elét'};return m[s]||s.toLowerCase().slice(0,4)}
+
+function renderProd2Termometro(){
+  const embMes=prod2EmbaladoPorMes();
+  const atual=embMes[prod2MesAtualKey()]||0;
+  const pct=Math.min(100,Math.round(atual/prod2Meta.max*100));
+  const pctMin=Math.round(prod2Meta.min/prod2Meta.max*100);
+  // dias úteis restantes no mês
+  const hj=new Date(), ano=hj.getFullYear(), mes=hj.getMonth();
+  const ultimoDia=new Date(ano,mes+1,0).getDate();
+  let uteisRest=0, uteisTot=0;
+  for(let d=1;d<=ultimoDia;d++){const wd=new Date(ano,mes,d).getDay();if(wd>=1&&wd<=5){uteisTot++;if(d>hj.getDate())uteisRest++;}}
+  const faltamMin=Math.max(0,prod2Meta.min-atual);
+  const ritmoNec=uteisRest>0?Math.ceil(faltamMin/uteisRest):faltamMin;
+  const diasProduzidos=uteisTot-uteisRest;
+  const projecao=diasProduzidos>0?Math.round(atual/diasProduzidos*uteisTot):atual;
+
+  const cor=atual>=prod2Meta.min?'var(--green)':pct>=pctMin*0.7?'var(--amber)':'var(--red)';
+  document.getElementById('prod2-termometro').innerHTML=`
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+      <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:28px;color:${cor};letter-spacing:-0.03em">${atual.toLocaleString('pt-BR')}</div>
+      <div style="font-size:12px;color:var(--text3)">de ${prod2Meta.min.toLocaleString('pt-BR')}–${prod2Meta.max.toLocaleString('pt-BR')} peças</div>
+    </div>
+    <div style="position:relative;height:12px;background:var(--ink3);border-radius:6px;overflow:hidden;margin-bottom:6px">
+      <div style="position:absolute;left:0;top:0;height:100%;width:${pct}%;background:${cor};border-radius:6px;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>
+      <div style="position:absolute;left:${pctMin}%;top:-2px;height:16px;width:2px;background:var(--text2)" title="meta mínima"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">
+      <span>Projeção do mês: <b style="color:${projecao>=prod2Meta.min?'var(--green)':'var(--amber)'}">${projecao.toLocaleString('pt-BR')}</b></span>
+      <span>${faltamMin>0?`Faltam ${faltamMin.toLocaleString('pt-BR')} · ~${ritmoNec}/dia em ${uteisRest} dias`:'Meta mínima atingida ✓'}</span>
+    </div>`;
+}
+
+function renderProd2Equipe(){
+  document.getElementById('prod2-equipe').innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px">${prod2Equipe.map(s=>`
+    <div style="flex:1;min-width:90px;background:var(--ink3);border-radius:var(--r);padding:10px 12px;text-align:center">
+      <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:22px">${s.qtd_pessoas}</div>
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:2px">${s.setor}</div>
+    </div>`).join('')}</div>`;
+}
+
+function renderProd2Setores(){
+  // capacidade = melhor MÊS histórico de cada setor; atual = mês corrente
+  const porSetorMes={};
+  cachedLancs.forEach(l=>{
+    const k=l.setor+'|'+l.data.slice(0,7);
+    porSetorMes[k]=(porSetorMes[k]||0)+l.qtd;
+  });
+  const setores=[...new Set(cachedLancs.map(l=>l.setor))].filter(s=>!['Expedição'].includes(s));
+  const dados=setores.map(setor=>{
+    const meses=Object.keys(porSetorMes).filter(k=>k.startsWith(setor+'|'));
+    const valores=meses.map(k=>porSetorMes[k]);
+    const pico=valores.length?Math.max(...valores):0;
+    const atual=porSetorMes[setor+'|'+prod2MesAtualKey()]||0;
+    const pessoas=(prod2Equipe.find(e=>e.setor===setor)||{}).qtd_pessoas||0;
+    return {setor,pico,atual,pessoas};
+  }).filter(d=>d.pico>0).sort((a,b)=>b.pico-a.pico);
+
+  const maxPico=Math.max(1,...dados.map(d=>d.pico));
+  document.getElementById('prod2-setores').innerHTML=dados.map(d=>{
+    const pctPico=Math.round(d.pico/maxPico*100);
+    const pctAtual=Math.round(d.atual/maxPico*100);
+    const perCap=d.pessoas>0?Math.round(d.pico/d.pessoas):null;
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span>${d.setor}${d.pessoas?` <span style="color:var(--text3)">· ${d.pessoas}p${perCap?` · pico ${perCap}/p`:''}</span>`:''}</span>
+        <span style="color:var(--text3)">pico <b style="color:var(--text);font-family:'Inter',sans-serif">${d.pico.toLocaleString('pt-BR')}</b></span>
+      </div>
+      <div style="position:relative;height:8px;background:var(--ink3);border-radius:4px;overflow:hidden">
+        <div style="position:absolute;height:100%;width:${pctPico}%;background:var(--line2);border-radius:4px"></div>
+        <div class="prog-bar" data-pct="${pctAtual}" style="position:absolute;height:100%;width:0%;background:var(--accent);border-radius:4px"></div>
+      </div>
+    </div>`;
+  }).join('')+`<div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">Barra clara = melhor mês já feito (capacidade). Barra âmbar = este mês. O setor de menor capacidade tende a limitar os demais.</div>`;
+  animarBarras('prod2-setores');
+}
+
+function renderProd2Insights(){
+  const embMes=prod2EmbaladoPorMes();
+  const atual=embMes[prod2MesAtualKey()]||0;
+  const totPessoas=prod2TotalPessoas();
+  const capEmbMes=PROD2_EMB_DIA_TALO*22;
+  let cards='';
+
+  // Alerta teto embalagem
+  const projMensal=atual; // simplificado
+  if(atual>capEmbMes*0.9){
+    cards+=prod2Card('!','var(--red)','rgba(224,92,92,.12)','Teto da embalagem',
+      `Embalagem perto do limite (~${capEmbMes.toLocaleString('pt-BR')}/mês)`,
+      `A ${PROD2_EMB_DIA_TALO}/dia, a embalagem faz ~${capEmbMes.toLocaleString('pt-BR')} por mês. Acima disso, vale realocar alguém para embalar.`);
+  }
+
+  // Produtividade vs base
+  const projMes=prod2ProjecaoMes();
+  const prodAtual=totPessoas>0?Math.round(projMes/totPessoas):0;
+  const prodBase=Math.round(PROD2_BASE_PECAS/PROD2_BASE_PESSOAS);
+  if(totPessoas>PROD2_BASE_PESSOAS){
+    const manteve=prodAtual>=prodBase*0.9;
+    cards+=prod2Card(manteve?'▲':'▼',manteve?'var(--green)':'var(--amber)',manteve?'rgba(76,175,125,.12)':'rgba(232,156,71,.12)',
+      'Produtividade com equipe maior',
+      manteve?`Produtividade mantida com ${totPessoas} pessoas`:`Produtividade caiu com a equipe maior`,
+      manteve?`${prodAtual} peças/pessoa vs ${prodBase} da base. A equipe maior está rendendo proporcional.`:`${prodAtual} peças/pessoa vs ${prodBase} da base. Pode ser curva de aprendizado dos novos, ou algum setor travando. Acompanhe as próximas semanas.`);
+  }
+
+  if(cards) document.getElementById('prod2-insights').innerHTML=`<div class="insights-grid">${cards}</div>`;
+  else document.getElementById('prod2-insights').innerHTML='';
+}
+function prod2Card(icone,cor,bg,cat,titulo,detalhe){
+  return `<div class="insight-card" style="border-color:${cor.replace('var(--','rgba(').replace(')',',.25)')}">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="width:28px;height:28px;border-radius:8px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${cor}">${icone}</div>
+      <div style="font-size:9px;color:${cor};font-weight:700;letter-spacing:.07em;text-transform:uppercase">${cat}</div>
+    </div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text);line-height:1.3;margin-bottom:4px">${titulo}</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.6">${detalhe}</div>
+  </div>`;
+}
+
+function renderProd2ChartEvol(){
+  const embMes=prod2EmbaladoPorMes();
+  const keys=Object.keys(embMes).sort();
+  if(!keys.length){return}
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const tickClr=isDark?'#5a5855':'#9a9994', gridClr=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
+  const totPessoas=prod2TotalPessoas()||PROD2_BASE_PESSOAS;
+  // histórico sempre 4 pessoas; mês atual usa equipe atual
+  const labels=keys.map(k=>{const[a,m]=k.split('-');return new Date(a,m-1,1).toLocaleDateString('pt-BR',{month:'short',year:'2-digit'})});
+  const prodMes=keys.map(k=>{
+    const pessoas=(k===prod2MesAtualKey())?totPessoas:PROD2_BASE_PESSOAS;
+    return Math.round(embMes[k]/pessoas);
+  });
+  const ctx=document.getElementById('prod2-chart-evol').getContext('2d');
+  if(charts.prod2Evol)charts.prod2Evol.destroy();
+  const prodBase=Math.round(PROD2_BASE_PECAS/PROD2_BASE_PESSOAS);
+  charts.prod2Evol=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Peças/pessoa',data:prodMes,borderColor:'#e8c547',backgroundColor:'rgba(232,197,71,0.1)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:'#e8c547'},
+      {label:'Base (175)',data:keys.map(()=>prodBase),borderColor:'rgba(138,136,128,0.5)',borderDash:[5,4],pointRadius:0,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:600,easing:'easeOutQuart'},
+      plugins:{legend:{display:true,labels:{color:tickClr,font:{size:10},boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' pç/pessoa'}}},
+      scales:{x:{grid:{display:false},ticks:{color:tickClr,font:{size:10}}},y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}},beginAtZero:true}}}
+  });
+}
+
+/* ── Editar equipe ── */
+function abrirProd2Equipe(){
+  prod2RenderEquipeForm();
+  document.getElementById('prod2-ov-equipe').style.display='flex';
+}
+function prod2RenderEquipeForm(){
+  const base=prod2Equipe.length?prod2Equipe:[{setor:'Marcenaria',qtd_pessoas:2},{setor:'Pintura',qtd_pessoas:1},{setor:'Embalagem',qtd_pessoas:1}];
+  document.getElementById('prod2-equipe-form').innerHTML=base.map(s=>prod2SetorRow(s.setor,s.qtd_pessoas)).join('');
+}
+function prod2SetorRow(setor,qtd){
+  return `<div class="wet-row" style="margin-bottom:8px">
+    <input type="text" list="prod2-setores-list" value="${(setor||'').replace(/"/g,'&quot;')}" placeholder="Setor" style="flex:1">
+    <input type="number" min="0" value="${parseInt(qtd)||0}" style="width:70px;padding:8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'Inter',sans-serif;font-weight:700;text-align:center;box-sizing:border-box">
+    <button class="wet-del" onclick="this.parentElement.remove()">&times;</button>
+  </div>
+  <datalist id="prod2-setores-list">${SETORES.map(s=>'<option value="'+s+'">').join('')}</datalist>`;
+}
+function prod2AddSetorLinha(){
+  document.getElementById('prod2-equipe-form').insertAdjacentHTML('beforeend',prod2SetorRow('',1));
+}
+async function salvarProd2Equipe(){
+  const rows=[...document.querySelectorAll('#prod2-equipe-form .wet-row')];
+  const novos=[];
+  rows.forEach(r=>{
+    const setor=r.querySelector('input[type=text]').value.trim();
+    const qtd=parseInt(r.querySelector('input[type=number]').value)||0;
+    if(setor)novos.push({setor,qtd_pessoas:qtd});
+  });
+  if(!novos.length){toast('Adicione ao menos um setor.','aviso');return}
+  setSync('syncing');
+  try{
+    // apaga os que sumiram e faz upsert dos atuais
+    const atuais=prod2Equipe.map(e=>e.setor);
+    const novosNomes=novos.map(n=>n.setor);
+    for(const velho of atuais){
+      if(!novosNomes.includes(velho)) await sb('equipe_setores?setor=eq.'+encodeURIComponent(velho),{method:'DELETE',prefer:'return=minimal'});
+    }
+    for(const n of novos){
+      await sb('equipe_setores',{method:'POST',body:JSON.stringify(n),prefer:'resolution=merge-duplicates,return=minimal',headers:{'Prefer':'resolution=merge-duplicates,return=minimal'}});
+    }
+    await loadProd2(); renderProd2();
+    document.getElementById('prod2-ov-equipe').style.display='none';
+    toast('Quadro da equipe salvo!');
+  }catch(e){setSync('err');prod2Erro('Erro ao salvar equipe: '+(e.message||e));toast('Erro ao salvar','erro')}
+}
+
+/* ── Editar meta ── */
+function abrirProd2Meta(){
+  document.getElementById('prod2-meta-min').value=prod2Meta.min;
+  document.getElementById('prod2-meta-max').value=prod2Meta.max;
+  document.getElementById('prod2-ov-meta').style.display='flex';
+}
+function salvarProd2Meta(){
+  prod2Meta.min=parseInt(document.getElementById('prod2-meta-min').value)||1000;
+  prod2Meta.max=parseInt(document.getElementById('prod2-meta-max').value)||1200;
+  localStorage.setItem('prod2_meta_min',prod2Meta.min);
+  localStorage.setItem('prod2_meta_max',prod2Meta.max);
+  document.getElementById('prod2-ov-meta').style.display='none';
+  renderProd2();
+  toast('Meta atualizada.');
+}
 
 function init(){
   document.getElementById('f-data').value=hoje();
@@ -2175,6 +2540,7 @@ function goTo(id,btn){
   }
   if(id==='prod'){document.getElementById('f-data').value=hoje();renderProd();}
   if(id==='wip'){loadWip().then(renderWip);}
+  if(id==='prod2'){Promise.all([cachedLancs.length?Promise.resolve():loadAll(),loadProd2()]).then(()=>renderProd2());}
   if(id==='dev'){document.getElementById('dv-data').value=hoje();Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
   if(id==='comp'){skeletonKPIs('comp-kpis');skeletonLista('comp-lista');loadCompras().then(()=>{initCompras();filtrarMateriais();renderCompLista();const b=document.getElementById('comp-gestor-badge');if(b)b.style.display=modoGestorAtivo?'block':'none';})}
   if(id==='materiais'){loadCompras().then(()=>{initCompras();renderMatLista()})}
@@ -5114,6 +5480,7 @@ function refreshPaginaAtual(){
   if(id==='dash')return renderDash();
   if(id==='prod')return Promise.resolve(renderProd());
   if(id==='wip')return loadWip().then(renderWip);
+  if(id==='prod2')return Promise.all([loadAll(),loadProd2()]).then(()=>renderProd2());
   if(id==='dev')return Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash());
   if(id==='comp')return loadCompras().then(()=>{filtrarMateriais();renderCompLista()});
   if(id==='materiais')return loadCompras().then(()=>renderMatLista());
