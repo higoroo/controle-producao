@@ -2186,7 +2186,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='prod-4 · 12/08';
+const APP_VERSION='prod-5 · 12/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -2360,45 +2360,48 @@ function renderProd2PorPessoa(){
     const serie=mesesRecentes.map(mk=>{
       const prod=prodSM[setor+'|'+mk]||0;
       const pessoas=prod2PessoasNoMes(setor,mk);
-      const ppd=pessoas>0?prod/pessoas/uteisNoMes(mk):0;
-      return {mk,ppd:Math.round(ppd),pessoas,prod};
+      const dias=uteisNoMes(mk);
+      const ppd=pessoas>0?prod/pessoas/dias:0;
+      return {mk,ppd:Math.round(ppd),pessoas,prod,dias};
     });
     const comDados=serie.filter(s=>s.prod>0);
     if(!comDados.length)return '';
     const atual=serie[serie.length-1];
-    const anterior=[...serie].reverse().find((s,idx)=>idx>0&&s.prod>0);
+    // mês anterior COM dados (para a seta)
+    let anterior=null;
+    for(let k=serie.length-2;k>=0;k--){if(serie[k].prod>0){anterior=serie[k];break;}}
     const delta=(anterior&&anterior.ppd>0)?Math.round((atual.ppd/anterior.ppd-1)*100):null;
     const max=Math.max(1,...serie.map(s=>s.ppd));
-
     const seta=delta===null?'':delta>3?'▲':delta<-3?'▼':'→';
     const corSeta=delta===null?'var(--text3)':delta>3?'var(--green)':delta<-3?'var(--red)':'var(--text3)';
 
-    // mini sparkline com barras
     const nomeMes=(mk)=>{const[y,m]=mk.split('-');return new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'short'}).replace('.','');};
     const bars=serie.map(s=>{
-      const h=s.ppd>0?Math.max(14,Math.round(s.ppd/max*100)):0;
       const ehAtual=s.mk===atual.mk;
-      return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px" title="${s.mk}: ${s.ppd}/pessoa/dia (${s.pessoas} pessoas)">
-        <div style="font-size:10px;font-weight:700;font-family:'Inter',sans-serif;color:${s.prod>0?(ehAtual?'var(--accent)':'var(--text2)'):'transparent'}">${s.prod>0?s.ppd:'·'}</div>
-        <div style="width:100%;max-width:26px;height:${h}%;min-height:${s.prod>0?'6px':'0'};background:${ehAtual?'var(--accent)':'var(--text3)'};border-radius:3px 3px 0 0;opacity:${ehAtual?1:0.55}"></div>
-        <div style="font-size:9px;color:var(--text3);text-transform:capitalize">${nomeMes(s.mk)}</div>
+      const temDado=s.prod>0;
+      const h=temDado?Math.max(18,Math.round(s.ppd/max*100)):0;
+      const conta=temDado?`${s.prod.toLocaleString('pt-BR')} pç ÷ ${s.pessoas} ${s.pessoas===1?'pessoa':'pessoas'} ÷ ${s.dias} dias = ${s.ppd}/pessoa/dia`:`${nomeMes(s.mk)}: sem lançamentos`;
+      return `<div class="pp-bar" onclick="alert('${conta.replace(/'/g,"\\'")}')" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;cursor:pointer" title="${conta}">
+        <div style="font-size:11px;font-weight:700;font-family:'Inter',sans-serif;color:${temDado?(ehAtual?'var(--accent)':'var(--text2)'):'var(--line2)'}">${temDado?s.ppd:'—'}</div>
+        <div style="width:100%;max-width:30px;height:${h}%;min-height:${temDado?'8px':'0'};background:${ehAtual?'var(--accent)':'var(--green)'};opacity:${ehAtual?1:temDado?0.5:0};border-radius:4px 4px 0 0;transition:height .5s ease"></div>
+        <div style="font-size:10px;color:var(--text3);text-transform:capitalize">${nomeMes(s.mk)}</div>
       </div>`;
     }).join('');
 
-    return `<div style="margin-bottom:16px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
-        <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:14px">${setor} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${atual.pessoas}p agora</span></div>
+    return `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+        <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px">${setor} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${atual.pessoas}p hoje</span></div>
         <div style="text-align:right">
-          <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:18px;color:var(--accent)">${atual.ppd}</span>
-          <span style="font-size:10px;color:var(--text3)">/pessoa/dia</span>
-          ${delta!==null?`<span style="font-size:11px;color:${corSeta};margin-left:4px">${seta} ${Math.abs(delta)}%</span>`:''}
+          <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:20px;color:var(--accent)">${atual.ppd}</span>
+          <span style="font-size:10px;color:var(--text3)"> pç/pessoa/dia</span>
+          ${delta!==null?`<span style="font-size:11px;color:${corSeta};margin-left:5px;font-weight:700">${seta} ${Math.abs(delta)}%</span>`:''}
         </div>
       </div>
-      <div style="display:flex;align-items:flex-end;gap:6px;height:72px">${bars}</div>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:90px">${bars}</div>
     </div>`;
   }).filter(Boolean).join('');
 
-  el.innerHTML=blocos+`<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6">Cada setor comparado com ele mesmo ao longo dos meses — peças por pessoa, por dia útil. A seta compara com o mês anterior. Usa o número real de pessoas de cada mês.</div>`;
+    el.innerHTML=blocos+`<div style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.7"><b>Como ler:</b> cada barra é quantas peças <b>uma pessoa</b> daquele setor produz por dia naquele mês (produção do mês ÷ pessoas ÷ dias úteis). Toque numa barra para ver a conta. A seta compara o mês atual com o anterior.</div>`;
 }
 
 function renderProd2Setores(){
