@@ -2215,7 +2215,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='meta-3 · 14/08';
+const APP_VERSION='meta-4 · 14/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -2260,7 +2260,7 @@ async function loadProd2(){
     const [eq,gr,mt]=await Promise.all([
       sb('equipe_setores?select=*&order=setor,mes_inicio').catch(()=>[]),
       sb('equipe_grupos?select=*&order=nome').catch(()=>[]),
-      sb('metas_diarias?select=*&data=gte.'+mesIni).catch(()=>[])
+      sb('metas_diarias?select=*&order=data.desc').catch(()=>[])
     ]);
     window.metasMesCache=mt||[];
     prod2EquipeHist=eq||[];
@@ -2503,50 +2503,71 @@ function renderProd2Metas(){
   const el=document.getElementById('prod2-metas');
   const card=document.getElementById('prod2-metas-card');
   if(!el)return;
-  const mesKey=hoje().slice(0,7);
-  const metas=(window.metasMesCache||[]).filter(m=>m.data.startsWith(mesKey));
-  if(!metas.length){ if(card)card.style.display='none'; return; }
+  const todasMetas=(window.metasMesCache||[]);
+  if(!todasMetas.length){ if(card)card.style.display='none'; return; }
   if(card)card.style.display='';
 
-  const html=METAS_SETORES.map(setor=>{
-    // dias que tiveram meta nesse setor
-    const dias=[...new Set(metas.filter(m=>m.setor===setor&&m.produto&&m.meta>0).map(m=>m.data))];
+  // dias com meta (qualquer setor), mais recentes primeiro
+  const diasComMeta=[...new Set(todasMetas.filter(m=>m.produto&&m.meta>0).map(m=>m.data))].sort().reverse();
+
+  // resumo do mês atual por setor (topo)
+  const mesKey=hoje().slice(0,7);
+  const resumoHtml=METAS_SETORES.map(setor=>{
+    const dias=[...new Set(todasMetas.filter(m=>m.setor===setor&&m.produto&&m.meta>0&&m.data.startsWith(mesKey)).map(m=>m.data))];
     if(!dias.length)return '';
-    let bateu=0, faltou=0;
-    const motivos=[];
+    let bateu=0;
     dias.forEach(dia=>{
-      const itens=metas.filter(m=>m.setor===setor&&m.produto&&m.meta>0&&m.data===dia);
-      let todosOk=true;
-      itens.forEach(it=>{
-        const real=cachedLancs.filter(l=>l.setor===setor&&l.produto===it.produto&&l.data===dia).reduce((a,l)=>a+l.qtd,0);
-        if(real<it.meta)todosOk=false;
-      });
-      if(todosOk)bateu++;
-      else{
-        faltou++;
-        const motReg=metas.find(m=>m.setor===setor&&!m.produto&&m.data===dia&&m.motivo);
-        if(motReg)motivos.push({data:dia,motivo:motReg.motivo});
-      }
+      const itens=todasMetas.filter(m=>m.setor===setor&&m.produto&&m.meta>0&&m.data===dia);
+      const ok=itens.every(it=>cachedLancs.filter(l=>l.setor===setor&&l.produto===it.produto&&l.data===dia).reduce((a,l)=>a+l.qtd,0)>=it.meta);
+      if(ok)bateu++;
     });
-    const total=bateu+faltou;
-    const pctBateu=total>0?Math.round(bateu/total*100):0;
-    const cor=pctBateu>=70?'var(--green)':pctBateu>=40?'var(--amber)':'var(--red)';
-    return `<div style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:14px">${setor}</span>
-        <span style="font-size:12px;color:${cor}"><b>${bateu}</b>/${total} dias bateu tudo</span>
-      </div>
-      <div style="height:6px;background:var(--ink3);border-radius:3px;overflow:hidden;margin-bottom:8px">
-        <div style="height:100%;width:${pctBateu}%;background:${cor};border-radius:3px"></div>
-      </div>
-      ${motivos.length?`<div style="font-size:11px;color:var(--text3);line-height:1.7">
-        <b style="color:var(--text2)">Motivos quando não bateu:</b>
-        ${motivos.slice(-6).map(mo=>{const[y,m,d]=mo.data.split('-');return `<div style="margin-top:3px">• ${d}/${m}: ${mo.motivo}</div>`;}).join('')}
-      </div>`:''}
+    const total=dias.length, pct=Math.round(bateu/total*100);
+    const cor=pct>=70?'var(--green)':pct>=40?'var(--amber)':'var(--red)';
+    return `<div style="flex:1;min-width:120px;background:var(--ink3);border-radius:var(--r);padding:10px 12px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">${setor} · mês</div>
+      <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:20px;color:${cor}">${bateu}<span style="font-size:12px;color:var(--text3);font-weight:400">/${total} dias ✓</span></div>
     </div>`;
   }).filter(Boolean).join('');
 
-  el.innerHTML=html||'<div style="font-size:12px;color:var(--text3)">Sem metas registradas este mês.</div>';
+  // histórico dia a dia (todos os setores juntos, por data)
+  const histHtml=diasComMeta.slice(0,30).map(dia=>{
+    const[y,m,d]=dia.split('-');
+    const setoresDoDia=METAS_SETORES.map(setor=>{
+      const itens=todasMetas.filter(mm=>mm.setor===setor&&mm.produto&&mm.meta>0&&mm.data===dia);
+      if(!itens.length)return null;
+      const linhas=itens.map(it=>{
+        const real=cachedLancs.filter(l=>l.setor===setor&&l.produto===it.produto&&l.data===dia).reduce((a,l)=>a+l.qtd,0);
+        const ok=real>=it.meta;
+        return {produto:it.produto,meta:it.meta,real,ok};
+      });
+      const todosOk=linhas.every(l=>l.ok);
+      const motReg=todasMetas.find(mm=>mm.setor===setor&&!mm.produto&&mm.data===dia&&mm.motivo);
+      return {setor,linhas,todosOk,motivo:motReg?motReg.motivo:''};
+    }).filter(Boolean);
+    if(!setoresDoDia.length)return '';
+
+    const diaOk=setoresDoDia.every(s=>s.todosOk);
+    return `<div style="border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:13px">${d}/${m}/${y.slice(2)}</span>
+        <span style="font-size:11px;font-weight:700;color:${diaOk?'var(--green)':'var(--red)'}">${diaOk?'✓ bateu tudo':'não bateu'}</span>
+      </div>
+      ${setoresDoDia.map(s=>`
+        <div style="margin-bottom:8px">
+          <div style="font-size:11px;color:var(--text2);font-weight:700;margin-bottom:3px">${s.setor}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            ${s.linhas.map(l=>`<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${l.ok?'var(--green-d)':'var(--red-d)'};color:${l.ok?'var(--green)':'var(--red)'}">${l.produto} ${l.real}/${l.meta}</span>`).join('')}
+          </div>
+          ${!s.todosOk&&s.motivo?`<div style="font-size:11px;color:var(--text3);margin-top:4px;font-style:italic">↳ ${s.motivo}</div>`:''}
+          ${!s.todosOk&&!s.motivo?`<div style="font-size:11px;color:var(--text3);margin-top:4px;opacity:.6">↳ sem motivo registrado</div>`:''}
+        </div>`).join('')}
+    </div>`;
+  }).filter(Boolean).join('');
+
+  el.innerHTML=`
+    ${resumoHtml?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">${resumoHtml}</div>`:''}
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Histórico dia a dia</div>
+    ${histHtml||'<div style="font-size:12px;color:var(--text3)">Nenhum dia com meta registrada ainda.</div>'}`;
 }
 
 function renderProd2Setores(){
