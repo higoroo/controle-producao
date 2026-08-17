@@ -2215,7 +2215,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='meta-2 · 14/08';
+const APP_VERSION='meta-3 · 14/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -2834,14 +2834,17 @@ function realizadoProdutoDia(setor,produto,dataStr){
   return cachedLancs.filter(l=>l.setor===setor&&l.produto===produto&&l.data===dataStr).reduce((a,l)=>a+l.qtd,0);
 }
 
-async function renderMetasDia(){
+async function carregarERenderMetas(){
+  const dataStr=document.getElementById('f-data').value||hoje();
+  await loadMetasDia(dataStr);
+  renderMetasDia();
+}
+function renderMetasDia(){
   const el=document.getElementById('metas-lista');
   if(!el)return;
   const dataStr=document.getElementById('f-data').value||hoje();
-  await loadMetasDia(dataStr);
-
   el.innerHTML=METAS_SETORES.map(setor=>{
-    const itens=metasDiaCache.filter(m=>m.setor===setor&&m.produto);  // linhas de produto
+    const itens=metasDiaCache.filter(m=>m.setor===setor&&(m.produto||m._novo));  // linhas de produto (inclui novas vazias)
     const motivoReg=metasDiaCache.find(m=>m.setor===setor&&!m.produto); // linha de motivo (produto vazio)
 
     // status: bateu se TODOS os produtos com meta atingiram
@@ -2891,7 +2894,6 @@ async function renderMetasDia(){
 }
 
 function addMetaProdutoLinha(setor,dataStr){
-  // adiciona uma linha vazia na tela (salva quando o usuário digita)
   metasDiaCache.push({setor,data:dataStr,produto:'',meta:0,_novo:true});
   renderMetasDia();
 }
@@ -3013,7 +3015,7 @@ function goTo(id,btn){
     renderDash();
   }
   if(id==='prod'){document.getElementById('f-data').value=hoje();renderProd();}
-  if(id==='lanc'){renderMetasDia();}
+  if(id==='lanc'){carregarERenderMetas();}
   if(id==='wip'){loadWip().then(renderWip);}
   if(id==='prod2'){Promise.all([cachedLancs.length?Promise.resolve():loadAll(),loadProd2()]).then(()=>renderProd2());}
   if(id==='dev'){document.getElementById('dv-data').value=hoje();Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
@@ -3061,7 +3063,7 @@ async function salvarDia(){
     const rows=pendentes.map(({_id,...r})=>r);
     await sb('lancamentos',{method:'POST',body:JSON.stringify(rows),prefer:'return=minimal'});
     cachedLancs=[...rows,...cachedLancs];pendentes=[];renderPend();setSync('ok');toast('Lançamento salvo!');
-    if(typeof renderMetasDia==='function')renderMetasDia();
+    if(typeof carregarERenderMetas==='function')carregarERenderMetas();
   }catch(e){setSync('err');toast('Erro ao salvar.','erro')}
   btn.disabled=false;btn.textContent='Salvar lançamento';
 }
@@ -5096,7 +5098,7 @@ function selecionarDia(iso, temLanc) {
   const av = document.getElementById('cal-aviso');
   av.style.display = temLanc ? 'block' : 'none';
   renderCal();
-  if(typeof renderMetasDia==='function') renderMetasDia();
+  if(typeof carregarERenderMetas==='function') carregarERenderMetas();
 }
 
 /* ── PERÍODO DO DASHBOARD ── */
