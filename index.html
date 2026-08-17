@@ -2194,7 +2194,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='prod-6 · 12/08';
+const APP_VERSION='prod-7 · 12/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -2376,37 +2376,44 @@ function renderProd2PorPessoa(){
   const nomeMes=(mk)=>{const[y,m]=mk.split('-');return new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'short'}).replace('.','');};
 
   // helper: desenha um bloco de barras para um conjunto de setores
-  function blocoBarras(titulo,setores,pessoasAgora,idExpand,ehGrupo){
+  function blocoBarras(titulo,setores,pessoasAgora,idExpand,ehGrupo,modoProducao){
     const serie=mesesRecentes.map(mk=>prod2ProdGrupoMes(setores,mk,prodSM,uteisNoMes)).map((v,idx)=>({...v,mk:mesesRecentes[idx]}));
     const comDados=serie.filter(s=>s.prod>0);
     if(!comDados.length)return '';
     const atual=serie[serie.length-1];
     let anterior=null;for(let k=serie.length-2;k>=0;k--){if(serie[k].prod>0){anterior=serie[k];break;}}
-    const delta=(anterior&&anterior.ppd>0)?Math.round((atual.ppd/anterior.ppd-1)*100):null;
-    const max=Math.max(1,...serie.map(s=>s.ppd));
+    // valor mostrado: peças/pessoa OU produção absoluta (quando modoProducao)
+    const valOf=(s)=>modoProducao?s.prod:s.ppd;
+    const delta=(anterior&&valOf(anterior)>0)?Math.round((valOf(atual)/valOf(anterior)-1)*100):null;
+    const max=Math.max(1,...serie.map(s=>valOf(s)));
     const seta=delta===null?'':delta>3?'▲':delta<-3?'▼':'→';
     const corSeta=delta===null?'var(--text3)':delta>3?'var(--green)':delta<-3?'var(--red)':'var(--text3)';
 
     const bars=serie.map(s=>{
       const ehAtual=s.mk===atual.mk;
       const temDado=s.prod>0;
-      const h=temDado?Math.max(18,Math.round(s.ppd/max*100)):0;
-      const conta=temDado?`${nomeMes(s.mk)}: ${s.prod.toLocaleString('pt-BR')} pç ÷ ${s.pessoas} ${s.pessoas===1?'pessoa':'pessoas'} ÷ ${s.dias} dias = ${s.ppd}/pessoa/dia`:`${nomeMes(s.mk)}: sem lançamentos`;
+      const val=valOf(s);
+      const h=temDado&&val>0?Math.max(18,Math.round(val/max*100)):0;
+      const contaPP=`${nomeMes(s.mk)}: ${s.prod.toLocaleString('pt-BR')} pç ÷ ${s.pessoas} ${s.pessoas===1?'pessoa':'pessoas'} ÷ ${s.dias} dias = ${s.ppd}/pessoa/dia`;
+      const contaProd=`${nomeMes(s.mk)}: ${s.prod.toLocaleString('pt-BR')} peças produzidas${s.pessoas>0?' · '+s.pessoas+'p':' · pessoa compartilhada no grupo'}`;
+      const conta=temDado?(modoProducao?contaProd:contaPP):`${nomeMes(s.mk)}: sem lançamentos`;
       return `<div onclick="event.stopPropagation();alert('${conta.replace(/'/g,"\\'")}')" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;cursor:pointer" title="${conta}">
-        <div style="font-size:11px;font-weight:700;font-family:'Inter',sans-serif;color:${temDado?(ehAtual?'var(--accent)':'var(--text2)'):'var(--line2)'}">${temDado?s.ppd:'—'}</div>
-        <div style="width:100%;max-width:30px;height:${h}%;min-height:${temDado?'8px':'0'};background:${ehAtual?'var(--accent)':'var(--green)'};opacity:${ehAtual?1:temDado?0.5:0};border-radius:4px 4px 0 0;transition:height .5s ease"></div>
+        <div style="font-size:11px;font-weight:700;font-family:'Inter',sans-serif;color:${temDado&&val>0?(ehAtual?'var(--accent)':'var(--text2)'):'var(--line2)'}">${temDado&&val>0?val:(temDado?'·':'—')}</div>
+        <div style="width:100%;max-width:30px;height:${h}%;min-height:${temDado&&val>0?'8px':'0'};background:${ehAtual?'var(--accent)':'var(--green)'};opacity:${ehAtual?1:temDado&&val>0?0.5:0};border-radius:4px 4px 0 0;transition:height .5s ease"></div>
         <div style="font-size:10px;color:var(--text3);text-transform:capitalize">${nomeMes(s.mk)}</div>
       </div>`;
     }).join('');
 
     const chevron=ehGrupo?`<span style="font-size:10px;color:var(--text3);margin-left:6px" id="chev-${idExpand}">▸ ver setores</span>`:'';
     const onclickAttr=ehGrupo?`onclick="prod2ToggleGrupo('${idExpand}')"`:'';
-    return `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)" ${ehGrupo?'style="cursor:pointer"':''}>
+    const unidade=modoProducao?' pç no mês':' pç/pessoa/dia';
+    const valAtual=modoProducao?atual.prod.toLocaleString('pt-BR'):atual.ppd;
+    return `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)">
       <div ${onclickAttr} style="${ehGrupo?'cursor:pointer;':''}display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
-        <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px">${titulo} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${pessoasAgora}p hoje</span>${chevron}</div>
+        <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px">${titulo} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${modoProducao&&pessoasAgora===0?'no grupo':pessoasAgora+'p hoje'}</span>${chevron}</div>
         <div style="text-align:right">
-          <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:20px;color:var(--accent)">${atual.ppd}</span>
-          <span style="font-size:10px;color:var(--text3)"> pç/pessoa/dia</span>
+          <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:20px;color:var(--accent)">${valAtual}</span>
+          <span style="font-size:10px;color:var(--text3)">${unidade}</span>
           ${delta!==null?`<span style="font-size:11px;color:${corSeta};margin-left:5px;font-weight:700">${seta} ${Math.abs(delta)}%</span>`:''}
         </div>
       </div>
@@ -2450,7 +2457,13 @@ function prod2ToggleGrupo(gid){
     let inner='';
     g.setores.forEach(setor=>{
       const pessoasAgora=prod2PessoasNoMes(setor,hoje().slice(0,7));
-      inner+=D.blocoBarras(setor,[setor],pessoasAgora,'x_'+setor.replace(/\W/g,''),false);
+      // se o setor tem pessoa própria em todos os meses com produção, mostra peças/pessoa;
+      // senão (pessoa compartilhada no passado), mostra PRODUÇÃO para não dar 0 enganoso
+      const temPessoaSempre=D.mesesRecentes.every(mk=>{
+        const temProd=(D.prodSM[setor+'|'+mk]||0)>0;
+        return !temProd || prod2PessoasNoMes(setor,mk)>0;
+      });
+      inner+=D.blocoBarras(setor,[setor],pessoasAgora,'x_'+setor.replace(/\W/g,''),false,!temPessoaSempre);
     });
     exp.innerHTML=inner||'<div style="font-size:11px;color:var(--text3)">Sem dados separados.</div>';
     exp.style.display='block';
