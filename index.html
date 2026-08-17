@@ -503,7 +503,7 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <div class="sec-title">Meta do dia · Pintura e Fundo</div>
   <div class="card" id="metas-card">
     <div id="metas-lista"></div>
-    <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-top:4px">Defina de manhã a expectativa de produção. No fim do dia, ao lançar a produção, o sistema compara com o realizado.</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-top:8px">Defina de manhã a meta por produto. No fim do dia, ao lançar a produção, o sistema compara produto a produto — só bate a meta se todos saírem.</div>
   </div>
 
   <div class="sec-title">Adicionar item</div>
@@ -2215,7 +2215,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='meta-1 · 14/08';
+const APP_VERSION='meta-2 · 14/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -2504,37 +2504,44 @@ function renderProd2Metas(){
   const card=document.getElementById('prod2-metas-card');
   if(!el)return;
   const mesKey=hoje().slice(0,7);
-  // usa metasMesCache carregado em loadProd2
   const metas=(window.metasMesCache||[]).filter(m=>m.data.startsWith(mesKey));
-  if(!metas.length){
-    if(card)card.style.display='none';
-    return;
-  }
+  if(!metas.length){ if(card)card.style.display='none'; return; }
   if(card)card.style.display='';
 
   const html=METAS_SETORES.map(setor=>{
-    const doSetor=metas.filter(m=>m.setor===setor&&m.meta>0);
-    if(!doSetor.length)return '';
+    // dias que tiveram meta nesse setor
+    const dias=[...new Set(metas.filter(m=>m.setor===setor&&m.produto&&m.meta>0).map(m=>m.data))];
+    if(!dias.length)return '';
     let bateu=0, faltou=0;
     const motivos=[];
-    doSetor.forEach(m=>{
-      const real=cachedLancs.filter(l=>l.setor===setor&&l.data===m.data).reduce((a,l)=>a+l.qtd,0);
-      if(real>=m.meta)bateu++;
-      else{faltou++; if(m.motivo)motivos.push({data:m.data,meta:m.meta,real,motivo:m.motivo});}
+    dias.forEach(dia=>{
+      const itens=metas.filter(m=>m.setor===setor&&m.produto&&m.meta>0&&m.data===dia);
+      let todosOk=true;
+      itens.forEach(it=>{
+        const real=cachedLancs.filter(l=>l.setor===setor&&l.produto===it.produto&&l.data===dia).reduce((a,l)=>a+l.qtd,0);
+        if(real<it.meta)todosOk=false;
+      });
+      if(todosOk)bateu++;
+      else{
+        faltou++;
+        const motReg=metas.find(m=>m.setor===setor&&!m.produto&&m.data===dia&&m.motivo);
+        if(motReg)motivos.push({data:dia,motivo:motReg.motivo});
+      }
     });
     const total=bateu+faltou;
     const pctBateu=total>0?Math.round(bateu/total*100):0;
+    const cor=pctBateu>=70?'var(--green)':pctBateu>=40?'var(--amber)':'var(--red)';
     return `<div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:14px">${setor}</span>
-        <span style="font-size:12px;color:${pctBateu>=70?'var(--green)':pctBateu>=40?'var(--amber)':'var(--red)'}"><b>${bateu}</b>/${total} dias bateu a meta</span>
+        <span style="font-size:12px;color:${cor}"><b>${bateu}</b>/${total} dias bateu tudo</span>
       </div>
       <div style="height:6px;background:var(--ink3);border-radius:3px;overflow:hidden;margin-bottom:8px">
-        <div style="height:100%;width:${pctBateu}%;background:${pctBateu>=70?'var(--green)':pctBateu>=40?'var(--amber)':'var(--red)'};border-radius:3px"></div>
+        <div style="height:100%;width:${pctBateu}%;background:${cor};border-radius:3px"></div>
       </div>
       ${motivos.length?`<div style="font-size:11px;color:var(--text3);line-height:1.7">
         <b style="color:var(--text2)">Motivos quando não bateu:</b>
-        ${motivos.slice(-6).map(mo=>{const[y,m,d]=mo.data.split('-');return `<div style="margin-top:3px">• ${d}/${m} (${mo.real}/${mo.meta}): ${mo.motivo}</div>`;}).join('')}
+        ${motivos.slice(-6).map(mo=>{const[y,m,d]=mo.data.split('-');return `<div style="margin-top:3px">• ${d}/${m}: ${mo.motivo}</div>`;}).join('')}
       </div>`:''}
     </div>`;
   }).filter(Boolean).join('');
@@ -2811,20 +2818,20 @@ function salvarProd2Meta(){
   toast('Meta atualizada.');
 }
 
-/* ══════════════ METAS DIÁRIAS (Pintura e Fundo) ══════════════ */
+/* ══════════════ METAS DIÁRIAS por produto (Pintura e Fundo) ══════════════ */
 const METAS_SETORES=['Pintura','Fundo'];
-let metasDiaCache={};  // {'YYYY-MM-DD|Setor': {id,meta,motivo}}
+let metasDiaCache=[];  // registros do dia [{id,data,setor,produto,meta,motivo}]
 
 async function loadMetasDia(dataStr){
   try{
     const r=await sb('metas_diarias?select=*&data=eq.'+dataStr).catch(()=>[]);
-    (r||[]).forEach(m=>{metasDiaCache[m.data+'|'+m.setor]=m;});
-    return r||[];
-  }catch(e){return []}
+    metasDiaCache=r||[];
+    return metasDiaCache;
+  }catch(e){metasDiaCache=[];return []}
 }
 
-function realizadoSetorDia(setor,dataStr){
-  return cachedLancs.filter(l=>l.setor===setor&&l.data===dataStr).reduce((a,l)=>a+l.qtd,0);
+function realizadoProdutoDia(setor,produto,dataStr){
+  return cachedLancs.filter(l=>l.setor===setor&&l.produto===produto&&l.data===dataStr).reduce((a,l)=>a+l.qtd,0);
 }
 
 async function renderMetasDia(){
@@ -2834,78 +2841,103 @@ async function renderMetasDia(){
   await loadMetasDia(dataStr);
 
   el.innerHTML=METAS_SETORES.map(setor=>{
-    const key=dataStr+'|'+setor;
-    const reg=metasDiaCache[key]||{};
-    const meta=reg.meta||0;
-    const realizado=realizadoSetorDia(setor,dataStr);
-    const temMeta=meta>0;
-    const temReal=realizado>0;
-    const bateu=temMeta&&realizado>=meta;
-    const faltou=temMeta&&temReal&&realizado<meta;
-    const pct=temMeta?Math.min(100,Math.round(realizado/meta*100)):0;
+    const itens=metasDiaCache.filter(m=>m.setor===setor&&m.produto);  // linhas de produto
+    const motivoReg=metasDiaCache.find(m=>m.setor===setor&&!m.produto); // linha de motivo (produto vazio)
 
-    let statusHtml='';
-    if(temMeta&&temReal){
-      const cor=bateu?'var(--green)':'var(--red)';
-      statusHtml=`<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-        <div style="flex:1;height:6px;background:var(--ink3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${cor};border-radius:3px"></div></div>
-        <span style="font-size:12px;font-weight:700;color:${cor}">${realizado}/${meta} ${bateu?'✓':''}</span>
+    // status: bateu se TODOS os produtos com meta atingiram
+    let temAlgumReal=false, todosOk=itens.length>0, algumaMeta=false;
+    itens.forEach(it=>{
+      if(it.meta>0){algumaMeta=true; const r=realizadoProdutoDia(setor,it.produto,dataStr); if(r>0)temAlgumReal=true; if(r<it.meta)todosOk=false;}
+    });
+    const faltou=algumaMeta&&temAlgumReal&&!todosOk;
+
+    const linhasHtml=itens.map(it=>{
+      const real=realizadoProdutoDia(setor,it.produto,dataStr);
+      const ok=it.meta>0&&real>=it.meta;
+      const temReal=real>0;
+      const cor=ok?'var(--green)':temReal?'var(--red)':'var(--text3)';
+      return `<div class="meta-item-row" data-id="${it.id||''}" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <input type="text" list="metas-prod-list" value="${(it.produto||'').replace(/"/g,'&quot;')}" placeholder="produto"
+          style="flex:1;padding:7px 9px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-size:12px;box-sizing:border-box"
+          onchange="salvarMetaProduto('${setor}','${dataStr}',this)">
+        <input type="number" min="0" value="${it.meta||''}" placeholder="meta"
+          style="width:64px;padding:7px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'Inter',sans-serif;font-weight:700;text-align:center;box-sizing:border-box"
+          onchange="salvarMetaProduto('${setor}','${dataStr}',this)">
+        <span style="width:52px;text-align:right;font-size:12px;font-weight:700;color:${cor}">${temReal?real+'/'+it.meta:(it.meta?'· '+it.meta:'')}</span>
+        <button onclick="removerMetaProduto('${it.id||''}','${setor}','${dataStr}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 2px">&times;</button>
       </div>`;
-    } else if(temMeta){
-      statusHtml=`<div style="font-size:11px;color:var(--text3);margin-top:6px">Meta ${meta} · aguardando lançamento da produção</div>`;
-    }
+    }).join('');
+
+    const statusBadge=algumaMeta&&temAlgumReal?(todosOk?'<span style="font-size:11px;color:var(--green);font-weight:700">✓ metas batidas</span>':'<span style="font-size:11px;color:var(--red);font-weight:700">faltou produção</span>'):'';
 
     const motivoHtml=faltou?`
-      <div style="margin-top:10px">
-        <label style="font-size:11px;color:var(--red);display:block;margin-bottom:4px">Ficou abaixo da meta — qual o motivo?</label>
-        <input type="text" id="motivo-${setor}" value="${(reg.motivo||'').replace(/"/g,'&quot;')}" placeholder="Ex: faltou material, máquina parada..."
-          style="width:100%;padding:9px 11px;background:var(--ink2);border:1px solid ${reg.motivo?'var(--line2)':'rgba(224,92,92,.4)'};border-radius:var(--r);color:var(--text);font-size:12px;box-sizing:border-box"
-          onblur="salvarMotivoMeta('${setor}','${dataStr}')">
+      <div style="margin-top:8px">
+        <label style="font-size:11px;color:var(--red);display:block;margin-bottom:4px">Não bateu todas as metas — motivo (do setor):</label>
+        <input type="text" id="motivo-${setor}" value="${(motivoReg&&motivoReg.motivo||'').replace(/"/g,'&quot;')}" placeholder="Ex: faltou material, máquina parada..."
+          style="width:100%;padding:9px 11px;background:var(--ink2);border:1px solid ${motivoReg&&motivoReg.motivo?'var(--line2)':'rgba(224,92,92,.4)'};border-radius:var(--r);color:var(--text);font-size:12px;box-sizing:border-box"
+          onblur="salvarMotivoSetor('${setor}','${dataStr}')">
       </div>`:'';
 
     return `<div style="padding:12px 0;${setor!==METAS_SETORES[METAS_SETORES.length-1]?'border-bottom:1px solid var(--line);margin-bottom:4px':''}">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="flex:1;font-family:'Inter',sans-serif;font-weight:700;font-size:14px">${setor}</span>
-        <input type="number" min="0" id="meta-${setor}" value="${meta||''}" placeholder="meta"
-          style="width:80px;padding:8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'Inter',sans-serif;font-weight:700;text-align:center;box-sizing:border-box"
-          onchange="salvarMetaDia('${setor}','${dataStr}')">
-        <span style="font-size:11px;color:var(--text3)">peças</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:14px">${setor}</span>
+        ${statusBadge}
       </div>
-      ${statusHtml}
+      ${linhasHtml||'<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Nenhum produto na meta ainda.</div>'}
+      <button onclick="addMetaProdutoLinha('${setor}','${dataStr}')" class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px">+ Produto</button>
       ${motivoHtml}
     </div>`;
-  }).join('');
+  }).join('')+`<datalist id="metas-prod-list">${PRODUTOS.map(p=>'<option value="'+p+'">').join('')}</datalist>`;
 }
 
-async function salvarMetaDia(setor,dataStr){
-  const meta=parseInt(document.getElementById('meta-'+setor).value)||0;
-  const key=dataStr+'|'+setor;
-  const reg=metasDiaCache[key];
+function addMetaProdutoLinha(setor,dataStr){
+  // adiciona uma linha vazia na tela (salva quando o usuário digita)
+  metasDiaCache.push({setor,data:dataStr,produto:'',meta:0,_novo:true});
+  renderMetasDia();
+}
+
+async function salvarMetaProduto(setor,dataStr,inputEl){
+  const row=inputEl.closest('.meta-item-row');
+  const produto=row.querySelector('input[type=text]').value.trim();
+  const meta=parseInt(row.querySelector('input[type=number]').value)||0;
+  if(!produto){return}
+  const id=row.getAttribute('data-id');
   setSync('syncing');
   try{
-    if(reg&&reg.id){
-      await sb('metas_diarias?id=eq.'+reg.id,{method:'PATCH',body:JSON.stringify({meta}),prefer:'return=minimal'});
-      reg.meta=meta;
+    if(id){
+      await sb('metas_diarias?id=eq.'+id,{method:'PATCH',body:JSON.stringify({produto,meta}),prefer:'return=minimal'});
     } else {
-      const novo={data:dataStr,setor,meta};
-      await sb('metas_diarias',{method:'POST',body:JSON.stringify(novo),prefer:'return=representation',headers:{'Prefer':'return=representation'}});
-      // recarrega para pegar o id
-      await loadMetasDia(dataStr);
+      await sb('metas_diarias',{method:'POST',body:JSON.stringify({data:dataStr,setor,produto,meta}),prefer:'return=minimal'});
     }
+    await loadMetasDia(dataStr);
     setSync('ok');
     renderMetasDia();
   }catch(e){setSync('err');toast('Erro ao salvar meta','erro')}
 }
 
-async function salvarMotivoMeta(setor,dataStr){
-  const motivo=document.getElementById('motivo-'+setor).value.trim();
-  const key=dataStr+'|'+setor;
-  const reg=metasDiaCache[key];
-  if(!reg||!reg.id)return;
+async function removerMetaProduto(id,setor,dataStr){
+  if(!id){await loadMetasDia(dataStr);renderMetasDia();return}
   setSync('syncing');
   try{
-    await sb('metas_diarias?id=eq.'+reg.id,{method:'PATCH',body:JSON.stringify({motivo}),prefer:'return=minimal'});
-    reg.motivo=motivo;
+    await sb('metas_diarias?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
+    await loadMetasDia(dataStr);
+    setSync('ok');renderMetasDia();
+  }catch(e){setSync('err');toast('Erro ao remover','erro')}
+}
+
+async function salvarMotivoSetor(setor,dataStr){
+  const el=document.getElementById('motivo-'+setor);
+  if(!el)return;
+  const motivo=el.value.trim();
+  const motivoReg=metasDiaCache.find(m=>m.setor===setor&&!m.produto);
+  setSync('syncing');
+  try{
+    if(motivoReg&&motivoReg.id){
+      await sb('metas_diarias?id=eq.'+motivoReg.id,{method:'PATCH',body:JSON.stringify({motivo}),prefer:'return=minimal'});
+    } else {
+      await sb('metas_diarias',{method:'POST',body:JSON.stringify({data:dataStr,setor,produto:null,meta:0,motivo}),prefer:'return=minimal'});
+    }
+    await loadMetasDia(dataStr);
     setSync('ok');
     if(motivo)toast('Motivo registrado.');
   }catch(e){setSync('err');toast('Erro ao salvar motivo','erro')}
