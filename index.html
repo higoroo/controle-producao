@@ -89,17 +89,21 @@ html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Mo
   border:1px solid rgba(255,255,255,0.12);
   border-radius:28px;
   display:flex;
-  padding:0 8px;
-  width:calc(100% - 32px);
-  max-width:420px;
+  padding:0 6px;
+  width:calc(100% - 24px);
+  max-width:500px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
   box-shadow:0 8px 32px rgba(0,0,0,0.4),0 2px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.08);
 }
+.bottom-nav::-webkit-scrollbar{display:none}
 [data-theme="light"] .bottom-nav{
   background:rgba(245,244,240,0.8);
   border:1px solid rgba(0,0,0,0.1);
   box-shadow:0 8px 32px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.6);
 }
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;transition:all .2s;padding-bottom:env(safe-area-inset-bottom,0);border-radius:20px;margin:6px 3px;padding-top:6px;padding-bottom:6px}
+.nav-item{flex:1 0 auto;min-width:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;transition:all .2s;padding-bottom:env(safe-area-inset-bottom,0);border-radius:20px;margin:6px 3px;padding-top:6px;padding-bottom:6px}
 .nav-item.active{color:var(--accent);background:rgba(232,197,71,0.15);box-shadow:inset 0 1px 0 rgba(232,197,71,0.2)}
 [data-theme="light"] .nav-item.active{color:var(--accent);background:rgba(184,150,10,0.12)}
 .nav-icon{width:20px;height:20px}
@@ -452,6 +456,10 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <button class="nav-item" onclick="goTo('dev',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
     Devol.
+  </button>
+  <button class="nav-item" onclick="goTo('prod2',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Equipe
   </button>
   <button class="nav-item" onclick="goTo('anal',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -2194,7 +2202,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='prod-8 · 12/08';
+const APP_VERSION='prod-8b · 12/08';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
