@@ -2215,7 +2215,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='meta-4 · 14/08';
+const APP_VERSION='hist-1 · 04/09';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -3661,20 +3661,34 @@ function renderHist(){
     if(modoGestorAtivo){
       html+=`<tr style="background:var(--ink3)"><td colspan="5" style="padding:6px 8px;font-size:11px;color:var(--text3);font-weight:500">${fmt(data)} — ${itens.length} item(s)</td><td style="padding:6px 8px;text-align:right"><button onclick="apagarDia('${data}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Apagar dia</button></td></tr>`;
     }
-    itens.forEach(x=>{
-      html+=`<tr>
-        <td style="white-space:nowrap">${fmt(x.data)}</td>
-        <td><span class="tag ${tc(x.setor)}">${x.setor.split(' ')[0]}</span></td>
-        <td style="color:var(--text2)">${x.produto}</td>
-        <td class="td-r">${x.qtd.toLocaleString('pt-BR')}</td>
-        <td style="color:var(--text3);font-size:11px">${x.obs||'—'}</td>
-        <td style="display:${modoGestorAtivo?'table-cell':'none'}">
-          <div style="display:flex;gap:4px">
-            <button onclick="abrirEdicao('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);cursor:pointer">Editar</button>
-            <button onclick="apagarItem('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer">Apagar</button>
-          </div>
-        </td>
-      </tr>`;
+    // agrupar por setor, na ordem do fluxo (SETORES)
+    const setoresDoDia=[...new Set(itens.map(x=>x.setor))].sort((a,b)=>{
+      const ia=SETORES.indexOf(a), ib=SETORES.indexOf(b);
+      return (ia<0?99:ia)-(ib<0?99:ib);
+    });
+    setoresDoDia.forEach(setor=>{
+      const doSetor=itens.filter(x=>x.setor===setor);
+      const totSetor=doSetor.reduce((a,x)=>a+x.qtd,0);
+      // subcabeçalho do setor
+      html+=`<tr><td colspan="6" style="padding:8px 8px 4px">
+        <span class="tag ${tc(setor)}">${setor.split(' ')[0]}</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:8px">${doSetor.length} ${doSetor.length===1?'item':'itens'} · ${totSetor.toLocaleString('pt-BR')} pç</span>
+      </td></tr>`;
+      doSetor.forEach(x=>{
+        html+=`<tr>
+          <td style="white-space:nowrap;color:var(--text3);font-size:11px;padding-left:16px">${fmt(x.data)}</td>
+          <td></td>
+          <td style="color:var(--text2)">${x.produto}</td>
+          <td class="td-r">${x.qtd.toLocaleString('pt-BR')}</td>
+          <td style="color:var(--text3);font-size:11px">${x.obs||'—'}</td>
+          <td style="display:${modoGestorAtivo?'table-cell':'none'}">
+            <div style="display:flex;gap:4px">
+              <button onclick="abrirEdicao('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);cursor:pointer">Editar</button>
+              <button onclick="apagarItem('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer">Apagar</button>
+            </div>
+          </td>
+        </tr>`;
+      });
     });
   });
   document.getElementById('tbody-hist').innerHTML=html||'<tr><td colspan="6" style="color:var(--text3);padding:14px 6px">Nenhum registro.</td></tr>';
