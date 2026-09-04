@@ -2215,7 +2215,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='hist-1 · 04/09';
+const APP_VERSION='hist-2 · 04/09';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -3648,11 +3648,28 @@ function renderDevDash(){
 }
 
 /* ── HISTÓRICO ── */
+let histMesesMostrar=1;      // quantos meses do histórico exibir
+let histSetoresAbertos={};   // {'data|setor': true}
+function histToggleSetor(chave){
+  histSetoresAbertos[chave]=!histSetoresAbertos[chave];
+  renderHist();
+}
+function histVerMais(){histMesesMostrar++;renderHist();}
 function renderHist(){
   const setor=document.getElementById('h-setor').value,de=document.getElementById('h-de').value,ate=document.getElementById('h-ate').value;
   let l=[...cachedLancs];
   if(setor)l=l.filter(x=>x.setor===setor);if(de)l=l.filter(x=>x.data>=de);if(ate)l=l.filter(x=>x.data<=ate);
   const tc=s=>{const i=SETORES.indexOf(s);return['tag-b','tag-g','tag-a','tag-r','tag-b','tag-r','tag-g','tag-a','tag-g'][i]||'tag-b'};
+
+  // Limitar aos últimos N meses (só quando não há filtro manual de data)
+  const filtroManual=de||ate;
+  let mesesDisponiveis=[];
+  if(!filtroManual){
+    mesesDisponiveis=[...new Set(l.map(x=>x.data.slice(0,7)))].sort().reverse();
+    const mesesVisiveis=mesesDisponiveis.slice(0,histMesesMostrar);
+    l=l.filter(x=>mesesVisiveis.includes(x.data.slice(0,7)));
+  }
+
   // Agrupar por dia para mostrar botão "apagar dia"
   const diasUnicos=[...new Set(l.map(x=>x.data))].sort().reverse();
   let html='';
@@ -3669,28 +3686,40 @@ function renderHist(){
     setoresDoDia.forEach(setor=>{
       const doSetor=itens.filter(x=>x.setor===setor);
       const totSetor=doSetor.reduce((a,x)=>a+x.qtd,0);
-      // subcabeçalho do setor
-      html+=`<tr><td colspan="6" style="padding:8px 8px 4px">
+      const chave=data+'|'+setor;
+      const aberto=!!histSetoresAbertos[chave];
+      // subcabeçalho do setor (clicável para expandir/recolher)
+      html+=`<tr style="cursor:pointer" onclick="histToggleSetor('${chave}')"><td colspan="6" style="padding:8px">
+        <span style="display:inline-block;width:12px;color:var(--text3);font-size:10px;transition:transform .2s">${aberto?'▾':'▸'}</span>
         <span class="tag ${tc(setor)}">${setor.split(' ')[0]}</span>
         <span style="font-size:11px;color:var(--text3);margin-left:8px">${doSetor.length} ${doSetor.length===1?'item':'itens'} · ${totSetor.toLocaleString('pt-BR')} pç</span>
       </td></tr>`;
-      doSetor.forEach(x=>{
-        html+=`<tr>
-          <td style="white-space:nowrap;color:var(--text3);font-size:11px;padding-left:16px">${fmt(x.data)}</td>
-          <td></td>
-          <td style="color:var(--text2)">${x.produto}</td>
-          <td class="td-r">${x.qtd.toLocaleString('pt-BR')}</td>
-          <td style="color:var(--text3);font-size:11px">${x.obs||'—'}</td>
-          <td style="display:${modoGestorAtivo?'table-cell':'none'}">
-            <div style="display:flex;gap:4px">
-              <button onclick="abrirEdicao('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);cursor:pointer">Editar</button>
-              <button onclick="apagarItem('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer">Apagar</button>
-            </div>
-          </td>
-        </tr>`;
-      });
+      if(aberto){
+        doSetor.forEach(x=>{
+          html+=`<tr>
+            <td style="white-space:nowrap;color:var(--text3);font-size:11px;padding-left:28px">${fmt(x.data)}</td>
+            <td></td>
+            <td style="color:var(--text2)">${x.produto}</td>
+            <td class="td-r">${x.qtd.toLocaleString('pt-BR')}</td>
+            <td style="color:var(--text3);font-size:11px">${x.obs||'—'}</td>
+            <td style="display:${modoGestorAtivo?'table-cell':'none'}">
+              <div style="display:flex;gap:4px">
+                <button onclick="abrirEdicao('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);cursor:pointer">Editar</button>
+                <button onclick="apagarItem('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer">Apagar</button>
+              </div>
+            </td>
+          </tr>`;
+        });
+      }
     });
   });
+  // Botão "Ver mais" se houver meses além dos exibidos
+  if(!filtroManual && mesesDisponiveis.length>histMesesMostrar){
+    const restantes=mesesDisponiveis.length-histMesesMostrar;
+    html+=`<tr><td colspan="6" style="padding:14px 8px;text-align:center">
+      <button onclick="histVerMais()" style="font-size:12px;padding:8px 20px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Ver mês anterior (${restantes} ${restantes===1?'mês':'meses'} restante${restantes===1?'':'s'})</button>
+    </td></tr>`;
+  }
   document.getElementById('tbody-hist').innerHTML=html||'<tr><td colspan="6" style="color:var(--text3);padding:14px 6px">Nenhum registro.</td></tr>';
 }
 function exportCSV(){
