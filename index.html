@@ -271,13 +271,24 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   to{opacity:1;transform:translateY(0)}
 }
 
-.pd-setor-card{transition:transform .18s ease,border-color .18s ease}
-@media(hover:hover){.pd-setor-card:hover{transform:translateY(-2px);border-color:var(--line2)}}
+.pd-setor-card{transition:transform .18s cubic-bezier(.4,0,.2,1),border-color .18s ease,box-shadow .18s ease}
+@media(hover:hover){.pd-setor-card:hover{transform:translateY(-3px);border-color:var(--line2);box-shadow:0 6px 20px rgba(0,0,0,.18)}}
+.pd-setor-card:active{transform:scale(.98);border-color:var(--line2)}
 .p2tabs{display:flex;gap:5px;background:var(--ink2);border-radius:12px;padding:4px;margin-bottom:14px}
 .p2tab{flex:1;text-align:center;padding:9px 4px;font-size:12px;color:var(--text2);border:none;background:none;border-radius:8px;cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s}
 .p2tab.on{background:var(--ink3);color:var(--accent)}
 .prod2-diaria-grid{display:grid;grid-template-columns:1fr;gap:9px}
 @media(min-width:768px){.prod2-diaria-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.skeleton{position:relative;overflow:hidden;background:var(--ink3);border-radius:var(--r)}
+.skeleton::after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);animation:shimmer 1.3s infinite}
+.skeleton-kpi{height:72px}
+.skeleton-row{height:44px;margin-bottom:8px}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+@keyframes flashOk{0%{background:rgba(76,175,125,.35)}100%{background:transparent}}
+@keyframes flashBad{0%{background:rgba(224,92,92,.35)}100%{background:transparent}}
+.flash-ok{animation:flashOk .9s ease-out}
+.flash-bad{animation:flashBad .9s ease-out}
+
 .pdbtn{border:1px solid var(--line2);background:transparent;border-radius:var(--r);cursor:pointer;color:var(--text2);font-family:'DM Mono',monospace;font-size:12px;padding:9px 15px;white-space:nowrap}
 .pdbtn:hover{color:var(--text)}
 .pdbtn.on{background:rgba(232,197,71,.14);border-color:rgba(232,197,71,.4);color:var(--accent)}
@@ -1356,7 +1367,10 @@ async function sb(path,opts={}){
   const t=await res.text();return t?JSON.parse(t):[];
 }
 function setSync(s){document.getElementById('sync-dot').className='sync-dot '+s}
+function flashEl(el,ok){ if(!el)return; el.classList.remove('flash-ok','flash-bad'); void el.offsetWidth; el.classList.add(ok?'flash-ok':'flash-bad'); }
+function vibrar(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 function toast(msg, tipo='ok'){
+  vibrar(tipo==='erro'?[40,30,40]:tipo==='aviso'?[25,20,25]:18);
   const el=document.getElementById('toast');
   const iconEl=document.getElementById('toast-icon');
   const msgEl=document.getElementById('toast-msg');
@@ -2266,7 +2280,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='perf-1 · 05/10';
+const APP_VERSION='anim-2 · 05/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -2933,6 +2947,14 @@ async function carregarERenderMetas(){
   const dataStr=document.getElementById('f-data').value||hoje();
   await loadMetasDia(dataStr);
   renderMetasDia();
+  // flash nos cards de meta conforme bateu (1) ou não (0)
+  setTimeout(()=>{
+    document.querySelectorAll('.meta-setor-card').forEach(card=>{
+      const b=card.getAttribute('data-bateu');
+      if(b==='1')flashEl(card,true);
+      else if(b==='0')flashEl(card,false);
+    });
+  },60);
 }
 function renderMetasDia(){
   const el=document.getElementById('metas-lista');
@@ -2976,7 +2998,7 @@ function renderMetasDia(){
           onblur="salvarMotivoSetor('${setor}','${dataStr}')">
       </div>`:'';
 
-    return `<div style="padding:12px 0;${setor!==METAS_SETORES[METAS_SETORES.length-1]?'border-bottom:1px solid var(--line);margin-bottom:4px':''}">
+    return `<div class="meta-setor-card" data-setor="${setor}" data-bateu="${(todosOk&&temAlgumReal)?1:faltou?0:-1}" style="padding:12px 0;border-radius:var(--r);${setor!==METAS_SETORES[METAS_SETORES.length-1]?'border-bottom:1px solid var(--line);margin-bottom:4px':''}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:14px">${setor}</span>
         ${statusBadge}
