@@ -1535,7 +1535,7 @@ async function loadAll(){
   setSync('syncing');
   try{
     const[lancs,metas,devs,prods,solic]=await Promise.all([
-      sbAll('lancamentos?select=*&order=data.desc,created_at.desc'),
+      sbAll('lancamentos?select=id,data,setor,produto,qtd,obs,created_at&order=data.desc,created_at.desc'),
       sb('metas?select=*'),
       sb('devolucoes?select=*&order=data.desc,created_at.desc'),
       sb('produtos_extra?select=*&order=nome'),
@@ -2266,7 +2266,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='prod2-ui3 · 05/10';
+const APP_VERSION='perf-1 · 05/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -2304,7 +2304,14 @@ function prod2PessoasNoMes(setor,mesKey){
     .sort((a,b)=>(b.mes_inicio||'2000-01').localeCompare(a.mes_inicio||'2000-01'));
   return regs.length?parseInt(regs[0].qtd_pessoas)||0:0;
 }
-async function loadProd2(){
+let prod2Carregado=false;
+function recarregarMetasMes(){
+  const mesIni=hoje().slice(0,7)+'-01';
+  return sb('metas_diarias?select=*&data=gte.'+mesIni).then(mt=>{window.metasMesCache=mt||[];}).catch(()=>{});
+}
+
+async function loadProd2(forcar){
+  if(prod2Carregado&&!forcar)return;  // cache: não re-busca se já carregou
   setSync('syncing');
   try{
     const mesIni=hoje().slice(0,7)+'-01';
@@ -2314,6 +2321,7 @@ async function loadProd2(){
       sb('metas_diarias?select=*&order=data.desc').catch(()=>[])
     ]);
     window.metasMesCache=mt||[];
+    prod2Carregado=true;
     prod2EquipeHist=eq||[];
     prod2Grupos=(gr||[]).map(g=>({...g,setores:Array.isArray(g.setores)?g.setores:JSON.parse(g.setores||'[]')}));
     // config ATUAL: para cada setor, o registro vigente mais recente
@@ -2883,7 +2891,7 @@ async function salvarProd2Equipe(){
     for(const g of prod2Grupos){ if(g.id) await sb('equipe_grupos?id=eq.'+g.id,{method:'DELETE',prefer:'return=minimal'}); }
     for(const g of novosGrupos){ await sb('equipe_grupos',{method:'POST',body:JSON.stringify({nome:g.nome,setores:g.setores}),prefer:'return=minimal'}); }
 
-    await loadProd2(); renderProd2();
+    await loadProd2(true); renderProd2();
     document.getElementById('prod2-ov-equipe').style.display='none';
     toast('Quadro atualizado a partir de '+mesAtual+'.');
   }catch(e){setSync('err');prod2Erro('Erro ao salvar equipe: '+(e.message||e));toast('Erro ao salvar','erro')}
@@ -3242,7 +3250,7 @@ function goTo(id,btn){
   if(id==='prod'){document.getElementById('f-data').value=hoje();renderProd();}
   if(id==='lanc'){carregarERenderMetas();}
   if(id==='wip'){loadWip().then(renderWip);}
-  if(id==='prod2'){Promise.all([cachedLancs.length?Promise.resolve():loadAll(),loadProd2()]).then(()=>renderProd2());}
+  if(id==='prod2'){Promise.all([cachedLancs.length?Promise.resolve():loadAll(),loadProd2()]).then(()=>{recarregarMetasMes().then(renderProd2);});}
   if(id==='dev'){document.getElementById('dv-data').value=hoje();Promise.all([loadAll(),loadDevs()]).then(()=>renderDevDash())}
   if(id==='comp'){skeletonKPIs('comp-kpis');skeletonLista('comp-lista');loadCompras().then(()=>{initCompras();filtrarMateriais();renderCompLista();const b=document.getElementById('comp-gestor-badge');if(b)b.style.display=modoGestorAtivo?'block':'none';})}
   if(id==='materiais'){loadCompras().then(()=>{initCompras();renderMatLista()})}
