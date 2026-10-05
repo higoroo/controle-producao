@@ -270,6 +270,12 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   from{opacity:0;transform:translateY(10px)}
   to{opacity:1;transform:translateY(0)}
 }
+
+.p2tabs{display:flex;gap:5px;background:var(--ink2);border-radius:12px;padding:4px;margin-bottom:14px}
+.p2tab{flex:1;text-align:center;padding:9px 4px;font-size:12px;color:var(--text2);border:none;background:none;border-radius:8px;cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s}
+.p2tab.on{background:var(--ink3);color:var(--accent)}
+.prod2-diaria-grid{display:grid;grid-template-columns:1fr;gap:9px}
+@media(min-width:768px){.prod2-diaria-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .pdbtn{border:1px solid var(--line2);background:transparent;border-radius:var(--r);cursor:pointer;color:var(--text2);font-family:'DM Mono',monospace;font-size:11px;padding:6px 12px}
 .pdbtn:hover{color:var(--text)}
 .pdbtn.on{background:rgba(232,197,71,.14);border-color:rgba(232,197,71,.4);color:var(--accent)}
@@ -831,80 +837,87 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 
 <!-- ── ANÁLISE ── -->
 <div id="page-prod2" class="page"><div class="content-inner">
-  <div class="sec-title">Produtividade da equipe</div>
+  <div class="sec-title">Produtividade</div>
 
   <div id="prod2-erro" style="display:none;background:var(--red-d);border:1px solid rgba(224,92,92,.35);border-radius:var(--r2);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--red)"></div>
 
-  <!-- KPIs principais -->
-  <div class="kpi-grid" id="prod2-kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"></div>
+  <!-- ══ TOPO FIXO: KPIs + meta ══ -->
+  <div class="kpi-grid" id="prod2-kpis" style="grid-template-columns:repeat(2,1fr);margin-bottom:10px"></div>
 
-  <!-- Termômetro da meta -->
-  <div class="card" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+  <div class="card" style="margin-bottom:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)">Meta do mês</div>
-      <button class="btn btn-ghost btn-sm" onclick="abrirProd2Meta()">Ajustar meta</button>
+      <button class="btn btn-ghost btn-sm" onclick="abrirProd2Meta()">Ajustar</button>
     </div>
     <div id="prod2-termometro"></div>
   </div>
 
-  <!-- Quadro da equipe -->
-  <div class="card" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)">Quadro da equipe</div>
-      <button class="btn btn-ghost btn-sm" onclick="abrirProd2Equipe()">Editar</button>
+  <!-- ══ ABAS INTERNAS ══ -->
+  <div class="p2tabs">
+    <button class="p2tab on" data-tab="setores" onclick="prod2Tab('setores')">Setores</button>
+    <button class="p2tab" data-tab="equipe" onclick="prod2Tab('equipe')">Equipe</button>
+    <button class="p2tab" data-tab="metas" onclick="prod2Tab('metas')">Metas</button>
+  </div>
+
+  <!-- ─── ABA SETORES ─── -->
+  <div class="p2pane" id="p2pane-setores">
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Produção diária por setor</div>
+      <div style="background:var(--ink3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:10px;-webkit-overflow-scrolling:touch">
+          <button class="pdbtn on" data-per="mes" onclick="setPdPeriodo('mes')">Mês</button>
+          <button class="pdbtn" data-per="semana" onclick="setPdPeriodo('semana')">Semana</button>
+          <button class="pdbtn" data-per="custom" onclick="setPdPeriodo('custom')">Custom</button>
+          <button id="pd-tend-btn" class="pdbtn" onclick="togglePdTend()">△ Tend.</button>
+        </div>
+        <div id="pd-custom-row" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">De / até</span>
+          <input type="date" id="pd-de" onchange="renderProd2Diaria()" style="font-size:11px;padding:6px 8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text)">
+          <span style="color:var(--text3)">→</span>
+          <input type="date" id="pd-ate" onchange="renderProd2Diaria()" style="font-size:11px;padding:6px 8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text)">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <button class="pdbtn on" data-cmp="1" onclick="setPdComparar(true)">Comparar anterior</button>
+          <button class="pdbtn" data-cmp="0" onclick="setPdComparar(false)">Sem comparação</button>
+        </div>
+      </div>
+      <div id="pd-legenda" style="font-size:11px;color:var(--text3);margin:0 2px 10px"></div>
+      <div id="prod2-diaria" class="prod2-diaria-grid"></div>
     </div>
-    <div id="prod2-equipe"></div>
-  </div>
 
-  <!-- Evolução da produtividade -->
-  <div class="card" style="margin-bottom:16px">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Produtividade por mês — embalado ÷ pessoas</div>
-    <div class="chart-wrap" style="height:200px"><canvas id="prod2-chart-evol"></canvas></div>
-  </div>
-
-  <!-- Produtividade por pessoa por setor -->
-  <div class="card" style="margin-bottom:16px">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Peças por pessoa · por setor</div>
-    <div id="prod2-porpessoa"></div>
-  </div>
-
-  <!-- Produção diária por setor -->
-  <div class="card" style="margin-bottom:16px">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Produção diária por setor</div>
-    <div style="background:var(--ink3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;min-width:46px">Período</span>
-        <button class="pdbtn" data-per="semana" onclick="setPdPeriodo('semana')">Semana</button>
-        <button class="pdbtn on" data-per="mes" onclick="setPdPeriodo('mes')">Mês</button>
-        <button class="pdbtn" data-per="custom" onclick="setPdPeriodo('custom')">Personalizado</button>
-        <button id="pd-tend-btn" class="pdbtn" style="margin-left:auto" onclick="togglePdTend()">△ Tendência</button>
-      </div>
-      <div id="pd-custom-row" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;min-width:46px">De / até</span>
-        <input type="date" id="pd-de" onchange="renderProd2Diaria()" style="font-size:11px;padding:6px 8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text)">
-        <span style="color:var(--text3)">→</span>
-        <input type="date" id="pd-ate" onchange="renderProd2Diaria()" style="font-size:11px;padding:6px 8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text)">
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;min-width:46px">Comparar</span>
-        <button class="pdbtn on" data-cmp="1" onclick="setPdComparar(true)">Período anterior</button>
-        <button class="pdbtn" data-cmp="0" onclick="setPdComparar(false)">Sem comparação</button>
-      </div>
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Capacidade e gargalo</div>
+      <div id="prod2-setores"></div>
     </div>
-    <div id="pd-legenda" style="font-size:11px;color:var(--text3);margin:0 2px 10px"></div>
-    <div id="prod2-diaria" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"></div>
   </div>
 
-  <!-- Capacidade por setor (gargalo) -->
-  <div class="card" style="margin-bottom:16px">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Capacidade por setor</div>
-    <div id="prod2-setores"></div>
+  <!-- ─── ABA EQUIPE ─── -->
+  <div class="p2pane" id="p2pane-equipe" style="display:none">
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)">Quadro da equipe</div>
+        <button class="btn btn-ghost btn-sm" onclick="abrirProd2Equipe()">Editar</button>
+      </div>
+      <div id="prod2-equipe"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Produtividade por mês — embalado ÷ pessoas</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="prod2-chart-evol"></canvas></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Peças por pessoa · por setor</div>
+      <div id="prod2-porpessoa"></div>
+    </div>
   </div>
 
-  <!-- Desempenho vs meta (Pintura e Fundo) -->
-  <div class="card" style="margin-bottom:16px" id="prod2-metas-card">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Metas do mês · Pintura e Fundo</div>
-    <div id="prod2-metas"></div>
+  <!-- ─── ABA METAS ─── -->
+  <div class="p2pane" id="p2pane-metas" style="display:none">
+    <div class="card" style="margin-bottom:16px" id="prod2-metas-card">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:12px">Metas diárias · Pintura e Fundo</div>
+      <div id="prod2-metas"></div>
+    </div>
   </div>
 
   <div id="prod2-insights"></div>
@@ -2249,7 +2262,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='diaria-1 · 05/10';
+const APP_VERSION='prod2-ui · 05/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -2312,6 +2325,21 @@ async function loadProd2(){
   }catch(e){setSync('err');prod2Erro('Erro ao carregar equipe: '+(e.message||e));prod2Equipe=[]}
 }
 
+
+let prod2TabAtual='setores';
+function prod2Tab(t){
+  prod2TabAtual=t;
+  ['setores','equipe','metas'].forEach(x=>{
+    const pane=document.getElementById('p2pane-'+x);
+    if(pane)pane.style.display=(x===t)?'block':'none';
+  });
+  document.querySelectorAll('.p2tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  // (re)renderiza gráficos da aba que abriu — canvas em display:none não dimensiona
+  if(t==='setores'){renderProd2Diaria();renderProd2Setores();}
+  if(t==='equipe'){renderProd2Equipe();renderProd2ChartEvol();renderProd2PorPessoa();}
+  if(t==='metas'){renderProd2Metas();}
+}
+
 function renderProd2(){
   if(!prod2Equipe.length){
     document.getElementById('prod2-kpis').innerHTML='';
@@ -2321,15 +2349,12 @@ function renderProd2(){
     document.getElementById('prod2-insights').innerHTML='';
     return;
   }
+  // topo sempre
   renderProd2Kpis();
   renderProd2Termometro();
-  renderProd2Equipe();
-  renderProd2PorPessoa();
-  renderProd2Diaria();
-  renderProd2Metas();
-  renderProd2Setores();
   renderProd2Insights();
-  renderProd2ChartEvol();
+  // renderiza a aba ativa (abas ocultas renderizam ao abrir, via prod2Tab)
+  prod2Tab(prod2TabAtual);
 }
 
 function prod2ProjecaoMes(){
@@ -2350,10 +2375,12 @@ function renderProd2Kpis(){
   const prodBase=Math.round(PROD2_BASE_PECAS/PROD2_BASE_PESSOAS); // 175
   const deltaProd=prodBase>0?Math.round((prodAtual/prodBase-1)*100):0;
 
+  const bateMeta=projMes>=prod2Meta.min;
   document.getElementById('prod2-kpis').innerHTML=`
-    <div class="kpi"><div class="kpi-label">Embalado no mês</div><div class="kpi-val">${mesAtualEmb.toLocaleString('pt-BR')}</div><div class="kpi-sub">meta ${prod2Meta.min.toLocaleString('pt-BR')}–${prod2Meta.max.toLocaleString('pt-BR')}</div></div>
+    <div class="kpi"><div class="kpi-label">Embalado no mês</div><div class="kpi-val" style="color:var(--accent)">${mesAtualEmb.toLocaleString('pt-BR')}</div><div class="kpi-sub">meta ${prod2Meta.min.toLocaleString('pt-BR')}–${prod2Meta.max.toLocaleString('pt-BR')}</div></div>
+    <div class="kpi"><div class="kpi-label">Projeção do mês</div><div class="kpi-val" style="color:${bateMeta?'var(--green)':'var(--amber)'}">${projMes.toLocaleString('pt-BR')}</div><div class="kpi-sub">${bateMeta?'bate a meta ✓':'abaixo da meta'}</div></div>
     <div class="kpi"><div class="kpi-label">Equipe</div><div class="kpi-val">${totPessoas}</div><div class="kpi-sub">${prod2Equipe.map(s=>s.qtd_pessoas+' '+abrevSetor(s.setor)).join(' · ')}</div></div>
-    <div class="kpi"><div class="kpi-label">Peças / pessoa (proj.)</div><div class="kpi-val" style="color:${deltaProd>=0?'var(--green)':'var(--red)'}">${prodAtual}</div><div class="kpi-sub">base ${prodBase} · ${deltaProd>=0?'+':''}${deltaProd}%</div></div>`;
+    <div class="kpi"><div class="kpi-label">Peças / pessoa</div><div class="kpi-val" style="color:${deltaProd>=0?'var(--green)':'var(--red)'}">${prodAtual}</div><div class="kpi-sub">base ${prodBase} · ${deltaProd>=0?'+':''}${deltaProd}%</div></div>`;
 }
 function abrevSetor(s){const m={'Marcenaria':'marc','Pintura':'pint','Embalagem':'emb','Usinagem':'usin','Montagem':'mont','Expedição':'exp','Fundo':'fundo','Lixa de Fundo':'lixa','Elétrica':'elét'};return m[s]||s.toLowerCase().slice(0,4)}
 
