@@ -271,6 +271,8 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   to{opacity:1;transform:translateY(0)}
 }
 
+.pd-setor-card{transition:transform .18s ease,border-color .18s ease}
+@media(hover:hover){.pd-setor-card:hover{transform:translateY(-2px);border-color:var(--line2)}}
 .p2tabs{display:flex;gap:5px;background:var(--ink2);border-radius:12px;padding:4px;margin-bottom:14px}
 .p2tab{flex:1;text-align:center;padding:9px 4px;font-size:12px;color:var(--text2);border:none;background:none;border-radius:8px;cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s}
 .p2tab.on{background:var(--ink3);color:var(--accent)}
@@ -334,8 +336,10 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   font-family:'Syne',sans-serif;font-weight:800;color:var(--accent);font-size:14px;
   z-index:150;transition:transform .15s ease;box-shadow:0 4px 12px rgba(0,0,0,.2);
 }
-#ptr-indicator.spin{animation:ptrSpin .7s linear infinite}
-@keyframes ptrSpin{from{transform:translateX(-50%) scale(1) rotate(0deg)}to{transform:translateX(-50%) scale(1) rotate(360deg)}}
+#ptr-indicator.spin{transform:translateX(-50%) scale(1)}
+#ptr-indicator.spin .ptr-ico{animation:ptrSpin .7s linear infinite}
+.ptr-ico{display:inline-block;transform-origin:center center}
+@keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .chip.active{background:var(--accent);color:var(--ink);border-color:var(--accent)}
 
 .cfg-item{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.cfg-label{font-size:11px;color:var(--text2);letter-spacing:.04em}
@@ -1197,7 +1201,7 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   </div>
   <div id="toast-bar"></div>
 </div>
-<div id="ptr-indicator">↻</div>
+<div id="ptr-indicator"><span class="ptr-ico">↻</span></div>
 
 <!-- ── Modais do fluxo ── -->
 <div id="wip-ov-mover" class="wov" onclick="if(event.target===this)wipFechar('wip-ov-mover')">
@@ -2262,7 +2266,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='prod2-ui2 · 05/10';
+const APP_VERSION='prod2-ui3 · 05/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -3113,14 +3117,16 @@ function renderProd2Diaria(){
   leg.innerHTML=`<b style="color:var(--text)">${nomeMesPeriodo()}</b>`+
     (pdComparar?` vs <span style="color:var(--text2)">${pdPeriodo==='mes'?'mês anterior':fmtBR(iv.aIni)+' a '+fmtBR(iv.aFim)}</span>`:'')+
     ` &nbsp;·&nbsp; <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--accent);vertical-align:-1px"></span> atual`+
-    (pdComparar?` &nbsp;<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#3a3a35;vertical-align:-1px"></span> <span style="color:var(--text2)">anterior</span>`:'');
+    (pdComparar?` &nbsp;<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--line2);vertical-align:-1px"></span> <span style="color:var(--text2)">anterior</span>`:'');
 
   pdCharts.forEach(ch=>ch.destroy()); pdCharts=[];
   el.innerHTML='';
+  const isDarkPd=document.documentElement.getAttribute('data-theme')!=='light';
+  const corComp=isDarkPd?'#3a3a35':'#d8d6cd';  // cinza da barra de comparação
 
   const setores=Object.keys(PD_CORES);
   let algum=false;
-  setores.forEach(setor=>{
+  setores.forEach((setor,idx)=>{
     const serie=pdSerieSetor(setor,iv.ini,iv.fim);
     const totAtual=serie.reduce((a,b)=>a+b,0);
     let serieAnt=[], totAnt=0;
@@ -3141,7 +3147,7 @@ function renderProd2Diaria(){
     if(n>1){const xs=serie.map((_,k)=>k);const mx=xs.reduce((a,b)=>a+b,0)/n,my=serie.reduce((a,b)=>a+b,0)/n;let num=0,den=0;xs.forEach((x,k)=>{num+=(x-mx)*(serie[k]-my);den+=(x-mx)**2;});const b=den?num/den:0,a=my-b*mx;tl=xs.map(x=>Math.max(0,Math.round((a+b*x)*10)/10));}
 
     const card=document.createElement('div');
-    card.style.cssText='background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:15px 16px;border-left:3px solid '+cor;
+    card.className='pd-setor-card';card.style.cssText='background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:15px 16px;border-left:3px solid '+cor+';animation:cardIn .35s ease-out backwards;animation-delay:'+(idx*0.04)+'s';
     card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
         <span style="color:var(--text);font-size:14px;font-family:'Inter',sans-serif;font-weight:700">${setor.replace(' de Fundo','')}</span>
         ${delta!==null?`<span style="font-size:11px;color:${dc}">${setaTxt}</span>`:''}
@@ -3151,9 +3157,9 @@ function renderProd2Diaria(){
     el.appendChild(card);
 
     const ds=[];
-    if(pdComparar) ds.push({type:'bar',data:serieAnt,backgroundColor:'#3a3a35',borderRadius:2,barPercentage:.95,categoryPercentage:.8,order:3});
+    if(pdComparar) ds.push({type:'bar',data:serieAnt,backgroundColor:corComp,borderRadius:2,barPercentage:.95,categoryPercentage:.8,order:3});
     ds.push({type:'bar',data:serie,backgroundColor:cor,borderRadius:2,barPercentage:.95,categoryPercentage:.8,order:2});
-    ds.push({type:'line',data:tl,borderColor:'#f0ede6',borderWidth:1.5,borderDash:[4,3],pointRadius:0,order:1,hidden:!pdTend});
+    ds.push({type:'line',data:tl,borderColor:isDarkPd?'#f0ede6':'#2c2c28',borderWidth:1.5,borderDash:[4,3],pointRadius:0,order:1,hidden:!pdTend});
     // garante que datasets[2] seja sempre a tendência
     while(ds.length<3) ds.splice(ds.length-1,0,{data:[],hidden:true});
 
