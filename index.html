@@ -276,7 +276,7 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 .p2tab.on{background:var(--ink3);color:var(--accent)}
 .prod2-diaria-grid{display:grid;grid-template-columns:1fr;gap:9px}
 @media(min-width:768px){.prod2-diaria-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.pdbtn{border:1px solid var(--line2);background:transparent;border-radius:var(--r);cursor:pointer;color:var(--text2);font-family:'DM Mono',monospace;font-size:11px;padding:6px 12px}
+.pdbtn{border:1px solid var(--line2);background:transparent;border-radius:var(--r);cursor:pointer;color:var(--text2);font-family:'DM Mono',monospace;font-size:12px;padding:9px 15px;white-space:nowrap}
 .pdbtn:hover{color:var(--text)}
 .pdbtn.on{background:rgba(232,197,71,.14);border-color:rgba(232,197,71,.4);color:var(--accent)}
 .insight-card{
@@ -2262,7 +2262,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='prod2-ui · 05/10';
+const APP_VERSION='prod2-ui2 · 05/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -3076,11 +3076,14 @@ function pdIntervalo(){
     const aIni=new Date(aFim); aIni.setDate(aFim.getDate()-(dias-1));
     return {ini:de,fim:ate,aIni:iso(aIni),aFim:iso(aFim),labelAnt:'ant.'};
   }
-  // mês atual
+  // mês atual — vai só ATÉ HOJE (cresce com os dias); anterior corta no mesmo dia
+  const diaHoje=hj.getDate();
   const ini=new Date(hj.getFullYear(),hj.getMonth(),1);
-  const fim=new Date(hj.getFullYear(),hj.getMonth()+1,0);
+  const fim=new Date(hj.getFullYear(),hj.getMonth(),diaHoje);          // dia 1 → hoje
   const aIni=new Date(hj.getFullYear(),hj.getMonth()-1,1);
-  const aFim=new Date(hj.getFullYear(),hj.getMonth(),0);
+  // mesmo dia no mês anterior (clamp p/ meses mais curtos)
+  const ultDiaAnt=new Date(hj.getFullYear(),hj.getMonth(),0).getDate();
+  const aFim=new Date(hj.getFullYear(),hj.getMonth()-1,Math.min(diaHoje,ultDiaAnt));
   return {ini:iso(ini),fim:iso(fim),aIni:iso(aIni),aFim:iso(aFim),labelAnt:'mês ant.'};
 }
 
@@ -3138,13 +3141,13 @@ function renderProd2Diaria(){
     if(n>1){const xs=serie.map((_,k)=>k);const mx=xs.reduce((a,b)=>a+b,0)/n,my=serie.reduce((a,b)=>a+b,0)/n;let num=0,den=0;xs.forEach((x,k)=>{num+=(x-mx)*(serie[k]-my);den+=(x-mx)**2;});const b=den?num/den:0,a=my-b*mx;tl=xs.map(x=>Math.max(0,Math.round((a+b*x)*10)/10));}
 
     const card=document.createElement('div');
-    card.style.cssText='background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:13px 15px;border-left:3px solid '+cor;
+    card.style.cssText='background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:15px 16px;border-left:3px solid '+cor;
     card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
-        <span style="color:var(--text);font-size:13px;font-family:'Inter',sans-serif;font-weight:700">${setor.replace(' de Fundo','')}</span>
+        <span style="color:var(--text);font-size:14px;font-family:'Inter',sans-serif;font-weight:700">${setor.replace(' de Fundo','')}</span>
         ${delta!==null?`<span style="font-size:11px;color:${dc}">${setaTxt}</span>`:''}
       </div>
-      <div style="font-size:10px;color:var(--text2);margin-bottom:8px">média <b style="color:var(--text)">${medAt}</b>/dia${pdComparar?` <span style="color:var(--text3)">· ${iv.labelAnt} ${medAn}</span>`:''}</div>
-      <div style="position:relative;height:50px"><canvas role="img" aria-label="Produção diária ${setor}"></canvas></div>`;
+      <div style="font-size:11px;color:var(--text2);margin-bottom:9px">média <b style="color:var(--text)">${medAt}</b>/dia${pdComparar?` <span style="color:var(--text3)">· ${iv.labelAnt} ${medAn}</span>`:''}</div>
+      <div style="position:relative;height:72px"><canvas role="img" aria-label="Produção diária ${setor}"></canvas></div>`;
     el.appendChild(card);
 
     const ds=[];
