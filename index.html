@@ -2335,7 +2335,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='cupulas-1 · 15/10';
+const APP_VERSION='cupulas-2 · 15/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -3321,13 +3321,17 @@ function renderCupulas(){
     return;
   }
   const dados=cupTipos.map(c=>{
-    const saldo=cupSaldo(c.id);
+    const base=cupDataCorte(c.id);
     const minimo=parseInt(c.minimo)||0;
+    if(!base){ // sem estoque inicial lançado → não conta consumo (evita alarme falso)
+      return {...c, saldo:0, minimo, nivel:'novo', consumoMes:0, semBase:true};
+    }
+    const saldo=cupSaldo(c.id);
     const nivel = saldo<=minimo ? 'red' : saldo<=minimo*1.5 ? 'amber' : 'green';
     return {...c, saldo, minimo, nivel, consumoMes:cupConsumoMes(c.id)};
   });
-  // ordenar: alerta (red) primeiro, depois amber, depois verde; dentro, menor saldo
-  const ordem={red:0,amber:1,green:2};
+  // ordenar: alerta (red) primeiro, depois amber, verde, e por fim os sem estoque inicial; dentro, menor saldo
+  const ordem={red:0,amber:1,green:2,novo:3};
   dados.sort((a,b)=> (ordem[a.nivel]-ordem[b.nivel]) || (a.saldo-b.saldo) || (a.ordem-b.ordem));
 
   const totEstoque=dados.reduce((a,d)=>a+Math.max(0,d.saldo),0);
@@ -3347,18 +3351,26 @@ function renderCupulas(){
       <span style="font-size:12px;color:var(--text2);line-height:1.4">${alertas.map(a=>'<b style="color:var(--text)">'+a.nome+'</b>').join(', ')} ${alertas.length>1?'estão':'está'} no vermelho — repor</span>
     </div>`:'';
 
-  const cor=n=>n==='red'?'var(--red)':n==='amber'?'var(--amber)':'var(--green)';
+  const cor=n=>n==='red'?'var(--red)':n==='amber'?'var(--amber)':n==='novo'?'var(--text3)':'var(--green)';
   lista.innerHTML=dados.map(d=>{
     const prods=cupVinculos.filter(v=>v.cupula_id===d.id).map(v=>v.produto).filter(p=>!p.startsWith('Cúpula ')); // esconde os produtos-cúpula do "usada em"
     const usada = prods.length?prods.slice(0,4).join(', ')+(prods.length>4?'…':''):'sem produto vinculado';
+    const valor = d.semBase
+      ? `<span style="font-family:'Inter',sans-serif;font-weight:700;font-size:13px;color:var(--text3)">sem estoque inicial</span>`
+      : `<span style="font-family:'Inter',sans-serif;font-weight:900;font-size:26px;color:${cor(d.nivel)}">${d.saldo.toLocaleString('pt-BR')}</span>`;
+    const rodape = d.semBase
+      ? `<span style="font-size:10px;color:var(--text3);background:var(--ink3);padding:3px 9px;border-radius:10px">lançar inicial</span>`
+      : d.nivel==='red'
+        ? `<span style="font-size:10px;color:var(--red);background:var(--red-d);padding:3px 9px;border-radius:10px">repor</span>`
+        : `<span style="font-size:11px;color:var(--text3)">saiu ${d.consumoMes} no mês</span>`;
     return `<div class="cup-card" style="background:var(--ink2);border:1px solid var(--line);border-left:3px solid ${cor(d.nivel)};border-radius:var(--r2);padding:13px 15px;margin-bottom:9px;animation:cardIn .35s ease-out backwards">
       <div style="display:flex;justify-content:space-between;align-items:baseline">
         <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px">${d.nome}</span>
-        <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:26px;color:${cor(d.nivel)}">${d.saldo.toLocaleString('pt-BR')}</span>
+        ${valor}
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
         <span style="font-size:11px;color:var(--text3)">usada em: ${usada} · mín. ${d.minimo}</span>
-        ${d.nivel==='red'?`<span style="font-size:10px;color:var(--red);background:var(--red-d);padding:3px 9px;border-radius:10px">repor</span>`:`<span style="font-size:11px;color:var(--text3)">saiu ${d.consumoMes} no mês</span>`}
+        ${rodape}
       </div>
     </div>`;
   }).join('');
