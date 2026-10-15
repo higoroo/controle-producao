@@ -306,6 +306,37 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 .solic-card:active{transform:scale(.99)}
 [data-theme="light"] .solic-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
 
+/* Cards de cúpula — clicáveis (repor) com entrada em cascata e toque */
+.cup-card{transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;cursor:pointer}
+@media(hover:hover){.cup-card:hover{transform:translateY(-2px);border-color:var(--line2);box-shadow:0 6px 18px rgba(0,0,0,.18)}}
+.cup-card:active{transform:scale(.985)}
+.cup-card .cup-cta{transition:background .15s ease,color .15s ease}
+@media(hover:hover){.cup-card:hover .cup-cta{filter:brightness(1.12)}}
+
+/* Check de confirmação central (ao salvar) */
+.ok-ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  background:rgba(10,10,9,.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+  z-index:1200;opacity:0;visibility:hidden;transition:opacity .18s ease,visibility .18s;pointer-events:none}
+.ok-ov.show{opacity:1;visibility:visible}
+.ok-badge{position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center}
+.ok-disc{position:absolute;inset:0;border-radius:50%;background:var(--green);
+  box-shadow:0 10px 34px -6px rgba(76,175,125,.55);transform:scale(0)}
+.ok-ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--green);opacity:0}
+.ok-ov.show .ok-disc{animation:okDisc .5s cubic-bezier(.34,1.56,.64,1) .04s both}
+.ok-ov.show .ok-ring{animation:okRing .9s ease-out .18s both}
+.ok-chk{position:relative;width:52px;height:52px}
+.ok-chk path{stroke:var(--ink);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;fill:none;stroke-dasharray:40;stroke-dashoffset:40}
+.ok-ov.show .ok-chk path{animation:okDraw .34s ease-out .22s forwards}
+.ok-label{font-family:'Syne',sans-serif;font-weight:800;font-size:21px;color:var(--text);opacity:0}
+.ok-ov.show .ok-label{animation:okLabel .3s ease-out .26s both}
+@keyframes okDisc{0%{transform:scale(0)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes okDraw{to{stroke-dashoffset:0}}
+@keyframes okRing{0%{transform:scale(.7);opacity:.7}100%{transform:scale(1.65);opacity:0}}
+@keyframes okLabel{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+  .ok-ov.show .ok-disc,.ok-ov.show .ok-ring,.ok-ov.show .ok-chk path,.ok-ov.show .ok-label{animation-duration:.01ms}
+}
+
 /* Feedback de sucesso (check animado) */
 @keyframes checkPop{
   0%{transform:scale(0) rotate(-20deg);opacity:0}
@@ -1227,6 +1258,16 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 </div>
 <div id="ptr-indicator"><span class="ptr-ico">↻</span></div>
 
+<!-- Check de confirmação (centro da tela) -->
+<div class="ok-ov" id="ok-ov" aria-hidden="true">
+  <div class="ok-badge">
+    <div class="ok-disc"></div>
+    <div class="ok-ring"></div>
+    <svg class="ok-chk" viewBox="0 0 48 48" aria-hidden="true"><path d="M13 25 L21 33 L36 16"/></svg>
+  </div>
+  <div class="ok-label" id="ok-label">Salvo!</div>
+</div>
+
 <!-- ── Modais do fluxo ── -->
 <div id="wip-ov-mover" class="wov" onclick="if(event.target===this)wipFechar('wip-ov-mover')">
   <div class="wmodal">
@@ -1384,7 +1425,7 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
     </select>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('cup-ov-entrada').style.display='none'">Cancelar</button>
-      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarCupEntrada()">Salvar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarCupEntrada(this)">Salvar</button>
     </div>
   </div>
 </div>
@@ -1401,7 +1442,7 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
     <button class="btn btn-ghost btn-sm" onclick="cupAddVinculoLinha()" style="width:100%;margin-bottom:14px">+ Vínculo</button>
     <div style="display:flex;gap:8px">
       <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('cup-ov-vinculos').style.display='none'">Cancelar</button>
-      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarCupVinculos()">Salvar tudo</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarCupVinculos(this)">Salvar tudo</button>
     </div>
   </div>
 </div>
@@ -1444,6 +1485,17 @@ function toast(msg, tipo='ok'){
     el.classList.add('hide');
     setTimeout(()=>{el.style.display='none';el.classList.remove('hide');},200);
   },2500);
+}
+// check de confirmação no centro da tela (~1,2s, some sozinho)
+let _okT;
+function mostrarCheck(label){
+  const ov=document.getElementById('ok-ov'); if(!ov)return;
+  const lb=document.getElementById('ok-label'); if(lb)lb.textContent=label||'Salvo!';
+  vibrar(18);
+  clearTimeout(_okT);
+  ov.classList.remove('show'); void ov.offsetWidth; // reinicia a animação
+  ov.classList.add('show');
+  _okT=setTimeout(()=>ov.classList.remove('show'), 1250);
 }
 function fmt(d){return new Date(d+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
 function hoje(){
@@ -1745,7 +1797,7 @@ async function confirmarRecebimento(){
     if(idx>=0)Object.assign(cachedSolic[idx],patch);
     setSync('ok');
     fecharModalRecebimento();
-    toast('Recebimento registrado!');
+    mostrarCheck('Recebimento registrado!');
     renderCompLista();
     renderCompKPIs();
   }catch(e){setSync('err');toast('Erro ao registrar recebimento.','erro');}
@@ -2109,7 +2161,7 @@ async function wipSalvarMov(payload){
   try{
     await sb('wip_movimentos',{method:'POST',body:JSON.stringify(payload),prefer:'return=minimal'});
     await loadWip(); renderWip();
-    toast('Movimento registrado!');
+    mostrarCheck('Movimento registrado!');
   }catch(e){setSync('err');console.error('WIP mov',e);wipMostraErro('Erro ao registrar movimento: '+wipErroMsg(e));toast('Erro ao registrar','erro')}
 }
 
@@ -2178,7 +2230,7 @@ async function addWipEtapa(){
     await sb('wip_etapas',{method:'POST',body:JSON.stringify({nome,ordem:wipEtapas.length}),prefer:'return=minimal'});
     document.getElementById('wet-nova').value='';
     await loadWip(); wipRenderEtapasEditor(); renderWip();
-    toast('Etapa adicionada.');
+    mostrarCheck('Etapa adicionada.');
   }catch(e){setSync('err');toast('Erro ao adicionar: '+wipErroMsg(e),'erro')}
 }
 async function removerWipEtapa(id){
@@ -2214,7 +2266,7 @@ async function salvarWipEtapasNomes(){
       }
     }
     await loadWip(); renderWip(); wipFechar('wip-ov-etapas');
-    toast('Etapas atualizadas.');
+    mostrarCheck('Etapas atualizadas.');
   }catch(e){setSync('err');toast('Erro ao renomear: '+wipErroMsg(e),'erro')}
 }
 
@@ -2250,7 +2302,7 @@ async function salvarWipLinha(){
     if(id) await sb('wip_linhas?id=eq.'+id,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
     else await sb('wip_linhas',{method:'POST',body:JSON.stringify(payload),prefer:'return=minimal'});
     await loadWip(); renderWip(); wipFechar('wip-ov-linha');
-    toast('Produto salvo!');
+    mostrarCheck('Produto salvo!');
   }catch(e){setSync('err');console.error('WIP linha',e);wipMostraErro('Erro ao salvar produto: '+wipErroMsg(e));toast('Erro ao salvar','erro')}
 }
 async function excluirWipLinha(){
@@ -2339,7 +2391,7 @@ async function salvarWipInicial(){
     }
     if(novos.length) await sb('wip_movimentos',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
     await loadWip(); renderWip(); wipFechar('wip-ov-inicial');
-    toast('Saldo inicial registrado!');
+    mostrarCheck('Saldo inicial registrado!');
   }catch(e){setSync('err');console.error('WIP inicial',e);wipMostraErro('Erro ao salvar saldo inicial: '+wipErroMsg(e));toast('Erro ao salvar saldo','erro')}
 }
 
@@ -2359,7 +2411,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='cupulas-3 · 15/10';
+const APP_VERSION='cupulas-6 · 15/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -3003,7 +3055,7 @@ function salvarProd2Meta(){
   localStorage.setItem('prod2_meta_max',prod2Meta.max);
   document.getElementById('prod2-ov-meta').style.display='none';
   renderProd2();
-  toast('Meta atualizada.');
+  mostrarCheck('Meta atualizada.');
 }
 
 /* ══════════════ METAS DIÁRIAS por produto (Pintura e Fundo) ══════════════ */
@@ -3137,7 +3189,7 @@ async function salvarMotivoSetor(setor,dataStr){
     }
     await loadMetasDia(dataStr);
     setSync('ok');
-    if(motivo)toast('Motivo registrado.');
+    if(motivo)mostrarCheck('Motivo registrado.');
   }catch(e){setSync('err');toast('Erro ao salvar motivo','erro')}
 }
 
@@ -3386,18 +3438,18 @@ function renderCupulas(){
     </div>`:'';
 
   const cor=n=>n==='red'?'var(--red)':n==='amber'?'var(--amber)':n==='novo'?'var(--text3)':'var(--green)';
-  lista.innerHTML=dados.map(d=>{
+  lista.innerHTML=dados.map((d,i)=>{
     const prods=cupVinculos.filter(v=>v.cupula_id===d.id).map(v=>v.produto).filter(p=>!p.startsWith('Cúpula ')); // esconde os produtos-cúpula do "usada em"
     const usada = prods.length?prods.slice(0,4).join(', ')+(prods.length>4?'…':''):'sem produto vinculado';
     const valor = d.semBase
       ? `<span style="font-family:'Inter',sans-serif;font-weight:700;font-size:13px;color:var(--text3)">sem estoque inicial</span>`
       : `<span style="font-family:'Inter',sans-serif;font-weight:900;font-size:26px;color:${cor(d.nivel)}">${d.saldo.toLocaleString('pt-BR')}</span>`;
     const rodape = d.semBase
-      ? `<span style="font-size:10px;color:var(--text3);background:var(--ink3);padding:3px 9px;border-radius:10px">lançar inicial</span>`
+      ? `<span class="cup-cta" style="font-size:10px;color:var(--text3);background:var(--ink3);padding:3px 9px;border-radius:10px">lançar inicial</span>`
       : d.nivel==='red'
-        ? `<span style="font-size:10px;color:var(--red);background:var(--red-d);padding:3px 9px;border-radius:10px">repor</span>`
+        ? `<span class="cup-cta" style="font-size:10px;color:var(--red);background:var(--red-d);padding:3px 9px;border-radius:10px">repor</span>`
         : `<span style="font-size:11px;color:var(--text3)">saiu ${d.consumoMes} no mês</span>`;
-    return `<div class="cup-card" style="background:var(--ink2);border:1px solid var(--line);border-left:3px solid ${cor(d.nivel)};border-radius:var(--r2);padding:13px 15px;margin-bottom:9px;animation:cardIn .35s ease-out backwards">
+    return `<div class="cup-card" onclick="cupRepor('${d.id}')" style="background:var(--ink2);border:1px solid var(--line);border-left:3px solid ${cor(d.nivel)};border-radius:var(--r2);padding:13px 15px;margin-bottom:9px;animation:cardIn .35s ease-out backwards;animation-delay:${(i*0.045).toFixed(3)}s">
       <div style="display:flex;justify-content:space-between;align-items:baseline">
         <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px">${d.nome}</span>
         ${valor}
@@ -3419,19 +3471,35 @@ function abrirCupEntrada(){
   document.getElementById('cup-e-tipo').value='entrada';
   document.getElementById('cup-ov-entrada').style.display='flex';
 }
-async function salvarCupEntrada(){
+// clicar no card: abre a entrada já com a cúpula selecionada (repor em 1 toque)
+function cupRepor(cupId){
+  if(!cupTipos.length)return;
+  abrirCupEntrada();
+  const sel=document.getElementById('cup-e-cupula');
+  if(sel) sel.value=cupId;
+  // se ainda não tem estoque inicial, já sugere "Estoque inicial"; senão, "Entrada"
+  const temBase=!!cupDataCorte(cupId);
+  document.getElementById('cup-e-tipo').value=temBase?'entrada':'inicial';
+  setTimeout(()=>{const q=document.getElementById('cup-e-qtd');if(q)q.focus();},120);
+}
+let cupSalvandoEntrada=false;
+async function salvarCupEntrada(btn){
+  if(cupSalvandoEntrada)return; // evita salvar duas vezes com toque duplo
   const cupula_id=document.getElementById('cup-e-cupula').value;
   const qtd=parseInt(document.getElementById('cup-e-qtd').value)||0;
   const data=document.getElementById('cup-e-data').value||hoje();
   const tipo=document.getElementById('cup-e-tipo').value;
   if(!cupula_id||!qtd){toast('Escolha a cúpula e a quantidade.','aviso');return}
+  cupSalvandoEntrada=true; if(btn)btn.disabled=true;
   setSync('syncing');
   try{
     await sb('cupula_entradas',{method:'POST',body:JSON.stringify({cupula_id,data,qtd,tipo}),prefer:'return=minimal'});
-    await loadCupulas(true); renderCupulas();
+    // sucesso: fecha e confirma ANTES de recarregar (se o refresh falhar, o dado já está salvo)
     document.getElementById('cup-ov-entrada').style.display='none';
-    toast('Entrada registrada!');
-  }catch(e){setSync('err');toast('Erro ao registrar','erro')}
+    setSync('ok'); mostrarCheck('Entrada registrada!');
+    try{ await loadCupulas(true); renderCupulas(); }catch(_){}
+  }catch(e){setSync('err');toast('Erro ao registrar — tente de novo','erro')}
+  finally{ cupSalvandoEntrada=false; if(btn)btn.disabled=false; }
 }
 
 /* ── Modal: vínculos + tipos ── */
@@ -3468,7 +3536,10 @@ function cupAddVinculoLinha(){
   if(!cupTipos.length){toast('Cadastre um tipo de cúpula primeiro.','aviso');return}
   document.getElementById('cup-v-vinculos').insertAdjacentHTML('beforeend',cupVinculoRow('',cupTipos[0].id));
 }
-async function salvarCupVinculos(){
+let cupSalvandoVinc=false;
+async function salvarCupVinculos(btn){
+  if(cupSalvandoVinc)return;
+  cupSalvandoVinc=true; if(btn)btn.disabled=true;
   setSync('syncing');
   try{
     // 1) Tipos: upsert por id; novos sem id = insert
@@ -3502,10 +3573,11 @@ async function salvarCupVinculos(){
       novos.push({produto,cupula_id,qtd_por_peca:1});
     }
     if(novos.length) await sb('cupula_vinculos',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
-    await loadCupulas(true); renderCupulas();
     document.getElementById('cup-ov-vinculos').style.display='none';
-    toast('Cúpulas e vínculos salvos!');
-  }catch(e){setSync('err');toast('Erro ao salvar','erro')}
+    setSync('ok'); mostrarCheck('Salvo!');
+    try{ await loadCupulas(true); renderCupulas(); }catch(_){}
+  }catch(e){setSync('err');toast('Erro ao salvar — tente de novo','erro')}
+  finally{ cupSalvandoVinc=false; if(btn)btn.disabled=false; }
 }
 
 function init(){
@@ -3625,7 +3697,7 @@ async function salvarDia(){
   try{
     const rows=pendentes.map(({_id,...r})=>r);
     await sb('lancamentos',{method:'POST',body:JSON.stringify(rows),prefer:'return=minimal'});
-    cachedLancs=[...rows,...cachedLancs];pendentes=[];renderPend();setSync('ok');toast('Lançamento salvo!');
+    cachedLancs=[...rows,...cachedLancs];pendentes=[];renderPend();setSync('ok');mostrarCheck('Lançamento salvo!');
     if(typeof carregarERenderMetas==='function')carregarERenderMetas();
   }catch(e){setSync('err');toast('Erro ao salvar.','erro')}
   btn.disabled=false;btn.textContent='Salvar lançamento';
@@ -4097,7 +4169,7 @@ async function salvarDevolucao(){
     const row={data,cliente,produto,quantidade:qtd,nf:nf||null,motivo:motivo||null,destino,obs:obs||null,status_fisico:status,foto_url,foto_url_2,foto_url_3,nota_emitida:false};
     const saved=await sb('devolucoes',{method:'POST',body:JSON.stringify(row)});
     cachedDevs=[...(saved||[row]),...cachedDevs];
-    setSync('ok');toast('Devolução registrada!');feedbackSucesso(document.getElementById('btn-salvar-dev'));
+    setSync('ok');mostrarCheck('Devolução registrada!');
     ['dv-cliente','dv-qtd','dv-nf','dv-obs'].forEach(id=>document.getElementById(id).value='');
     ['dv-produto','dv-motivo','dv-destino'].forEach(id=>document.getElementById(id).selectedIndex=0);
     const fakeEvt={stopPropagation:()=>{}};
@@ -4341,7 +4413,7 @@ async function salvarCfg(){
     for(const s of SETORES){const el=document.getElementById('m_'+s.replace(/[\s\/]/g,'_'));const qtd=parseInt(el?.value)||0;await sb('metas',{method:'POST',body:JSON.stringify({setor:s,quantidade:qtd}),prefer:'resolution=merge-duplicates',headers:{'Prefer':'resolution=merge-duplicates'}});cachedMetas[s]=qtd}
     const nome=document.getElementById('cfg-nome').value,resp=document.getElementById('cfg-resp').value;
     await sb('config',{method:'POST',body:JSON.stringify([{chave:'nome',valor:nome},{chave:'resp',valor:resp}]),prefer:'resolution=merge-duplicates',headers:{'Prefer':'resolution=merge-duplicates'}});
-    setSync('ok');toast('Configurações salvas!');
+    setSync('ok');mostrarCheck('Configurações salvas!');
   }catch(e){setSync('err');toast('Erro ao salvar.','erro')}
 }
 
@@ -5471,7 +5543,7 @@ async function salvarSolicitacao(){
     const row={data_solicitacao:hoje(),solicitante:'Encarregado',setor,categoria:cat,material:mat,quantidade:qtd,unidade:un,prazo_necessidade:prazo,prioridade:prior,obs:obs||null,status:'Pendente'};
     const saved=await sb('solicitacoes',{method:'POST',body:JSON.stringify(row)});
     cachedSolic=[(saved&&saved[0]?saved[0]:row),...cachedSolic];
-    setSync('ok');toast('Solicitação enviada!');
+    setSync('ok');mostrarCheck('Solicitação enviada!');
     ['sc-qtd','sc-obs'].forEach(id=>document.getElementById(id).value='');
     ['sc-setor'].forEach(id=>document.getElementById(id).selectedIndex=0);
     limparBuscaMat();
@@ -5548,7 +5620,7 @@ async function confirmarCompra(){
     await sb(`solicitacoes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch),prefer:'return=minimal'});
     const idx=cachedSolic.findIndex(s=>s.id===id);
     if(idx>=0)Object.assign(cachedSolic[idx],patch);
-    fecharModalCompra();setSync('ok');toast('Compra registrada!');renderCompLista();
+    fecharModalCompra();setSync('ok');mostrarCheck('Compra registrada!');renderCompLista();
   }catch(e){setSync('err');toast('Erro ao confirmar compra.')}
 }
 
@@ -5824,7 +5896,7 @@ async function salvarEdicao() {
     await sb(`lancamentos?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ setor, produto, qtd, obs: obs || null }), prefer: 'return=minimal' });
     const idx = cachedLancs.findIndex(x => x.id === id);
     if (idx >= 0) Object.assign(cachedLancs[idx], { setor, produto, qtd, obs });
-    fecharModal(); setSync('ok'); toast('Lançamento atualizado!'); renderHist();
+    fecharModal(); setSync('ok'); mostrarCheck('Lançamento atualizado!'); renderHist();
   } catch (e) { setSync('err'); toast('Erro ao salvar edição.'); }
 }
 
