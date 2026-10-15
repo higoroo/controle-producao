@@ -1026,6 +1026,12 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 
 <!-- ── COMPRAS ── -->
 <div id="page-comp" class="page"><div class="content-inner">
+  <div style="font-size:11px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px">Compras</div>
+  <div class="p2tabs" style="margin-bottom:14px">
+    <button class="p2tab on" data-ctab="pedidos" onclick="compTab('pedidos')">Pedidos</button>
+    <button class="p2tab" data-ctab="cupulas" onclick="compTab('cupulas')">Estoque de cúpulas</button>
+  </div>
+  <div id="comp-pane-pedidos">
 
   <!-- FILTRO STATUS -->
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
@@ -1186,10 +1192,17 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
     </div>
   </div>
 
-</div></div>
-
-<!-- ── MATERIAIS CADASTRADOS ── -->
-<div id="page-materiais" class="page"><div class="content-inner">
+</div>
+  <div id="comp-pane-cupulas" style="display:none">
+    <div style="display:flex;justify-content:flex-end;gap:7px;margin-bottom:12px">
+      <button class="btn btn-primary btn-sm" onclick="abrirCupEntrada()">+ Entrada</button>
+      <button class="btn btn-ghost btn-sm" onclick="abrirCupVinculos()">Vínculos</button>
+    </div>
+    <div class="kpi-grid" id="cup-kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px"></div>
+    <div id="cup-alerta" style="margin-bottom:12px"></div>
+    <div id="cup-lista"></div>
+  </div>
+</div></div><div id="page-materiais" class="page"><div class="content-inner">
   <div class="sec-title">Cadastrar novo material</div>
   <div class="card">
     <div class="form-2col">
@@ -1351,13 +1364,55 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   </div>
 </div>
 
+
+<!-- Modais Cúpulas -->
+<div id="cup-ov-entrada" class="wov" onclick="if(event.target===this)this.style.display='none'">
+  <div class="wmodal">
+    <h3>Registrar entrada</h3>
+    <div class="wmodal-sub">Quando o fornecedor entrega, ou pra lançar o estoque inicial.</div>
+    <label class="wfl">Cúpula</label>
+    <select class="wfi" id="cup-e-cupula"></select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <div><label class="wfl">Quantidade</label><input type="number" class="wfi" id="cup-e-qtd" placeholder="0"></div>
+      <div><label class="wfl">Data</label><input type="date" class="wfi" id="cup-e-data"></div>
+    </div>
+    <label class="wfl" style="margin-top:8px">Tipo</label>
+    <select class="wfi" id="cup-e-tipo">
+      <option value="entrada">Entrega do fornecedor</option>
+      <option value="inicial">Estoque inicial (ponto de partida)</option>
+      <option value="ajuste">Ajuste / correção</option>
+    </select>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('cup-ov-entrada').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarCupEntrada()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="cup-ov-vinculos" class="wov" onclick="if(event.target===this)this.style.display='none'">
+  <div class="wmodal" style="max-width:560px">
+    <h3>Cúpulas e vínculos</h3>
+    <div class="wmodal-sub">Edite os nomes, o mínimo de alerta e quais produtos usam cada cúpula.</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin:10px 0 8px">Tipos de cúpula</div>
+    <div id="cup-v-tipos"></div>
+    <button class="btn btn-ghost btn-sm" onclick="cupAddTipoLinha()" style="width:100%;margin-bottom:14px">+ Tipo de cúpula</button>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin:4px 0 8px;border-top:1px solid var(--line);padding-top:12px">Vínculos produto → cúpula</div>
+    <div id="cup-v-vinculos"></div>
+    <button class="btn btn-ghost btn-sm" onclick="cupAddVinculoLinha()" style="width:100%;margin-bottom:14px">+ Vínculo</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('cup-ov-vinculos').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:2" onclick="salvarCupVinculos()">Salvar tudo</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let toggleDia = 'emb';
 let compSetoresAtivo = false;
 const SB_URL='https://xsnnqqeugywkzrptllom.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzbm5xcWV1Z3l3a3pycHRsbG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODI5OTMsImV4cCI6MjA5MTI1ODk5M30.kk2gQ43Py3Ghb8sBjgWDwGiFKjnL1WVDxUrs3ugPxnM';
 const SETORES=['Usinagem','Marcenaria','Fundo','Lixa de Fundo','Pintura','Montagem','Elétrica','Embalagem','Expedição'];
-const PRODUTOS=['A/W','XG','XP','AB Slim','AB Mine','AB Soft','AB A/W','AB XP','Viena','Mônaco','Floripa','Ipanema','Áustria','Wells','Mine','Wood','Sky','Slim','Colunas','Abajures','Chapa Lázaro','Prateleira Pinus','Ádegas Vinho','Sup Taça','Cup 40','Ripada','Peça Nova','Mesa Dobrável','Outros'];
+const PRODUTOS=['A/W','XG','XP','AB Slim','AB Mine','AB Soft','AB A/W','AB XP','Viena','Mônaco','Floripa','Ipanema','Áustria','Wells','Mine','Wood','Sky','Slim','Colunas','Abajures','Chapa Lázaro','Prateleira Pinus','Ádegas Vinho','Sup Taça','Cup 40','Ripada','Peça Nova','Mesa Dobrável','Cúpula 40cm c/ aro','Cúpula 40cm s/ aro','Cúpula cônica','Cúpula 35cm c/ aro','Cúpula 30cm c/ aro','Cúpula 30cm s/ aro','Cúpula oval','Cúpula chapéuzinho','Outros'];
 const CORS=['#5b9cf6','#4caf7d','#e89c47','#e05c5c','#a78bf6','#e87d7d','#64c896','#8a8880','#3dd6ac'];
 let pendentes=[],charts={},chipSetor='Embalagem',cachedLancs=[],cachedMetas={},cachedDevs=[];
 
@@ -2280,7 +2335,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='anim-2 · 05/10';
+const APP_VERSION='cupulas-1 · 15/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -3198,6 +3253,208 @@ function renderProd2Diaria(){
   });
 
   if(!algum) el.innerHTML='<div style="grid-column:1/-1;font-size:12px;color:var(--text3);text-align:center;padding:16px">Sem lançamentos no período selecionado.</div>';
+}
+
+/* ══════════════ ESTOQUE DE CÚPULAS ══════════════ */
+let cupTipos=[], cupVinculos=[], cupEntradas=[], cupCarregado=false, compTabAtual='pedidos';
+
+function compTab(t){
+  compTabAtual=t;
+  document.getElementById('comp-pane-pedidos').style.display=(t==='pedidos')?'block':'none';
+  document.getElementById('comp-pane-cupulas').style.display=(t==='cupulas')?'block':'none';
+  document.querySelectorAll('#page-comp .p2tab').forEach(b=>b.classList.toggle('on',b.dataset.ctab===t));
+  if(t==='cupulas'){
+    const need=cachedLancs.length?Promise.resolve():loadAll();
+    Promise.resolve(need).then(()=>loadCupulas()).then(()=>renderCupulas());
+  }
+}
+
+async function loadCupulas(forcar){
+  if(cupCarregado&&!forcar)return;
+  setSync('syncing');
+  try{
+    const [tp,vi,en]=await Promise.all([
+      sb('cupulas?select=*&order=ordem').catch(()=>[]),
+      sb('cupula_vinculos?select=*').catch(()=>[]),
+      sb('cupula_entradas?select=*').catch(()=>[])
+    ]);
+    cupTipos=tp||[]; cupVinculos=vi||[]; cupEntradas=en||[];
+    cupCarregado=true; setSync('ok');
+  }catch(e){ setSync('err'); cupTipos=[];cupVinculos=[];cupEntradas=[]; }
+}
+
+// data de corte da cúpula = primeira entrada registrada (inicial de preferência)
+function cupDataCorte(cupId){
+  const es=cupEntradas.filter(e=>e.cupula_id===cupId);
+  if(!es.length)return null;
+  const inicial=es.filter(e=>e.tipo==='inicial').map(e=>e.data).sort()[0];
+  return inicial||es.map(e=>e.data).sort()[0];
+}
+function cupEntrou(cupId){ return cupEntradas.filter(e=>e.cupula_id===cupId).reduce((a,e)=>a+(parseInt(e.qtd)||0),0); }
+function cupConsumo(cupId,desde){
+  // soma embalagem dos produtos vinculados a essa cúpula, a partir de 'desde'
+  const prods=cupVinculos.filter(v=>v.cupula_id===cupId);
+  if(!prods.length)return 0;
+  let tot=0;
+  prods.forEach(v=>{
+    const emb=cachedLancs.filter(l=>l.setor==='Embalagem'&&l.produto===v.produto&&(!desde||l.data>=desde)).reduce((a,l)=>a+l.qtd,0);
+    tot+=emb*(parseInt(v.qtd_por_peca)||1);
+  });
+  return tot;
+}
+function cupSaldo(cupId){
+  const corte=cupDataCorte(cupId);
+  return cupEntrou(cupId) - cupConsumo(cupId,corte);
+}
+function cupConsumoMes(cupId){
+  const ini=hoje().slice(0,7)+'-01';
+  return cupConsumo(cupId,ini);
+}
+
+function renderCupulas(){
+  const lista=document.getElementById('cup-lista');
+  if(!lista)return;
+  if(!cupTipos.length){
+    lista.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Nenhuma cúpula cadastrada. Rode o SQL e recarregue, ou toque em <b>Vínculos</b> para cadastrar.</div>';
+    document.getElementById('cup-kpis').innerHTML='';
+    document.getElementById('cup-alerta').innerHTML='';
+    return;
+  }
+  const dados=cupTipos.map(c=>{
+    const saldo=cupSaldo(c.id);
+    const minimo=parseInt(c.minimo)||0;
+    const nivel = saldo<=minimo ? 'red' : saldo<=minimo*1.5 ? 'amber' : 'green';
+    return {...c, saldo, minimo, nivel, consumoMes:cupConsumoMes(c.id)};
+  });
+  // ordenar: alerta (red) primeiro, depois amber, depois verde; dentro, menor saldo
+  const ordem={red:0,amber:1,green:2};
+  dados.sort((a,b)=> (ordem[a.nivel]-ordem[b.nivel]) || (a.saldo-b.saldo) || (a.ordem-b.ordem));
+
+  const totEstoque=dados.reduce((a,d)=>a+Math.max(0,d.saldo),0);
+  const emAlerta=dados.filter(d=>d.nivel==='red').length;
+  const ini=hoje().slice(0,7)+'-01';
+  const entrouMes=cupEntradas.filter(e=>e.tipo!=='inicial'&&e.data>=ini).reduce((a,e)=>a+(parseInt(e.qtd)||0),0);
+
+  document.getElementById('cup-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Em estoque</div><div class="kpi-val">${totEstoque.toLocaleString('pt-BR')}</div></div>
+    <div class="kpi"><div class="kpi-label">Em alerta</div><div class="kpi-val" style="color:${emAlerta?'var(--red)':'var(--green)'}">${emAlerta}</div></div>
+    <div class="kpi"><div class="kpi-label">Entrou no mês</div><div class="kpi-val" style="color:var(--green)">${entrouMes.toLocaleString('pt-BR')}</div></div>`;
+
+  const alertas=dados.filter(d=>d.nivel==='red');
+  document.getElementById('cup-alerta').innerHTML = alertas.length?
+    `<div style="background:var(--red-d);border:1px solid rgba(224,92,92,.3);border-radius:var(--r2);padding:11px 14px;display:flex;align-items:center;gap:10px">
+      <span style="color:var(--red);font-size:18px;font-weight:700">!</span>
+      <span style="font-size:12px;color:var(--text2);line-height:1.4">${alertas.map(a=>'<b style="color:var(--text)">'+a.nome+'</b>').join(', ')} ${alertas.length>1?'estão':'está'} no vermelho — repor</span>
+    </div>`:'';
+
+  const cor=n=>n==='red'?'var(--red)':n==='amber'?'var(--amber)':'var(--green)';
+  lista.innerHTML=dados.map(d=>{
+    const prods=cupVinculos.filter(v=>v.cupula_id===d.id).map(v=>v.produto).filter(p=>!p.startsWith('Cúpula ')); // esconde os produtos-cúpula do "usada em"
+    const usada = prods.length?prods.slice(0,4).join(', ')+(prods.length>4?'…':''):'sem produto vinculado';
+    return `<div class="cup-card" style="background:var(--ink2);border:1px solid var(--line);border-left:3px solid ${cor(d.nivel)};border-radius:var(--r2);padding:13px 15px;margin-bottom:9px;animation:cardIn .35s ease-out backwards">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px">${d.nome}</span>
+        <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:26px;color:${cor(d.nivel)}">${d.saldo.toLocaleString('pt-BR')}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+        <span style="font-size:11px;color:var(--text3)">usada em: ${usada} · mín. ${d.minimo}</span>
+        ${d.nivel==='red'?`<span style="font-size:10px;color:var(--red);background:var(--red-d);padding:3px 9px;border-radius:10px">repor</span>`:`<span style="font-size:11px;color:var(--text3)">saiu ${d.consumoMes} no mês</span>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Modal: entrada ── */
+function abrirCupEntrada(){
+  const sel=document.getElementById('cup-e-cupula');
+  sel.innerHTML=cupTipos.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  document.getElementById('cup-e-qtd').value='';
+  document.getElementById('cup-e-data').value=hoje();
+  document.getElementById('cup-e-tipo').value='entrada';
+  document.getElementById('cup-ov-entrada').style.display='flex';
+}
+async function salvarCupEntrada(){
+  const cupula_id=document.getElementById('cup-e-cupula').value;
+  const qtd=parseInt(document.getElementById('cup-e-qtd').value)||0;
+  const data=document.getElementById('cup-e-data').value||hoje();
+  const tipo=document.getElementById('cup-e-tipo').value;
+  if(!cupula_id||!qtd){toast('Escolha a cúpula e a quantidade.','aviso');return}
+  setSync('syncing');
+  try{
+    await sb('cupula_entradas',{method:'POST',body:JSON.stringify({cupula_id,data,qtd,tipo}),prefer:'return=minimal'});
+    await loadCupulas(true); renderCupulas();
+    document.getElementById('cup-ov-entrada').style.display='none';
+    toast('Entrada registrada!');
+  }catch(e){setSync('err');toast('Erro ao registrar','erro')}
+}
+
+/* ── Modal: vínculos + tipos ── */
+function abrirCupVinculos(){
+  cupRenderTiposForm(); cupRenderVinculosForm();
+  document.getElementById('cup-ov-vinculos').style.display='flex';
+}
+function cupRenderTiposForm(){
+  document.getElementById('cup-v-tipos').innerHTML=cupTipos.map(c=>cupTipoRow(c.id,c.nome,c.minimo)).join('');
+}
+function cupTipoRow(id,nome,minimo){
+  return `<div class="wet-row cup-tipo-row" data-id="${id||''}" style="margin-bottom:8px;gap:6px">
+    <input type="text" value="${(nome||'').replace(/"/g,'&quot;')}" placeholder="Nome da cúpula" style="flex:1">
+    <input type="number" value="${parseInt(minimo)||0}" title="mínimo de alerta" style="width:74px;padding:8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);text-align:center">
+    <button class="wet-del" onclick="this.parentElement.remove()">&times;</button>
+  </div>`;
+}
+function cupAddTipoLinha(){ document.getElementById('cup-v-tipos').insertAdjacentHTML('beforeend',cupTipoRow('','',0)); }
+
+function cupRenderVinculosForm(){
+  const prodOpts='<datalist id="cup-prod-list">'+PRODUTOS.map(p=>'<option value="'+p+'">').join('')+'</datalist>';
+  document.getElementById('cup-v-vinculos').innerHTML=prodOpts+cupVinculos.map(v=>cupVinculoRow(v.produto,v.cupula_id)).join('');
+}
+function cupVinculoRow(produto,cupula_id){
+  const opts=cupTipos.map(c=>`<option value="${c.id}" ${c.id===cupula_id?'selected':''}>${c.nome}</option>`).join('');
+  return `<div class="wet-row cup-vinc-row" style="margin-bottom:8px;gap:6px">
+    <input type="text" list="cup-prod-list" value="${(produto||'').replace(/"/g,'&quot;')}" placeholder="produto" style="flex:1">
+    <span style="color:var(--text3);align-self:center">→</span>
+    <select style="flex:1;padding:8px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--text)">${opts}</select>
+    <button class="wet-del" onclick="this.parentElement.remove()">&times;</button>
+  </div>`;
+}
+function cupAddVinculoLinha(){
+  if(!cupTipos.length){toast('Cadastre um tipo de cúpula primeiro.','aviso');return}
+  document.getElementById('cup-v-vinculos').insertAdjacentHTML('beforeend',cupVinculoRow('',cupTipos[0].id));
+}
+async function salvarCupVinculos(){
+  setSync('syncing');
+  try{
+    // 1) Tipos: upsert por id; novos sem id = insert
+    const tipoRows=[...document.querySelectorAll('#cup-v-tipos .cup-tipo-row')];
+    const idsMantidos=[];
+    for(let i=0;i<tipoRows.length;i++){
+      const r=tipoRows[i];
+      const id=r.getAttribute('data-id');
+      const nome=r.querySelector('input[type=text]').value.trim();
+      const minimo=parseInt(r.querySelector('input[type=number]').value)||0;
+      if(!nome)continue;
+      if(id){ await sb('cupulas?id=eq.'+id,{method:'PATCH',body:JSON.stringify({nome,minimo,ordem:i}),prefer:'return=minimal'}); idsMantidos.push(id); }
+      else { await sb('cupulas',{method:'POST',body:JSON.stringify({nome,minimo,ordem:i}),prefer:'return=minimal'}); }
+    }
+    // tipos removidos
+    for(const t of cupTipos){ if(!idsMantidos.includes(t.id)) await sb('cupulas?id=eq.'+t.id,{method:'DELETE',prefer:'return=minimal'}).catch(()=>{}); }
+    // recarrega tipos pra ter ids dos novos
+    cupTipos=await sb('cupulas?select=*&order=ordem').catch(()=>cupTipos);
+    const idPorNome={}; cupTipos.forEach(c=>idPorNome[c.nome.toLowerCase()]=c.id);
+
+    // 2) Vínculos: apaga todos e recria (são poucos)
+    for(const v of cupVinculos){ if(v.id) await sb('cupula_vinculos?id=eq.'+v.id,{method:'DELETE',prefer:'return=minimal'}).catch(()=>{}); }
+    const vincRows=[...document.querySelectorAll('#cup-v-vinculos .cup-vinc-row')];
+    for(const r of vincRows){
+      const produto=r.querySelector('input[type=text]').value.trim();
+      const cupula_id=r.querySelector('select').value;
+      if(produto&&cupula_id) await sb('cupula_vinculos',{method:'POST',body:JSON.stringify({produto,cupula_id,qtd_por_peca:1}),prefer:'return=minimal'});
+    }
+    await loadCupulas(true); renderCupulas();
+    document.getElementById('cup-ov-vinculos').style.display='none';
+    toast('Cúpulas e vínculos salvos!');
+  }catch(e){setSync('err');toast('Erro ao salvar','erro')}
 }
 
 function init(){
