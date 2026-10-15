@@ -1588,16 +1588,40 @@ function devNoPeriodo(){
 let produtosExtra=[];
 
 // Busca paginada — contorna o limite de 1000 linhas do Supabase
-async function sbAll(path, pageSize=1000){
-  let all=[], offset=0;
-  while(true){
+// conta total de linhas sem baixar o corpo (usa Content-Range do PostgREST)
+async function sbCount(path){
+  try{
     const sep=path.includes('?')?'&':'?';
-    const batch=await sb(`${path}${sep}limit=${pageSize}&offset=${offset}`);
-    all=[...all,...batch];
-    if(batch.length<pageSize)break;
-    offset+=pageSize;
+    const res=await fetch(SB_URL+'/rest/v1/'+path+sep+'limit=1&offset=0',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'count=exact'}});
+    const cr=res.headers.get('content-range'); // ex.: "0-0/3573"
+    if(cr&&cr.includes('/')){ const n=parseInt(cr.split('/')[1]); return isNaN(n)?0:n; }
+  }catch(e){}
+  return 0;
+}
+async function sbAll(path, pageSize=1000){
+  const sep=path.includes('?')?'&':'?';
+  const first=await sb(`${path}${sep}limit=${pageSize}&offset=0`);
+  if(first.length<pageSize)return first; // cabe em uma página só
+  const total=await sbCount(path);
+  if(!total||total<=pageSize){ // sem contagem confiável → sequencial (fallback seguro)
+    let all=[...first], offset=pageSize;
+    while(true){
+      const batch=await sb(`${path}${sep}limit=${pageSize}&offset=${offset}`);
+      all=all.concat(batch);
+      if(batch.length<pageSize)break;
+      offset+=pageSize;
+    }
+    return all;
   }
-  return all;
+  // baixa as páginas restantes em paralelo (janela de 6 por vez)
+  const offsets=[];
+  for(let off=pageSize; off<total; off+=pageSize)offsets.push(off);
+  const all=[first], CONC=6;
+  for(let i=0;i<offsets.length;i+=CONC){
+    const res=await Promise.all(offsets.slice(i,i+CONC).map(off=>sb(`${path}${sep}limit=${pageSize}&offset=${off}`)));
+    res.forEach(r=>all.push(r));
+  }
+  return all.flat();
 }
 
 async function loadAll(){
@@ -2335,7 +2359,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='cupulas-2 · 15/10';
+const APP_VERSION='cupulas-3 · 15/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -3278,9 +3302,19 @@ async function loadCupulas(forcar){
       sb('cupula_vinculos?select=*').catch(()=>[]),
       sb('cupula_entradas?select=*').catch(()=>[])
     ]);
-    cupTipos=tp||[]; cupVinculos=vi||[]; cupEntradas=en||[];
+    cupTipos=tp||[]; cupVinculos=dedupeVinc(vi||[]); cupEntradas=en||[];
     cupCarregado=true; setSync('ok');
   }catch(e){ setSync('err'); cupTipos=[];cupVinculos=[];cupEntradas=[]; }
+}
+
+// remove vínculos repetidos (mesma cúpula + mesmo produto) pra não contar consumo em dobro
+function dedupeVinc(arr){
+  const seen=new Set(), out=[];
+  for(const v of arr){
+    const k=v.cupula_id+'|'+(v.produto||'').toLowerCase().trim();
+    if(seen.has(k))continue; seen.add(k); out.push(v);
+  }
+  return out;
 }
 
 // data de corte da cúpula = primeira entrada registrada (inicial de preferência)
@@ -3455,14 +3489,19 @@ async function salvarCupVinculos(){
     cupTipos=await sb('cupulas?select=*&order=ordem').catch(()=>cupTipos);
     const idPorNome={}; cupTipos.forEach(c=>idPorNome[c.nome.toLowerCase()]=c.id);
 
-    // 2) Vínculos: apaga todos e recria (são poucos)
-    for(const v of cupVinculos){ if(v.id) await sb('cupula_vinculos?id=eq.'+v.id,{method:'DELETE',prefer:'return=minimal'}).catch(()=>{}); }
+    // 2) Vínculos: apaga TODOS (inclusive duplicados órfãos) e recria sem repetir
+    await sb('cupula_vinculos?id=not.is.null',{method:'DELETE',prefer:'return=minimal'}).catch(()=>{});
     const vincRows=[...document.querySelectorAll('#cup-v-vinculos .cup-vinc-row')];
+    const vistos=new Set(), novos=[];
     for(const r of vincRows){
       const produto=r.querySelector('input[type=text]').value.trim();
       const cupula_id=r.querySelector('select').value;
-      if(produto&&cupula_id) await sb('cupula_vinculos',{method:'POST',body:JSON.stringify({produto,cupula_id,qtd_por_peca:1}),prefer:'return=minimal'});
+      if(!produto||!cupula_id)continue;
+      const k=cupula_id+'|'+produto.toLowerCase();
+      if(vistos.has(k))continue; vistos.add(k);
+      novos.push({produto,cupula_id,qtd_por_peca:1});
     }
+    if(novos.length) await sb('cupula_vinculos',{method:'POST',body:JSON.stringify(novos),prefer:'return=minimal'});
     await loadCupulas(true); renderCupulas();
     document.getElementById('cup-ov-vinculos').style.display='none';
     toast('Cúpulas e vínculos salvos!');
