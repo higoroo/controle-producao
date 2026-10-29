@@ -337,6 +337,36 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   .ok-ov.show .ok-disc,.ok-ov.show .ok-ring,.ok-ov.show .ok-chk path,.ok-ov.show .ok-label{animation-duration:.01ms}
 }
 
+/* Comemoração de fim de dia (embalagem): recorde do mês / subida rumo aos 1.000 */
+.cmr-ov{position:fixed;inset:0;z-index:1300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  background:radial-gradient(130% 100% at 50% 22%,rgba(44,37,8,.74),rgba(10,10,9,.9));
+  opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s;padding:24px;text-align:center;cursor:pointer}
+.cmr-ov.show{opacity:1;visibility:visible}
+.cmr-cf{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1301;opacity:0;transition:opacity .2s}
+.cmr-cf.on{opacity:1}
+.cmr-trophy{width:64px;height:64px;transform:scale(0);margin-bottom:2px}
+.cmr-ov.show .cmr-trophy{animation:cmrPop .55s cubic-bezier(.34,1.56,.64,1) .05s both}
+.cmr-eyebrow{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);opacity:0}
+.cmr-ov.show .cmr-eyebrow{animation:cmrUp .4s ease-out .2s both}
+.cmr-num{font-family:'Syne',sans-serif;font-weight:800;font-size:78px;line-height:.95;color:var(--text);font-variant-numeric:tabular-nums;opacity:0}
+.cmr-ov.show .cmr-num{animation:cmrUp .4s ease-out .28s both}
+.cmr-label{font-size:15px;color:var(--text2);opacity:0;margin-top:-2px}
+.cmr-ov.show .cmr-label{animation:cmrUp .4s ease-out .34s both}
+.cmr-delta{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;border-radius:20px;padding:6px 14px;opacity:0;margin-top:2px}
+.cmr-ov.show .cmr-delta{animation:cmrUp .4s ease-out .44s both}
+.cmr-prog{width:min(340px,86vw);margin-top:14px;opacity:0}
+.cmr-ov.show .cmr-prog{animation:cmrUp .4s ease-out .54s both}
+.cmr-ptop{display:flex;justify-content:space-between;align-items:baseline;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:6px}
+.cmr-ptop b{color:var(--text);font-size:13px}
+.cmr-bar{position:relative;height:12px;border-radius:7px;background:var(--ink3);border:1px solid var(--line2);overflow:hidden}
+.cmr-fill{position:absolute;inset:0;width:0;border-radius:7px;background:linear-gradient(90deg,var(--green),var(--accent));transition:width 1.1s cubic-bezier(.3,1,.4,1) .3s}
+.cmr-pcap{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:5px}
+.cmr-tap{position:absolute;bottom:calc(30px + env(safe-area-inset-bottom,0px));font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;opacity:0}
+.cmr-ov.show .cmr-tap{animation:cmrUp .4s ease-out 1s both}
+@keyframes cmrPop{0%{transform:scale(0) rotate(-12deg)}60%{transform:scale(1.14) rotate(6deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes cmrUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.cmr-ov.show *{animation-duration:.01ms!important}.cmr-fill{transition:none}}
+
 /* Feedback de sucesso (check animado) */
 @keyframes checkPop{
   0%{transform:scale(0) rotate(-20deg);opacity:0}
@@ -1258,6 +1288,28 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 </div>
 <div id="ptr-indicator"><span class="ptr-ico">↻</span></div>
 
+<!-- Comemoração de fim de dia (embalagem) -->
+<canvas class="cmr-cf" id="cmr-cf"></canvas>
+<div class="cmr-ov" id="cmr-ov" aria-hidden="true" onclick="this.classList.remove('show')">
+  <svg class="cmr-trophy" id="cmr-trophy" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+    <path d="M20 10h24v10a12 12 0 0 1-24 0V10Z" fill="#e8c547"/>
+    <path d="M20 14h-6a6 6 0 0 0 6 10M44 14h6a6 6 0 0 1-6 10" stroke="#e8c547" stroke-width="3" stroke-linecap="round"/>
+    <path d="M28 32h8v8h-8z" fill="#e8c547"/>
+    <path d="M22 46h20l-2-6H24l-2 6Z" fill="#e8c547"/>
+    <rect x="20" y="46" width="24" height="6" rx="2" fill="#c9a832"/>
+  </svg>
+  <p class="cmr-eyebrow" id="cmr-eyebrow">Recorde do mês!</p>
+  <p class="cmr-num" id="cmr-num">0</p>
+  <p class="cmr-label">peças embaladas no mês</p>
+  <span class="cmr-delta" id="cmr-delta"></span>
+  <div class="cmr-prog">
+    <div class="cmr-ptop"><span>rumo à meta master</span><b id="cmr-pval">0 / 1.000</b></div>
+    <div class="cmr-bar"><div class="cmr-fill" id="cmr-fill"></div></div>
+    <div class="cmr-pcap"><span id="cmr-ppct">0%</span><span>sonho: 5.000</span></div>
+  </div>
+  <span class="cmr-tap">toque pra fechar</span>
+</div>
+
 <!-- Check de confirmação (centro da tela) -->
 <div class="ok-ov" id="ok-ov" aria-hidden="true">
   <div class="ok-badge">
@@ -1458,9 +1510,17 @@ const CORS=['#5b9cf6','#4caf7d','#e89c47','#e05c5c','#a78bf6','#e87d7d','#64c896
 let pendentes=[],charts={},chipSetor='Embalagem',cachedLancs=[],cachedMetas={},cachedDevs=[];
 
 async function sb(path,opts={}){
-  const res=await fetch(SB_URL+'/rest/v1/'+path,{...opts,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':opts.prefer||'return=representation',...opts.headers}});
-  if(!res.ok)throw new Error(await res.text());
-  const t=await res.text();return t?JSON.parse(t):[];
+  // timeout: se a requisição travar, aborta em vez de ficar esperando pra sempre
+  const ctrl=new AbortController();
+  const to=setTimeout(()=>ctrl.abort(), opts.timeout||15000);
+  try{
+    const res=await fetch(SB_URL+'/rest/v1/'+path,{...opts,signal:ctrl.signal,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':opts.prefer||'return=representation',...opts.headers}});
+    if(!res.ok)throw new Error(await res.text());
+    const t=await res.text();return t?JSON.parse(t):[];
+  }catch(e){
+    if(e.name==='AbortError')throw new Error('timeout');
+    throw e;
+  }finally{ clearTimeout(to); }
 }
 function setSync(s){document.getElementById('sync-dot').className='sync-dot '+s}
 function flashEl(el,ok){ if(!el)return; el.classList.remove('flash-ok','flash-bad'); void el.offsetWidth; el.classList.add(ok?'flash-ok':'flash-bad'); }
@@ -1496,6 +1556,52 @@ function mostrarCheck(label){
   ov.classList.remove('show'); void ov.offsetWidth; // reinicia a animação
   ov.classList.add('show');
   _okT=setTimeout(()=>ov.classList.remove('show'), 1250);
+}
+// ── Comemoração de fim de dia (embalagem) ──
+var _cmrCv,_cmrCtx,_cmrW,_cmrH,_cmrParts=[],_cmrRaf,_cmrCount,_cmrHide;
+var CMR_PAL={recorde:['#e8c547','#4caf7d','#f0ede6','#c9a832'],dia:['#4caf7d','#8ad0ac','#f0ede6'],master:['#e8c547','#4caf7d','#f0ede6','#c9a832','#ffffff']};
+function _cmrResize(){ if(!_cmrCv)return; _cmrW=_cmrCv.width=innerWidth; _cmrH=_cmrCv.height=innerHeight; }
+function _cmrSpawn(n,cols){ for(var i=0;i<n;i++)_cmrParts.push({x:Math.random()*_cmrW,y:-20-Math.random()*_cmrH*0.3,vx:(Math.random()-0.5)*2.4,vy:2+Math.random()*3.5,r:3+Math.random()*4,rot:Math.random()*6.28,vr:(Math.random()-0.5)*0.3,c:cols[(Math.random()*cols.length)|0]}); }
+function _cmrTick(){ _cmrCtx.clearRect(0,0,_cmrW,_cmrH); for(var i=_cmrParts.length-1;i>=0;i--){var p=_cmrParts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.045;p.rot+=p.vr;if(p.y>_cmrH+30){_cmrParts.splice(i,1);continue;}_cmrCtx.save();_cmrCtx.translate(p.x,p.y);_cmrCtx.rotate(p.rot);_cmrCtx.fillStyle=p.c;_cmrCtx.fillRect(-p.r/2,-p.r,p.r,p.r*2);_cmrCtx.restore();} if(_cmrParts.length)_cmrRaf=requestAnimationFrame(_cmrTick);else{_cmrCtx.clearRect(0,0,_cmrW,_cmrH);_cmrRaf=null;_cmrCv.classList.remove('on');} }
+function _cmrCountTo(el,target,ms){ cancelAnimationFrame(_cmrCount); (function s(now){var k=Math.min(1,(now-s.t0)/ms),e=1-Math.pow(1-k,3);el.textContent=Math.round(target*e).toLocaleString('pt-BR');if(k<1)_cmrCount=requestAnimationFrame(s);})(s.t0=performance.now()); }
+function embMes(ym){ return cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data&&l.data.indexOf(ym)===0).reduce((a,l)=>a+(parseInt(l.qtd)||0),0); }
+function embRecordeAnterior(ymAtual){ var tot={}; cachedLancs.forEach(l=>{ if(l.setor==='Embalagem'&&l.data){ var ym=l.data.slice(0,7); if(ym!==ymAtual) tot[ym]=(tot[ym]||0)+(parseInt(l.qtd)||0); } }); var m=0; for(var k in tot) if(tot[k]>m) m=tot[k]; return m; }
+function comemorar(modo,total,eyebrow,delta,master){
+  var ov=document.getElementById('cmr-ov'); if(!ov){ mostrarCheck('Lançamento salvo!'); return; }
+  if(!_cmrCv){ _cmrCv=document.getElementById('cmr-cf'); _cmrCtx=_cmrCv.getContext('2d'); _cmrResize(); addEventListener('resize',_cmrResize); }
+  var acc=(modo!=='dia'), full=(modo!=='dia');
+  document.getElementById('cmr-trophy').style.display=full?'block':'none';
+  var eb=document.getElementById('cmr-eyebrow'); eb.textContent=eyebrow; eb.style.color=acc?'var(--accent)':'var(--green)';
+  var dl=document.getElementById('cmr-delta'); dl.textContent=delta; dl.style.color=acc?'var(--accent)':'var(--green)';
+  dl.style.background=acc?'rgba(232,197,71,.14)':'rgba(76,175,125,.14)';
+  dl.style.border='1px solid '+(acc?'rgba(232,197,71,.35)':'rgba(76,175,125,.35)');
+  var pct=Math.max(0,Math.min(100,Math.round(total/master*100)));
+  document.getElementById('cmr-pval').textContent=total.toLocaleString('pt-BR')+' / '+master.toLocaleString('pt-BR');
+  document.getElementById('cmr-ppct').textContent=pct+'%';
+  vibrar(full?[40,30,60]:18);
+  clearTimeout(_cmrHide);
+  ov.classList.remove('show'); void ov.offsetWidth; ov.classList.add('show');
+  var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  _cmrParts=[];
+  if(!reduce){ _cmrCv.classList.add('on'); if(!_cmrRaf)_cmrRaf=requestAnimationFrame(_cmrTick); _cmrSpawn(full?90:38,CMR_PAL[modo]); setTimeout(function(){_cmrSpawn(full?75:22,CMR_PAL[modo]);},280); }
+  var fill=document.getElementById('cmr-fill'); fill.style.width='0';
+  setTimeout(function(){_cmrCountTo(document.getElementById('cmr-num'),total,1200);},260);
+  setTimeout(function(){fill.style.width=pct+'%';},120);
+  _cmrHide=setTimeout(function(){ov.classList.remove('show');},full?4400:3200);
+}
+function celebrarEmbalagem(rows){
+  var ym=mesAtual();
+  var addMes=rows.filter(r=>r.setor==='Embalagem'&&r.data&&r.data.indexOf(ym)===0).reduce((a,r)=>a+(parseInt(r.qtd)||0),0);
+  if(addMes<=0){ mostrarCheck('Lançamento salvo!'); return; }
+  var depois=embMes(ym), antes=depois-addMes, recorde=embRecordeAnterior(ym), MASTER=1000;
+  var dts=rows.filter(r=>r.setor==='Embalagem').map(r=>r.data).sort(); var dia=dts[dts.length-1]||hoje();
+  var hojeTot=cachedLancs.filter(l=>l.setor==='Embalagem'&&l.data===dia).reduce((a,l)=>a+(parseInt(l.qtd)||0),0);
+  var modo,eyebrow,delta;
+  if(antes<MASTER&&depois>=MASTER){ modo='master'; eyebrow='Meta master · 1.000!'; delta='próxima parada: os 5.000'; }
+  else if(recorde>0&&antes<=recorde&&depois>recorde){ modo='recorde'; eyebrow='Recorde do mês!'; delta='+'+(depois-recorde).toLocaleString('pt-BR')+' acima do recorde anterior'; }
+  else if(recorde>0&&depois>recorde){ modo='dia'; eyebrow='Dia fechado'; delta='+'+hojeTot.toLocaleString('pt-BR')+' hoje · recorde do mês ✓'; }
+  else { mostrarCheck('Lançamento salvo!'); return; } // dia comum abaixo do recorde → só o check
+  comemorar(modo,depois,eyebrow,delta,MASTER);
 }
 function fmt(d){return new Date(d+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
 function hoje(){
@@ -1642,12 +1748,15 @@ let produtosExtra=[];
 // Busca paginada — contorna o limite de 1000 linhas do Supabase
 // conta total de linhas sem baixar o corpo (usa Content-Range do PostgREST)
 async function sbCount(path){
+  const ctrl=new AbortController();
+  const to=setTimeout(()=>ctrl.abort(), 10000);
   try{
     const sep=path.includes('?')?'&':'?';
-    const res=await fetch(SB_URL+'/rest/v1/'+path+sep+'limit=1&offset=0',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'count=exact'}});
+    const res=await fetch(SB_URL+'/rest/v1/'+path+sep+'limit=1&offset=0',{signal:ctrl.signal,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'count=exact'}});
     const cr=res.headers.get('content-range'); // ex.: "0-0/3573"
     if(cr&&cr.includes('/')){ const n=parseInt(cr.split('/')[1]); return isNaN(n)?0:n; }
   }catch(e){}
+  finally{ clearTimeout(to); }
   return 0;
 }
 async function sbAll(path, pageSize=1000){
@@ -1668,7 +1777,7 @@ async function sbAll(path, pageSize=1000){
   // baixa as páginas restantes em paralelo (janela de 6 por vez)
   const offsets=[];
   for(let off=pageSize; off<total; off+=pageSize)offsets.push(off);
-  const all=[first], CONC=6;
+  const all=[first], CONC=4;
   for(let i=0;i<offsets.length;i+=CONC){
     const res=await Promise.all(offsets.slice(i,i+CONC).map(off=>sb(`${path}${sep}limit=${pageSize}&offset=${off}`)));
     res.forEach(r=>all.push(r));
@@ -1678,22 +1787,26 @@ async function sbAll(path, pageSize=1000){
 
 async function loadAll(){
   setSync('syncing');
-  try{
-    const[lancs,metas,devs,prods,solic]=await Promise.all([
-      sbAll('lancamentos?select=id,data,setor,produto,qtd,obs,created_at&order=data.desc,created_at.desc'),
-      sb('metas?select=*'),
-      sb('devolucoes?select=*&order=data.desc,created_at.desc'),
-      sb('produtos_extra?select=*&order=nome'),
-      sbAll('solicitacoes?select=*&order=created_at.desc')
-    ]);
-    cachedLancs=lancs;
-    cachedMetas={};metas.forEach(m=>{cachedMetas[m.setor]=m.quantidade});
-    cachedDevs=devs;
-    cachedSolic=solic;
-    produtosExtra=prods.map(p=>p.nome);
-    atualizarDropdownProdutos();
-    setSync('ok');
-  }catch(e){setSync('err');toast('Sem conexão com o banco.')}
+  // allSettled: se uma consulta falhar/estourar o tempo, as outras ainda carregam
+  // e o loadAll SEMPRE termina (a tela nunca fica presa em "Carregando")
+  const r=await Promise.allSettled([
+    sbAll('lancamentos?select=id,data,setor,produto,qtd,obs,created_at&order=data.desc,created_at.desc'),
+    sb('metas?select=*'),
+    sb('devolucoes?select=*&order=data.desc,created_at.desc'),
+    sb('produtos_extra?select=*&order=nome'),
+    sbAll('solicitacoes?select=*&order=created_at.desc')
+  ]);
+  const val=i=>r[i].status==='fulfilled'?r[i].value:null;
+  const lancs=val(0),metas=val(1),devs=val(2),prods=val(3),solic=val(4);
+  let ok=0;
+  if(lancs){cachedLancs=lancs;ok++}
+  if(metas){cachedMetas={};metas.forEach(m=>{cachedMetas[m.setor]=m.quantidade});ok++}
+  if(devs){cachedDevs=devs;ok++}
+  if(prods){produtosExtra=prods.map(p=>p.nome);atualizarDropdownProdutos();ok++}
+  if(solic){cachedSolic=solic;ok++}
+  if(ok===5){ setSync('ok'); }
+  else if(ok===0){ setSync('err'); toast('Sem conexão com o banco — puxe a tela pra baixo pra tentar de novo.','erro'); }
+  else { setSync('err'); toast('Parte dos dados não carregou — puxe a tela pra baixo pra atualizar.','aviso'); }
 }
 
 function atualizarDropdownProdutos(){
@@ -2411,7 +2524,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='cupulas-6 · 15/10';
+const APP_VERSION='IW · 29/10';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
@@ -3697,7 +3810,8 @@ async function salvarDia(){
   try{
     const rows=pendentes.map(({_id,...r})=>r);
     await sb('lancamentos',{method:'POST',body:JSON.stringify(rows),prefer:'return=minimal'});
-    cachedLancs=[...rows,...cachedLancs];pendentes=[];renderPend();setSync('ok');mostrarCheck('Lançamento salvo!');
+    cachedLancs=[...rows,...cachedLancs];pendentes=[];renderPend();setSync('ok');
+    if(rows.some(r=>r.setor==='Embalagem')) celebrarEmbalagem(rows); else mostrarCheck('Lançamento salvo!');
     if(typeof carregarERenderMetas==='function')carregarERenderMetas();
   }catch(e){setSync('err');toast('Erro ao salvar.','erro')}
   btn.disabled=false;btn.textContent='Salvar lançamento';
