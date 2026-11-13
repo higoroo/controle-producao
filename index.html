@@ -1759,6 +1759,17 @@ async function sbCount(path){
   finally{ clearTimeout(to); }
   return 0;
 }
+// remove linhas repetidas por id — a paginação por offset pode repetir linhas na
+// virada de página, o que inflava os números (ex.: embalagem contada 2x)
+function dedupById(arr){
+  if(!Array.isArray(arr)||arr.length<2||arr[0]==null||arr[0].id===undefined)return arr;
+  const seen=new Set(), out=[];
+  for(const r of arr){
+    if(r&&r.id!==undefined){ if(seen.has(r.id))continue; seen.add(r.id); }
+    out.push(r);
+  }
+  return out;
+}
 async function sbAll(path, pageSize=1000){
   const sep=path.includes('?')?'&':'?';
   const first=await sb(`${path}${sep}limit=${pageSize}&offset=0`);
@@ -1772,7 +1783,7 @@ async function sbAll(path, pageSize=1000){
       if(batch.length<pageSize)break;
       offset+=pageSize;
     }
-    return all;
+    return dedupById(all);
   }
   // baixa as páginas restantes em paralelo (janela de 6 por vez)
   const offsets=[];
@@ -1782,7 +1793,7 @@ async function sbAll(path, pageSize=1000){
     const res=await Promise.all(offsets.slice(i,i+CONC).map(off=>sb(`${path}${sep}limit=${pageSize}&offset=${off}`)));
     res.forEach(r=>all.push(r));
   }
-  return all.flat();
+  return dedupById(all.flat());
 }
 
 async function loadAll(){
@@ -1790,11 +1801,11 @@ async function loadAll(){
   // allSettled: se uma consulta falhar/estourar o tempo, as outras ainda carregam
   // e o loadAll SEMPRE termina (a tela nunca fica presa em "Carregando")
   const r=await Promise.allSettled([
-    sbAll('lancamentos?select=id,data,setor,produto,qtd,obs,created_at&order=data.desc,created_at.desc'),
+    sbAll('lancamentos?select=id,data,setor,produto,qtd,obs,created_at&order=data.desc,created_at.desc,id.desc'),
     sb('metas?select=*'),
     sb('devolucoes?select=*&order=data.desc,created_at.desc'),
     sb('produtos_extra?select=*&order=nome'),
-    sbAll('solicitacoes?select=*&order=created_at.desc')
+    sbAll('solicitacoes?select=*&order=created_at.desc,id.desc')
   ]);
   const val=i=>r[i].status==='fulfilled'?r[i].value:null;
   const lancs=val(0),metas=val(1),devs=val(2),prods=val(3),solic=val(4);
@@ -2018,7 +2029,7 @@ async function loadWip(){
     const[et,li,mv]=await Promise.all([
       sb('wip_etapas?select=*&order=ordem'),
       sb('wip_linhas?select=*&ativo=is.true&order=grupo,produto,cor'),
-      sbAll('wip_movimentos?select=*&order=created_at')
+      sbAll('wip_movimentos?select=*&order=created_at,id')
     ]);
     wipEtapas=et; wipLinhas=li; wipMovs=mv;
     wipCalcSaldos();
@@ -2524,7 +2535,7 @@ async function wipCriarEstrutura(){
   }catch(e){setSync('err');console.error('WIP setup',e);wipMostraErro('Erro ao criar fluxo: '+wipErroMsg(e));toast('Erro ao criar fluxo','erro')}
 }
 
-const APP_VERSION='IW · 29/10';
+const APP_VERSION='IW · 13/11';
 (function(){const el=document.getElementById('app-ver');if(el)el.textContent=APP_VERSION;})();
 
 /* ══════════════ PRODUTIVIDADE DA EQUIPE ══════════════ */
