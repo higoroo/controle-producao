@@ -443,6 +443,12 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
 .status-chip.selected-avaria .sc-label{color:var(--amber)}
 .status-chip.selected-quebrado .sc-label{color:var(--red)}
 .status-chip.selected-incompleto .sc-label{color:var(--blue)}
+/* iOS (iPhone/iPad): evita o zoom automático ao tocar num campo — a fonte precisa ser >=16px */
+@supports (-webkit-touch-callout:none){
+  .field select,.field input[type=text],.field input[type=date],.field input[type=number],
+  .meta-input-wrap input,.cfg-item input,
+  input,select,textarea{font-size:16px !important}
+}
 </style>
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
