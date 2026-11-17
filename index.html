@@ -1538,6 +1538,16 @@ async function refrescarSessao(){
     return true;
   }catch(e){return false;}
 }
+async function iniciarSessao(){
+  let s=null; try{ s=JSON.parse(localStorage.getItem('iw_sessao')||'null'); }catch(e){}
+  if(!s||!s.access_token) return false;
+  SESSAO=s;
+  if(s.exp && s.exp*1000 > Date.now()+10000){ refrescarSessao(); return true; } // válido agora; renova em 2º plano
+  // access token vencido — tenta renovar com o refresh_token (mantém logado entre dias)
+  const ok=await refrescarSessao();
+  if(ok) return true;
+  limparSessao(); return false;
+}
 function agendarRefresh(){ if(_refreshTimer)clearInterval(_refreshTimer); _refreshTimer=setInterval(refrescarSessao,40*60*1000); }
 function sair(){ if(!confirm('Sair do app?'))return; limparSessao(); location.reload(); }
 function mostrarLogin(){ const ov=document.getElementById('login-ov'); if(ov)ov.style.display='flex'; setTimeout(()=>{const e=document.getElementById('login-email');if(e)e.focus();},100); }
@@ -3811,9 +3821,11 @@ function init(){
       }
     });
   };
-  // Só carrega os dados depois do login
-  if(carregarSessao()){ aplicarPermissoes(); agendarRefresh(); refrescarSessao(); window._bootDados(); }
-  else { mostrarLogin(); }
+  // Só carrega os dados depois do login (mantém logado entre sessões via refresh token)
+  iniciarSessao().then(ok=>{
+    if(ok){ aplicarPermissoes(); agendarRefresh(); window._bootDados(); }
+    else { mostrarLogin(); }
+  });
 }
 
 function toggleTema(){
