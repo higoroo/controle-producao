@@ -1877,7 +1877,14 @@ async function sbAll(path, pageSize=1000){
   return dedupById(all.flat());
 }
 
-async function loadAll(){
+let _lastLoadAll=0, _loadAllEmAndamento=null;
+async function loadAll(force){
+  // cache: não re-busca tudo a cada troca de tela (evita recarregar 5mil+ linhas sempre).
+  // Passe force=true (ou puxar pra atualizar) pra forçar uma recarga do banco.
+  if(!force && cachedLancs.length && (Date.now()-_lastLoadAll)<45000){ setSync('ok'); return; }
+  // se já tem uma carga em andamento, reaproveita (evita baixar tudo em dobro)
+  if(_loadAllEmAndamento) return _loadAllEmAndamento;
+  _loadAllEmAndamento=(async()=>{
   setSync('syncing');
   // allSettled: se uma consulta falhar/estourar o tempo, as outras ainda carregam
   // e o loadAll SEMPRE termina (a tela nunca fica presa em "Carregando")
@@ -1896,9 +1903,11 @@ async function loadAll(){
   if(devs){cachedDevs=devs;ok++}
   if(prods){produtosExtra=prods.map(p=>p.nome);atualizarDropdownProdutos();ok++}
   if(solic){cachedSolic=solic;ok++}
-  if(ok===5){ setSync('ok'); }
+  if(ok===5){ setSync('ok'); _lastLoadAll=Date.now(); }
   else if(ok===0){ setSync('err'); toast('Sem conexão com o banco — puxe a tela pra baixo pra tentar de novo.','erro'); }
-  else { setSync('err'); toast('Parte dos dados não carregou — puxe a tela pra baixo pra atualizar.','aviso'); }
+  else { setSync('err'); _lastLoadAll=Date.now(); toast('Parte dos dados não carregou — puxe a tela pra baixo pra atualizar.','aviso'); }
+  })();
+  try{ await _loadAllEmAndamento; } finally { _loadAllEmAndamento=null; }
 }
 
 function atualizarDropdownProdutos(){
@@ -6909,6 +6918,7 @@ function initSwipeCards(){
   });
 }
 function refreshPaginaAtual(){
+  _lastLoadAll=0; // puxar pra atualizar = força recarregar do banco (ignora o cache)
   const ativo=document.querySelector('.page.active');
   if(!ativo)return Promise.resolve();
   const id=ativo.id.replace('page-','');
