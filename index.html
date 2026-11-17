@@ -454,6 +454,16 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <link rel="icon" type="image/svg+xml" href="/icon-32.svg">
 </head>
 <body>
+<div id="login-ov" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--ink,#14110c);align-items:center;justify-content:center;padding:24px">
+  <form onsubmit="return submeterLogin(event)" style="width:100%;max-width:340px;background:var(--ink2,#1d1913);border:1px solid var(--line2,#352c20);border-radius:16px;padding:26px 22px">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text,#f2ece2)">IW Produção</div>
+    <div style="font-size:13px;color:var(--text3,#9b8f7c);margin-bottom:20px">Entre para continuar</div>
+    <input type="email" id="login-email" placeholder="E-mail" autocomplete="username" autocapitalize="none" spellcheck="false" style="width:100%;padding:12px 14px;margin-bottom:10px;background:var(--ink3,#211c15);border:1px solid var(--line2,#352c20);border-radius:10px;color:var(--text,#f2ece2);font-size:15px;box-sizing:border-box">
+    <input type="password" id="login-senha" placeholder="Senha" autocomplete="current-password" style="width:100%;padding:12px 14px;margin-bottom:6px;background:var(--ink3,#211c15);border:1px solid var(--line2,#352c20);border-radius:10px;color:var(--text,#f2ece2);font-size:15px;box-sizing:border-box">
+    <div id="login-err" style="display:none;color:var(--red,#e05c5c);font-size:12px;margin:6px 2px 0"></div>
+    <button type="submit" id="login-btn" class="btn btn-accent" style="width:100%;margin-top:14px;padding:12px">Entrar</button>
+  </form>
+</div>
 
 <div class="topbar">
   <div class="logo" onclick="goTo('dash',document.getElementById('sb-dash'))" style="cursor:pointer" title="Dashboard">IW<em>.</em></div>
@@ -1036,14 +1046,8 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
     <div class="sec-title" style="margin:0">Lançamentos</div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--text3)">Modo gestor:</span>
-      <button id="btn-modo-gestor" onclick="toggleGestor()" class="btn btn-ghost btn-sm">Desativado</button>
-    </div>
-  </div>
-  <div id="gestor-auth" style="display:none;margin-bottom:12px">
-    <div class="card" style="display:flex;gap:8px;align-items:center;padding:12px">
-      <input type="password" id="gestor-senha" placeholder="Senha do gestor" style="flex:1;padding:9px 12px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:14px">
-      <button class="btn btn-accent btn-sm" onclick="autenticarGestor()">Entrar</button>
+      <span id="lbl-conectado" style="font-size:11px;color:var(--text3)">Conectado:</span>
+      <button id="btn-modo-gestor" onclick="sair()" class="btn btn-ghost btn-sm">—</button>
     </div>
   </div>
   <div class="card"><div class="tabela-wrap"><table><thead><tr><th>Data</th><th>Setor</th><th>Produto</th><th class="td-r">Qtd</th><th>Obs</th><th id="th-acoes" style="display:none">Ações</th></tr></thead><tbody id="tbody-hist"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
@@ -1504,17 +1508,78 @@ let toggleDia = 'emb';
 let compSetoresAtivo = false;
 const SB_URL='https://xsnnqqeugywkzrptllom.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzbm5xcWV1Z3l3a3pycHRsbG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODI5OTMsImV4cCI6MjA5MTI1ODk5M30.kk2gQ43Py3Ghb8sBjgWDwGiFKjnL1WVDxUrs3ugPxnM';
+
+/* ══════════════ LOGIN / SESSÃO (Supabase Auth) ══════════════ */
+const GESTOR_EMAIL='iluminiwood@gmail.com';
+const AUTOR_LABELS={'iluminiwood@gmail.com':'Gestor','guilherme@ilumini.app':'Guilherme'};
+let SESSAO=null, _refreshTimer=null;
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function carregarSessao(){ try{ const s=JSON.parse(localStorage.getItem('iw_sessao')||'null'); if(s&&s.access_token&&s.exp&&s.exp*1000>Date.now()+10000){SESSAO=s;return true;} }catch(e){} SESSAO=null; return false; }
+function salvarSessao(s){ SESSAO=s; try{localStorage.setItem('iw_sessao',JSON.stringify(s));}catch(e){} }
+function limparSessao(){ SESSAO=null; try{localStorage.removeItem('iw_sessao');}catch(e){} if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;} }
+function usuarioEmail(){ return SESSAO?SESSAO.email:null; }
+function ehGestor(){ return usuarioEmail()===GESTOR_EMAIL; }
+function logado(){ return !!SESSAO; }
+function autorAtual(){ const e=usuarioEmail(); return AUTOR_LABELS[e]||(e?e.split('@')[0]:'—'); }
+function authToken(){ return SESSAO?SESSAO.access_token:SB_KEY; }
+async function fazerLogin(email,senha){
+  const res=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:(email||'').trim(),password:senha})});
+  if(!res.ok) throw new Error('login');
+  const d=await res.json();
+  salvarSessao({access_token:d.access_token,refresh_token:d.refresh_token,email:(d.user&&d.user.email)||(email||'').trim(),exp:d.expires_at||(Math.floor(Date.now()/1000)+(d.expires_in||3600))});
+}
+async function refrescarSessao(){
+  if(!SESSAO||!SESSAO.refresh_token)return false;
+  try{
+    const res=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:SESSAO.refresh_token})});
+    if(!res.ok)return false;
+    const d=await res.json();
+    salvarSessao({access_token:d.access_token,refresh_token:d.refresh_token,email:(d.user&&d.user.email)||SESSAO.email,exp:d.expires_at||(Math.floor(Date.now()/1000)+(d.expires_in||3600))});
+    return true;
+  }catch(e){return false;}
+}
+function agendarRefresh(){ if(_refreshTimer)clearInterval(_refreshTimer); _refreshTimer=setInterval(refrescarSessao,40*60*1000); }
+function sair(){ if(!confirm('Sair do app?'))return; limparSessao(); location.reload(); }
+function mostrarLogin(){ const ov=document.getElementById('login-ov'); if(ov)ov.style.display='flex'; setTimeout(()=>{const e=document.getElementById('login-email');if(e)e.focus();},100); }
+function esconderLogin(){ const ov=document.getElementById('login-ov'); if(ov)ov.style.display='none'; }
+async function submeterLogin(ev){
+  if(ev&&ev.preventDefault)ev.preventDefault();
+  const email=(document.getElementById('login-email')||{}).value;
+  const senha=(document.getElementById('login-senha')||{}).value;
+  const btn=document.getElementById('login-btn'), err=document.getElementById('login-err');
+  if(!email||!senha){ if(err){err.textContent='Preencha e-mail e senha.';err.style.display='block';} return false; }
+  if(btn){btn.disabled=true;btn.textContent='Entrando...';} if(err)err.style.display='none';
+  try{
+    await fazerLogin(email,senha);
+    esconderLogin();
+    aplicarPermissoes(); agendarRefresh();
+    if(window._bootDados)window._bootDados();
+  }catch(e){
+    if(err){err.textContent='E-mail ou senha incorretos.';err.style.display='block';}
+    if(btn){btn.disabled=false;btn.textContent='Entrar';}
+  }
+  return false;
+}
+function aplicarPermissoes(){
+  modoGestorAtivo=ehGestor();
+  const btn=document.getElementById('btn-modo-gestor');
+  if(btn){ btn.textContent=autorAtual()+' · Sair'; btn.onclick=sair; btn.style.color=''; }
+  const lbl=document.getElementById('lbl-conectado'); if(lbl)lbl.textContent='Conectado:';
+  const th=document.getElementById('th-acoes'); if(th)th.style.display='';
+  const bg=document.getElementById('comp-gestor-badge'); if(bg)bg.style.display=ehGestor()?'block':'none';
+}
+
 const SETORES=['Usinagem','Marcenaria','Fundo','Lixa de Fundo','Pintura','Montagem','Elétrica','Embalagem','Expedição'];
 const PRODUTOS=['A/W','XG','XP','AB Slim','AB Mine','AB Soft','AB A/W','AB XP','Viena','Mônaco','Floripa','Ipanema','Áustria','Wells','Mine','Wood','Sky','Slim','Colunas','Abajures','Chapa Lázaro','Prateleira Pinus','Ádegas Vinho','Sup Taça','Cup 40','Ripada','Peça Nova','Mesa Dobrável','Cúpula 40cm c/ aro','Cúpula 40cm s/ aro','Cúpula cônica','Cúpula 35cm c/ aro','Cúpula 30cm c/ aro','Cúpula 30cm s/ aro','Cúpula oval','Cúpula chapéuzinho','Outros'];
 const CORS=['#5b9cf6','#4caf7d','#e89c47','#e05c5c','#a78bf6','#e87d7d','#64c896','#8a8880','#3dd6ac'];
-let pendentes=[],charts={},chipSetor='Embalagem',cachedLancs=[],cachedMetas={},cachedDevs=[];
+let pendentes=[],charts={},chipSetor='Embalagem',cachedLancs=[],cachedMetas={},cachedDevs=[],cachedLancsApagados=[];
 
 async function sb(path,opts={}){
   // timeout: se a requisição travar, aborta em vez de ficar esperando pra sempre
   const ctrl=new AbortController();
   const to=setTimeout(()=>ctrl.abort(), opts.timeout||15000);
   try{
-    const res=await fetch(SB_URL+'/rest/v1/'+path,{...opts,signal:ctrl.signal,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':opts.prefer||'return=representation',...opts.headers}});
+    const res=await fetch(SB_URL+'/rest/v1/'+path,{...opts,signal:ctrl.signal,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken(),'Content-Type':'application/json','Prefer':opts.prefer||'return=representation',...opts.headers}});
     if(!res.ok)throw new Error(await res.text());
     const t=await res.text();return t?JSON.parse(t):[];
   }catch(e){
@@ -1801,7 +1866,7 @@ async function loadAll(){
   // allSettled: se uma consulta falhar/estourar o tempo, as outras ainda carregam
   // e o loadAll SEMPRE termina (a tela nunca fica presa em "Carregando")
   const r=await Promise.allSettled([
-    sbAll('lancamentos?select=id,data,setor,produto,qtd,obs,created_at&order=data.desc,created_at.desc,id.desc'),
+    sbAll('lancamentos?select=*&order=data.desc,created_at.desc,id.desc'),
     sb('metas?select=*'),
     sb('devolucoes?select=*&order=data.desc,created_at.desc'),
     sb('produtos_extra?select=*&order=nome'),
@@ -1810,7 +1875,7 @@ async function loadAll(){
   const val=i=>r[i].status==='fulfilled'?r[i].value:null;
   const lancs=val(0),metas=val(1),devs=val(2),prods=val(3),solic=val(4);
   let ok=0;
-  if(lancs){cachedLancs=lancs;ok++}
+  if(lancs){cachedLancs=lancs.filter(l=>!l.apagado);cachedLancsApagados=lancs.filter(l=>l.apagado);ok++}
   if(metas){cachedMetas={};metas.forEach(m=>{cachedMetas[m.setor]=m.quantidade});ok++}
   if(devs){cachedDevs=devs;ok++}
   if(prods){produtosExtra=prods.map(p=>p.nome);atualizarDropdownProdutos();ok++}
@@ -3730,20 +3795,25 @@ function init(){
     const btn = document.getElementById('btn-tema');
     if(btn) btn.textContent = '☀️';
   }
-  loadAll().then(()=>{
-    atualizarDiasComLanc();
-    initCal();
-    // Navegar para a página indicada no hash da URL
-    const hash = window.location.hash.replace('#','');
-    const paginasValidas = ['lanc','dash','prod','dev','anal','hist','cfg','comp','materiais'];
-    if(hash && paginasValidas.includes(hash)){
-      const btn = document.getElementById('sb-'+hash) || document.querySelector(`[onclick*="goTo('${hash}'"]`);
-      if(btn) goTo(hash, btn);
-      else renderDash();
-    } else {
-      renderDash();
-    }
-  });
+  window._bootDados=function(){
+    loadAll().then(()=>{
+      atualizarDiasComLanc();
+      initCal();
+      // Navegar para a página indicada no hash da URL
+      const hash = window.location.hash.replace('#','');
+      const paginasValidas = ['lanc','dash','prod','dev','anal','hist','cfg','comp','materiais'];
+      if(hash && paginasValidas.includes(hash)){
+        const btn = document.getElementById('sb-'+hash) || document.querySelector(`[onclick*="goTo('${hash}'"]`);
+        if(btn) goTo(hash, btn);
+        else renderDash();
+      } else {
+        renderDash();
+      }
+    });
+  };
+  // Só carrega os dados depois do login
+  if(carregarSessao()){ aplicarPermissoes(); agendarRefresh(); refrescarSessao(); window._bootDados(); }
+  else { mostrarLogin(); }
 }
 
 function toggleTema(){
@@ -3819,8 +3889,15 @@ async function salvarDia(){
   if(!pendentes.length){toast('Adicione ao menos um item.');return}
   const btn=document.getElementById('btn-salvar');btn.disabled=true;btn.textContent='Salvando...';setSync('syncing');
   try{
-    const rows=pendentes.map(({_id,...r})=>r);
-    await sb('lancamentos',{method:'POST',body:JSON.stringify(rows),prefer:'return=minimal'});
+    const autor=autorAtual();
+    const rows=pendentes.map(({_id,...r})=>({...r,lancado_por:autor}));
+    try{
+      await sb('lancamentos',{method:'POST',body:JSON.stringify(rows),prefer:'return=minimal'});
+    }catch(err){
+      // fallback: se a coluna de autor ainda não existir no banco, salva sem ela
+      const semAutor=rows.map(({lancado_por,...r})=>r);
+      await sb('lancamentos',{method:'POST',body:JSON.stringify(semAutor),prefer:'return=minimal'});
+    }
     cachedLancs=[...rows,...cachedLancs];pendentes=[];renderPend();setSync('ok');
     if(rows.some(r=>r.setor==='Embalagem')) celebrarEmbalagem(rows); else mostrarCheck('Lançamento salvo!');
     if(typeof carregarERenderMetas==='function')carregarERenderMetas();
@@ -4262,10 +4339,31 @@ function limparSlot(num, e){
   slot.style.border='1px dashed var(--line2)';
   document.getElementById('dv-foto-'+num).value='';
 }
+// comprime a imagem antes de subir (de vários MB pra ~100 KB) — mantém legível
+async function comprimirImagem(file, maxLado=1280, q=0.58){
+  try{
+    if(!file || !/^image\//.test(file.type||'')) return file;
+    const url=URL.createObjectURL(file);
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej('e');i.src=url;});
+    let w=img.naturalWidth,h=img.naturalHeight;
+    const r=Math.min(1,maxLado/Math.max(w,h));
+    const cw=Math.max(1,Math.round(w*r)),ch=Math.max(1,Math.round(h*r));
+    const c=document.createElement('canvas');c.width=cw;c.height=ch;
+    c.getContext('2d').drawImage(img,0,0,cw,ch);
+    try{URL.revokeObjectURL(url);}catch(_){}
+    const blob=await new Promise(rs=>c.toBlob(rs,'image/jpeg',q));
+    if(blob && blob.size>0 && blob.size<file.size) return blob;
+    return file;
+  }catch(e){ return file; }
+}
 async function uploadFoto(file){
   try{
-    const ext=file.name.split('.').pop()||'jpg',nome=`dev_${Date.now()}.${ext}`;
-    const res=await fetch(`${SB_URL}/storage/v1/object/fotos-devolucoes/${nome}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type},body:file});
+    const img=await comprimirImagem(file,1280,0.58);
+    const comprimiu=(img!==file); // se comprimiu, virou jpeg
+    const ext=comprimiu?'jpg':((file.name||'').split('.').pop()||'jpg');
+    const ct=comprimiu?'image/jpeg':(file.type||'image/jpeg');
+    const nome=`dev_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+    const res=await fetch(`${SB_URL}/storage/v1/object/fotos-devolucoes/${nome}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':ct},body:img});
     if(!res.ok){console.warn('Upload foto falhou:',await res.text());return null;}
     return`${SB_URL}/storage/v1/object/public/fotos-devolucoes/${nome}`;
   }catch(e){console.warn('Erro upload foto:',e);return null;}
@@ -4396,7 +4494,8 @@ function histToggleSetor(chave){
 function histVerMais(){histMesesMostrar++;renderHist();}
 function renderHist(){
   const setor=document.getElementById('h-setor').value,de=document.getElementById('h-de').value,ate=document.getElementById('h-ate').value;
-  let l=[...cachedLancs];
+  // gestor vê também os apagados (riscados); encarregado vê só os ativos
+  let l = ehGestor() ? [...cachedLancs,...cachedLancsApagados] : [...cachedLancs];
   if(setor)l=l.filter(x=>x.setor===setor);if(de)l=l.filter(x=>x.data>=de);if(ate)l=l.filter(x=>x.data<=ate);
   const tc=s=>{const i=SETORES.indexOf(s);return['tag-b','tag-g','tag-a','tag-r','tag-b','tag-r','tag-g','tag-a','tag-g'][i]||'tag-b'};
 
@@ -4409,16 +4508,17 @@ function renderHist(){
     l=l.filter(x=>mesesVisiveis.includes(x.data.slice(0,7)));
   }
 
-  // Agrupar por dia para mostrar botão "apagar dia"
+  // Agrupar por dia (totais contam só os ativos; apagados aparecem riscados)
   const diasUnicos=[...new Set(l.map(x=>x.data))].sort().reverse();
   let html='';
   diasUnicos.forEach(data=>{
     const itens=l.filter(x=>x.data===data);
-    const totDia=itens.reduce((a,x)=>a+x.qtd,0);
-    // cabeçalho do dia — sempre visível (botão apagar só no modo gestor)
+    const ativos=itens.filter(x=>!x.apagado);
+    const totDia=ativos.reduce((a,x)=>a+x.qtd,0);
+    // cabeçalho do dia — botão apagar dia só pro gestor
     html+=`<tr style="background:var(--ink3)">
-      <td colspan="5" style="padding:8px;font-size:12px;color:var(--text);font-weight:700;font-family:'Syne',sans-serif">${fmt(data)} <span style="color:var(--text3);font-weight:400;font-family:'DM Mono',monospace;font-size:11px">— ${itens.length} ${itens.length===1?'item':'itens'} · ${totDia.toLocaleString('pt-BR')} pç</span></td>
-      <td style="padding:8px;text-align:right">${modoGestorAtivo?`<button onclick="apagarDia('${data}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Apagar dia</button>`:''}</td>
+      <td colspan="5" style="padding:8px;font-size:12px;color:var(--text);font-weight:700;font-family:'Syne',sans-serif">${fmt(data)} <span style="color:var(--text3);font-weight:400;font-family:'DM Mono',monospace;font-size:11px">— ${ativos.length} ${ativos.length===1?'item':'itens'} · ${totDia.toLocaleString('pt-BR')} pç</span></td>
+      <td style="padding:8px;text-align:right">${ehGestor()?`<button onclick="apagarDia('${data}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">Apagar dia</button>`:''}</td>
     </tr>`;
     // agrupar por setor, na ordem do fluxo (SETORES)
     const setoresDoDia=[...new Set(itens.map(x=>x.setor))].sort((a,b)=>{
@@ -4427,30 +4527,47 @@ function renderHist(){
     });
     setoresDoDia.forEach(setor=>{
       const doSetor=itens.filter(x=>x.setor===setor);
-      const totSetor=doSetor.reduce((a,x)=>a+x.qtd,0);
+      const ativosSetor=doSetor.filter(x=>!x.apagado);
+      const totSetor=ativosSetor.reduce((a,x)=>a+x.qtd,0);
       const chave=data+'|'+setor;
       const aberto=!!histSetoresAbertos[chave];
       // subcabeçalho do setor (clicável para expandir/recolher)
       html+=`<tr style="cursor:pointer" onclick="histToggleSetor('${chave}')"><td colspan="6" style="padding:8px">
         <span style="display:inline-block;width:12px;color:var(--text3);font-size:10px;transition:transform .2s">${aberto?'▾':'▸'}</span>
         <span class="tag ${tc(setor)}">${setor.split(' ')[0]}</span>
-        <span style="font-size:11px;color:var(--text3);margin-left:8px">${doSetor.length} ${doSetor.length===1?'item':'itens'} · ${totSetor.toLocaleString('pt-BR')} pç</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:8px">${ativosSetor.length} ${ativosSetor.length===1?'item':'itens'} · ${totSetor.toLocaleString('pt-BR')} pç</span>
       </td></tr>`;
       if(aberto){
         doSetor.forEach(x=>{
-          html+=`<tr>
-            <td style="white-space:nowrap;color:var(--text3);font-size:11px;padding-left:28px">${fmt(x.data)}</td>
-            <td></td>
-            <td style="color:var(--text2)">${x.produto}</td>
-            <td class="td-r">${x.qtd.toLocaleString('pt-BR')}</td>
-            <td style="color:var(--text3);font-size:11px">${x.obs||'—'}</td>
-            <td style="display:${modoGestorAtivo?'table-cell':'none'}">
-              <div style="display:flex;gap:4px">
-                <button onclick="abrirEdicao('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);cursor:pointer">Editar</button>
-                <button onclick="apagarItem('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer">Apagar</button>
-              </div>
-            </td>
-          </tr>`;
+          const apg=!!x.apagado;
+          const autorInfo = (ehGestor()&&x.lancado_por) ? ` <span style="color:var(--text3);font-size:10px">· ${esc(x.lancado_por)}</span>` : '';
+          if(apg){
+            const quando = x.apagado_em ? fmt(String(x.apagado_em).slice(0,10)) : '';
+            html+=`<tr style="opacity:.55">
+              <td style="white-space:nowrap;color:var(--text3);font-size:11px;padding-left:28px;text-decoration:line-through">${fmt(x.data)}</td>
+              <td></td>
+              <td style="color:var(--text3);text-decoration:line-through">${esc(x.produto)}</td>
+              <td class="td-r" style="text-decoration:line-through">${x.qtd.toLocaleString('pt-BR')}</td>
+              <td style="color:var(--red);font-size:10px">apagado${x.apagado_por?' por '+esc(x.apagado_por):''}${quando?' · '+quando:''}</td>
+              <td style="display:${ehGestor()?'table-cell':'none'}">
+                <button onclick="restaurarItem('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);cursor:pointer">Restaurar</button>
+              </td>
+            </tr>`;
+          } else {
+            html+=`<tr>
+              <td style="white-space:nowrap;color:var(--text3);font-size:11px;padding-left:28px">${fmt(x.data)}</td>
+              <td></td>
+              <td style="color:var(--text2)">${esc(x.produto)}${autorInfo}</td>
+              <td class="td-r">${x.qtd.toLocaleString('pt-BR')}</td>
+              <td style="color:var(--text3);font-size:11px">${esc(x.obs)||'—'}</td>
+              <td style="display:${logado()?'table-cell':'none'}">
+                <div style="display:flex;gap:4px">
+                  ${ehGestor()?`<button onclick="abrirEdicao('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--line2);background:var(--ink3);color:var(--text2);cursor:pointer">Editar</button>`:''}
+                  <button onclick="apagarItem('${x.id}')" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(224,92,92,.3);background:var(--red-d);color:var(--red);cursor:pointer">Apagar</button>
+                </div>
+              </td>
+            </tr>`;
+          }
         });
       }
     });
@@ -6028,19 +6145,34 @@ async function salvarEdicao() {
 async function apagarItem(id) {
   if (!confirm('Apagar este item?')) return;
   setSync('syncing');
+  const quem=autorAtual(), quando=new Date().toISOString();
   try {
-    await sb(`lancamentos?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
-    cachedLancs = cachedLancs.filter(x => x.id !== id);
+    await sb(`lancamentos?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ apagado:true, apagado_por:quem, apagado_em:quando }), prefer: 'return=minimal' });
+    const it=cachedLancs.find(x=>x.id===id);
+    if(it){ it.apagado=true; it.apagado_por=quem; it.apagado_em=quando; cachedLancs=cachedLancs.filter(x=>x.id!==id); cachedLancsApagados.unshift(it); }
     atualizarDiasComLanc(); renderCal(); renderHist(); setSync('ok'); toast('Item apagado.');
   } catch (e) { setSync('err'); toast('Erro ao apagar.'); }
+}
+
+async function restaurarItem(id){
+  setSync('syncing');
+  try{
+    await sb(`lancamentos?id=eq.${id}`, { method:'PATCH', body:JSON.stringify({ apagado:false, apagado_por:null, apagado_em:null }), prefer:'return=minimal' });
+    const it=cachedLancsApagados.find(x=>x.id===id);
+    if(it){ it.apagado=false; it.apagado_por=null; it.apagado_em=null; cachedLancsApagados=cachedLancsApagados.filter(x=>x.id!==id); cachedLancs.unshift(it); }
+    atualizarDiasComLanc(); renderCal(); renderHist(); setSync('ok'); toast('Item restaurado.');
+  }catch(e){ setSync('err'); toast('Erro ao restaurar.'); }
 }
 
 async function apagarDia(data) {
   if (!confirm(`Apagar TODOS os lançamentos de ${fmt(data)}?`)) return;
   setSync('syncing');
+  const quem=autorAtual(), quando=new Date().toISOString();
   try {
-    await sb(`lancamentos?data=eq.${data}`, { method: 'DELETE', prefer: 'return=minimal' });
-    cachedLancs = cachedLancs.filter(x => x.data !== data);
+    await sb(`lancamentos?data=eq.${data}&apagado=eq.false`, { method: 'PATCH', body: JSON.stringify({ apagado:true, apagado_por:quem, apagado_em:quando }), prefer: 'return=minimal' });
+    const movidos=cachedLancs.filter(x=>x.data===data);
+    movidos.forEach(it=>{ it.apagado=true; it.apagado_por=quem; it.apagado_em=quando; cachedLancsApagados.unshift(it); });
+    cachedLancs=cachedLancs.filter(x=>x.data!==data);
     atualizarDiasComLanc(); renderCal(); renderHist(); setSync('ok'); toast('Dia apagado.');
   } catch (e) { setSync('err'); toast('Erro ao apagar dia.'); }
 }
