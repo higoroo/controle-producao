@@ -611,6 +611,13 @@ body,.topbar,.sidebar,.bottom-nav,.card,.kpi,.insight-card,.scroll-area,input,se
     <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-top:8px">Defina de manhã a meta por produto. No fim do dia, ao lançar a produção, o sistema compara produto a produto — só bate a meta se todos saírem.</div>
   </div>
 
+  <div class="sec-title">Lançar por foto</div>
+  <div class="card">
+    <button class="btn btn-accent" onclick="abrirFotoLanc()">📷 Tirar foto do caderno</button>
+    <input type="file" id="foto-input" accept="image/*" capture="environment" style="display:none" onchange="lerCaderno(event)">
+    <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5">Fotografe a folha de produção — o app lê e preenche pra você conferir e salvar. O lançamento manual abaixo continua igual.</div>
+  </div>
+
   <div class="sec-title">Adicionar item</div>
   <div class="card">
     <div class="form-2col">
@@ -6936,5 +6943,222 @@ function refreshPaginaAtual(){
 
 init();
 </script>
+<!-- ═══════════ LANÇAR POR FOTO ═══════════ -->
+<style>
+.foto-ov{display:none;position:fixed;inset:0;z-index:600;background:var(--ink);overflow-y:auto}
+.foto-ov.show{display:block}
+.foto-ov .inner{max-width:640px;margin:0 auto;padding:20px 16px 110px}
+.foto-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.foto-top .voltar{background:var(--ink3);border:1px solid var(--line2);color:var(--text2);border-radius:var(--r);padding:8px 12px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer}
+.cf-fotocard{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:8px;margin-bottom:12px;text-align:center}
+.cf-fotocard img{max-width:100%;max-height:150px;border-radius:var(--r);transition:max-height .25s}
+.cf-fotocard.big img{max-height:640px}
+.cf-fotocard .cap{font-size:10px;color:var(--text3);margin-top:7px;letter-spacing:.04em}
+.cf-aviso{background:var(--amber-d);border:1px solid rgba(232,156,71,.35);border-radius:var(--r);padding:11px 13px;font-size:12px;color:var(--amber);line-height:1.55;margin-bottom:10px}
+.cf-aviso b{color:var(--amber)}
+.cf-row{display:flex;align-items:center;gap:9px;background:var(--ink3);border-radius:var(--r);padding:8px 10px;border:1px solid var(--line);margin-bottom:6px}
+.cf-row.confira{background:var(--amber-d);border-color:rgba(232,156,71,.5)}
+.cf-qbox{display:flex;align-items:center;gap:3px;flex:0 0 auto}
+.cf-qbox button{width:28px;height:32px;border-radius:7px;border:1px solid var(--line2);background:var(--ink2);color:var(--text);font-weight:800;font-size:15px;font-family:'Inter',sans-serif;cursor:pointer}
+.cf-qbox input{width:42px;height:32px;text-align:center;background:var(--ink2);border:1px solid var(--line2);border-radius:7px;color:var(--accent);font-weight:800;font-size:15px;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;-webkit-appearance:none}
+.cf-pin{flex:1;min-width:0;height:32px;background:transparent;border:1px solid transparent;border-radius:7px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:0 8px;outline:none}
+.cf-pin:focus{background:var(--ink2);border-color:var(--line2)}
+.cf-row.confira .cf-pin{color:var(--amber)}
+.cf-flag{font-size:9px;font-weight:700;font-family:'Syne',sans-serif;color:var(--amber);background:rgba(232,156,71,.15);border-radius:6px;padding:3px 6px;flex:0 0 auto}
+.cf-rm{width:28px;height:28px;border-radius:7px;border:none;background:none;color:var(--text3);font-size:17px;cursor:pointer;flex:0 0 auto}
+.cf-addbtn{width:100%;padding:10px;border-radius:var(--r);border:1px dashed var(--line2);background:none;color:var(--text2);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;margin:2px 0 8px}
+.foto-bar{position:fixed;left:0;right:0;bottom:0;background:var(--ink);border-top:1px solid var(--line2);padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:601}
+.foto-bar .inner{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.foto-bar .tt{flex:1;font-size:11px;color:var(--text3);line-height:1.4}
+.foto-bar .tt b{color:var(--text);font-size:18px;font-family:'Inter',sans-serif;font-weight:800}
+.foto-loading{display:none;position:fixed;inset:0;z-index:650;background:rgba(15,15,14,.93);flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.foto-loading.show{display:flex}
+.foto-loading .sp{width:42px;height:42px;border:3px solid var(--line2);border-top-color:var(--accent);border-radius:50%;animation:spin360 .8s linear infinite}
+@keyframes spin360{to{transform:rotate(360deg)}}
+.foto-loading div{font-family:'Syne',sans-serif;font-weight:700;color:var(--text2);font-size:14px}
+.key-ov{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:20px}
+.key-ov.show{display:flex}
+.key-modal{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r2);padding:20px;max-width:420px;width:100%}
+.key-modal h3{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:6px}
+.key-modal p{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.key-modal input{width:100%;padding:11px 14px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;margin-bottom:12px;box-sizing:border-box}
+</style>
+
+<div class="foto-ov" id="foto-ov">
+  <div class="inner">
+    <div class="foto-top">
+      <button class="voltar" onclick="fecharConf()">‹ Voltar</button>
+      <div class="sec-title" style="margin:0">Conferir leitura</div>
+    </div>
+    <div class="cf-fotocard" id="cf-fotocard" onclick="this.classList.toggle('big')">
+      <img id="cf-foto" alt="foto do caderno"><div class="cap">FOTO LIDA · TOQUE PARA AMPLIAR</div>
+    </div>
+    <div class="cf-aviso"><b id="cf-confira-n">0</b> itens em amarelo pra conferir (número ou nome em dúvida). Toque pra ajustar.</div>
+    <div id="cf-lista"></div>
+  </div>
+</div>
+<div class="foto-bar" id="foto-bar" style="display:none">
+  <div class="inner">
+    <div class="tt">Dia <span id="cf-data"></span><br><b id="cf-total">0</b> peças</div>
+    <button class="btn btn-accent" style="width:auto;padding:12px 20px" onclick="salvarConf()">Confirmar e salvar</button>
+  </div>
+</div>
+<div class="foto-loading" id="foto-loading"><div class="sp"></div><div id="foto-loading-txt">Lendo a foto...</div></div>
+<div class="key-ov" id="key-ov">
+  <div class="key-modal">
+    <h3>Chave de leitura (Gemini)</h3>
+    <p>Cole sua chave grátis do Google AI Studio (aistudio.google.com). Fica guardada no app e é pedida só uma vez.</p>
+    <input type="text" id="key-input" placeholder="AIza..." autocapitalize="none" spellcheck="false">
+    <button class="btn btn-accent" onclick="salvarGeminiKey()">Salvar e continuar</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-ghost" onclick="document.getElementById('key-ov').classList.remove('show')">Cancelar</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var _fotoPend=null, _fotoDataURL=null, cfItens=[], GKEY=null;
+  var GEMINI_MODEL='gemini-2.0-flash'; // se a API reclamar do modelo, troque aqui por outro modelo de visão gratuito
+  var PROD_CONHECIDOS='Base, Miolo, A/W, ABS, Slim, XP, XG, Ipanema, Floripa, Viena, Mônaco, Áustria, Wood, Ripada, Mesa, Lâmpada, Cup40, Flo3M, Sky';
+
+  window.abrirFotoLanc=function(){ var el=document.getElementById('foto-input'); if(el)el.click(); };
+
+  window.lerCaderno=async function(ev){
+    var file=ev.target.files&&ev.target.files[0]; ev.target.value='';
+    if(!file)return;
+    _fotoPend=file;
+    var key=await getGeminiKey();
+    if(!key){ document.getElementById('key-ov').classList.add('show'); return; }
+    processarFoto(file,key);
+  };
+
+  async function getGeminiKey(){
+    if(GKEY)return GKEY;
+    try{ var r=await sb('config?chave=eq.gemini_key&select=valor'); if(r&&r[0]&&r[0].valor){ GKEY=r[0].valor; return GKEY; } }catch(e){}
+    return null;
+  }
+  window.salvarGeminiKey=async function(){
+    var k=(document.getElementById('key-input').value||'').trim();
+    if(!k)return;
+    try{ await sb('config',{method:'POST',body:JSON.stringify([{chave:'gemini_key',valor:k}]),prefer:'resolution=merge-duplicates',headers:{'Prefer':'resolution=merge-duplicates'}}); }catch(e){}
+    GKEY=k; document.getElementById('key-ov').classList.remove('show');
+    if(_fotoPend)processarFoto(_fotoPend,k);
+  };
+
+  function fileToDataURL(b){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){res(fr.result)}; fr.onerror=rej; fr.readAsDataURL(b); }); }
+
+  async function processarFoto(file,key){
+    document.getElementById('foto-loading').classList.add('show');
+    try{
+      var img=(typeof comprimirImagem==='function')? await comprimirImagem(file,1800,0.82) : file;
+      var dataURL=await fileToDataURL(img); _fotoDataURL=dataURL;
+      var b64=dataURL.slice(dataURL.indexOf(',')+1);
+      var mime=(dataURL.match(/^data:([^;]+)/)||[])[1]||'image/jpeg';
+      var itens=await chamarGemini(b64,mime,key);
+      if(!itens||!itens.length) throw new Error('vazio');
+      cfItens=itens.map(function(it,i){ return {s:normSetor(it.setor), p:String(it.produto||'').trim(), q:parseInt(it.qtd)||0, c:it.confira?1:0, id:i}; }).filter(function(it){return it.q>0||it.p});
+      abrirConf();
+    }catch(e){
+      console.warn('foto',e);
+      toast('Não consegui ler a foto. Confira a chave ou tente de novo (ou use o manual).','erro');
+    }
+    document.getElementById('foto-loading').classList.remove('show');
+  }
+
+  function normSetor(s){
+    s=String(s||'').trim();
+    var m=SETORES.find(function(x){return x.toLowerCase()===s.toLowerCase()});
+    if(m)return m;
+    m=SETORES.find(function(x){return x.toLowerCase().indexOf(s.toLowerCase())>=0||s.toLowerCase().indexOf(x.toLowerCase())>=0});
+    return m||s;
+  }
+
+  async function chamarGemini(b64,mime,key){
+    var prompt='Você lê uma planilha de "Controle de Produção" de uma fábrica, preenchida à mão com caneta. '+
+      'Colunas: PROCESSO (setor) | QTD (quantidade) | DESCRIÇÃO (produto). '+
+      'Setores possíveis, nesta ordem: '+SETORES.join(', ')+'. '+
+      'Produtos comuns: '+PROD_CONHECIDOS+'. '+
+      'Atenção: nos setores Embalagem e Expedição às vezes há anotações laterais fora da coluna QTD (ex.: "26-Mônaco") ou várias colunas separadas por "|". Inclua TODAS como itens do mesmo setor. '+
+      'Retorne APENAS um array JSON. Cada item: {"setor": string, "produto": string, "qtd": inteiro, "confira": booleano}. '+
+      'confira=true se tiver QUALQUER dúvida no número ou no nome; false se estiver claro. '+
+      'Não invente itens. Linha ilegível: inclua com confira:true e seu melhor palpite.';
+    var url='https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent?key='+encodeURIComponent(key);
+    var body={ contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}], generationConfig:{temperature:0, responseMimeType:'application/json'} };
+    var r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok){ console.warn('gemini',r.status, await r.text()); throw new Error('api'); }
+    var d=await r.json();
+    var parts=(((d.candidates||[])[0]||{}).content||{}).parts;
+    var txt=parts&&parts[0]&&parts[0].text?parts[0].text:'';
+    var arr=JSON.parse(txt);
+    return Array.isArray(arr)?arr:(arr.itens||arr.items||arr.data||[]);
+  }
+
+  function abrirConf(){
+    document.getElementById('cf-foto').src=_fotoDataURL||'';
+    var _d=document.getElementById('f-data').value||(typeof hoje==='function'?hoje():'');
+    document.getElementById('cf-data').textContent=(typeof fmt==='function'?fmt(_d):_d);
+    renderConf();
+    document.getElementById('foto-ov').classList.add('show');
+    document.getElementById('foto-bar').style.display='block';
+    window.scrollTo(0,0);
+  }
+  window.fecharConf=function(){ document.getElementById('foto-ov').classList.remove('show'); document.getElementById('foto-bar').style.display='none'; };
+
+  function renderConf(){
+    var lista=document.getElementById('cf-lista'); lista.innerHTML='';
+    SETORES.forEach(function(s){
+      var dd=cfItens.filter(function(it){return it.s===s});
+      if(!dd.length)return;
+      var tot=dd.reduce(function(a,it){return a+(parseInt(it.q)||0)},0);
+      var h=document.createElement('div'); h.className='sec-title'; h.style.margin='16px 0 8px';
+      h.innerHTML=s+' <span style="color:var(--text3);letter-spacing:0;text-transform:none;font-weight:500">· '+tot+' pç</span>';
+      lista.appendChild(h);
+      dd.forEach(function(it){
+        var row=document.createElement('div'); row.className='cf-row'+(it.c?' confira':'');
+        row.innerHTML='<div class="cf-qbox"><button type="button">−</button><input type="number" inputmode="numeric" value="'+it.q+'"><button type="button">+</button></div>'+
+          '<input class="cf-pin" value="'+String(it.p).replace(/"/g,'&quot;')+'">'+
+          (it.c?'<span class="cf-flag">confira</span>':'')+'<button type="button" class="cf-rm">✕</button>';
+        var b=row.querySelectorAll('.cf-qbox button'), qi=row.querySelector('.cf-qbox input'), pi=row.querySelector('.cf-pin');
+        b[0].onclick=function(){ it.q=Math.max(0,(parseInt(it.q)||0)-1); it.c=0; renderConf(); };
+        b[1].onclick=function(){ it.q=(parseInt(it.q)||0)+1; it.c=0; renderConf(); };
+        qi.onchange=function(){ it.q=parseInt(qi.value)||0; it.c=0; renderConf(); };
+        pi.onchange=function(){ it.p=pi.value; it.c=0; atualizarConf(); };
+        row.querySelector('.cf-rm').onclick=function(){ cfItens=cfItens.filter(function(x){return x.id!==it.id}); renderConf(); };
+        lista.appendChild(row);
+      });
+    });
+    var add=document.createElement('button'); add.className='cf-addbtn'; add.type='button'; add.textContent='+ adicionar item que faltou';
+    add.onclick=function(){ cfItens.push({s:'Embalagem',q:1,p:'',c:0,id:'n'+Date.now()}); renderConf(); };
+    lista.appendChild(add);
+    atualizarConf();
+  }
+  function atualizarConf(){
+    var tot=cfItens.reduce(function(a,it){return a+(parseInt(it.q)||0)},0);
+    var conf=cfItens.filter(function(it){return it.c}).length;
+    document.getElementById('cf-total').textContent=tot;
+    document.getElementById('cf-confira-n').textContent=conf;
+  }
+
+  window.salvarConf=async function(){
+    var validos=cfItens.filter(function(it){return (parseInt(it.q)||0)>0 && String(it.p).trim()});
+    if(!validos.length){ toast('Nada pra salvar.'); return; }
+    var data=document.getElementById('f-data').value||(typeof hoje==='function'?hoje():new Date().toISOString().slice(0,10));
+    var autor=(typeof autorAtual==='function')?autorAtual():null;
+    setSync('syncing');
+    try{
+      var rows=validos.map(function(it){ return {data:data, setor:it.s, produto:String(it.p).trim(), qtd:parseInt(it.q), lancado_por:autor}; });
+      try{ await sb('lancamentos',{method:'POST',body:JSON.stringify(rows),prefer:'return=minimal'}); }
+      catch(err){ var sem=rows.map(function(r){ return {data:r.data,setor:r.setor,produto:r.produto,qtd:r.qtd}; }); await sb('lancamentos',{method:'POST',body:JSON.stringify(sem),prefer:'return=minimal'}); }
+      if(typeof cachedLancs!=='undefined') cachedLancs=rows.concat(cachedLancs);
+      setSync('ok'); fecharConf();
+      if(typeof mostrarCheck==='function')mostrarCheck(rows.length+' itens lançados!'); else toast('Lançado!');
+      if(typeof atualizarDiasComLanc==='function')atualizarDiasComLanc();
+      if(typeof renderCal==='function')renderCal();
+      if(typeof carregarERenderMetas==='function')carregarERenderMetas();
+    }catch(e){ setSync('err'); toast('Erro ao salvar.','erro'); }
+  };
+})();
+</script>
+
 </body>
 </html>
