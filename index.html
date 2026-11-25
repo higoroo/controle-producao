@@ -7050,7 +7050,7 @@ init();
   async function processarFoto(file,key){
     document.getElementById('foto-loading').classList.add('show');
     try{
-      var img=(typeof comprimirImagem==='function')? await comprimirImagem(file,1800,0.82) : file;
+      var img=(typeof comprimirImagem==='function')? await comprimirImagem(file,1500,0.8) : file;
       var dataURL=await fileToDataURL(img); _fotoDataURL=dataURL;
       var b64=dataURL.slice(dataURL.indexOf(',')+1);
       var mime=(dataURL.match(/^data:([^;]+)/)||[])[1]||'image/jpeg';
@@ -7083,8 +7083,11 @@ init();
       'confira=true se tiver QUALQUER dúvida no número ou no nome; false se estiver claro. '+
       'Não invente itens. Linha ilegível: inclua com confira:true e seu melhor palpite.';
     var url='https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent?key='+encodeURIComponent(key);
-    var body={ contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}], generationConfig:{temperature:0, responseMimeType:'application/json'} };
-    var r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var reqParts=[{text:prompt},{inline_data:{mime_type:mime,data:b64}}];
+    function callGemini(gen){ return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:reqParts}],generationConfig:gen})}); }
+    // 1ª tentativa rápida: desliga o "pensamento" (que atrasa muito os modelos novos) e limita a saída
+    var r=await callGemini({temperature:0, responseMimeType:'application/json', maxOutputTokens:2048, thinkingConfig:{thinkingBudget:0}});
+    if(r.status===400){ r=await callGemini({temperature:0, responseMimeType:'application/json'}); } // modelo não aceitou a config extra -> tenta simples
     if(!r.ok){ console.warn('gemini',r.status, await r.text()); throw new Error('api'); }
     var d=await r.json();
     var parts=(((d.candidates||[])[0]||{}).content||{}).parts;
